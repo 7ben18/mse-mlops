@@ -15,12 +15,47 @@ A short description of the project
 
 Follow the instructions under https://gabrieltorresgamez.github.io/gabocutter/tutorial/ to get started.
 
+## DINOv3 Fine-Tuning
+
+Fine-tuning DINOv3 for melanoma skin cancer classification.
+
+Model:
+
+`facebook/dinov3-vits16-pretrain-lvd1689m`
+
+Dataset download (manual):
+
+https://www.kaggle.com/datasets/hasnainjaved/melanoma-skin-cancer-dataset-of-10000-images
+
+Extract into `data/` so this path exists:
+
+`data/melanoma_cancer_dataset`
+
+Expected dataset structure:
+
+`data/melanoma_cancer_dataset/train/{benign,malignant}`
+
+`data/melanoma_cancer_dataset/test/{benign,malignant}`
+
+Run training:
+
+`uv run train-dinov3`
+
+Training settings:
+
+`config/train.yaml`
+
+## TODO
+
+- Move the dataset from `data/melanoma_cancer_dataset` into either `data/raw` or `data/processed`.
+- Update and align all dataset path documentation after that move.
+
 ## Structure
 
     ├── .github
     │   ├── actions        <- Github Actions configuration.
     │   └── workflows      <- Github Actions workflows.
-    │   
+    │
     ├── mse-mlops-project <- Source code for use in this project.
     ├── data
     │   ├── processed      <- The final, canonical data sets for modeling.
@@ -28,10 +63,10 @@ Follow the instructions under https://gabrieltorresgamez.github.io/gabocutter/tu
     │
     ├── docs               <- MkDocs documentation for the project.
     ├── models             <- Modelcheckpoints, model predictions, metrics, and model summaries.
-    ├── notebooks          <- Jupyter notebooks or Quarto Markdown Notebooks. 
-    │                         Naming convention is a number (for ordering) and a short `-` 
+    ├── notebooks          <- Jupyter notebooks or Quarto Markdown Notebooks.
+    │                         Naming convention is a number (for ordering) and a short `-`
     │                         delimited description, e.g. `00-example.qmd`.
-    ├── references         <- Data dictionaries, manuals, and all other explanatory materials.    
+    ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
     ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
     ├── tests              <- Unit tests for the project.
     ├── .gitignore         <- Files to be ignored by git.

@@ -1,0 +1,117 @@
+model:
+  # Hugging Face model id or a local folder path with model files.
+  model_name: facebook/dinov3-vits16-pretrain-lvd1689m
+
+data:
+  # Root data folder that contains class subfolders.
+  data_dir: data/melanoma_cancer_dataset
+
+  # Subfolder under data_dir used as training source.
+  train_subdir: train
+
+  # Subfolder under data_dir used only when val_mode = test.
+  # Ignored when val_mode = split or train.
+  val_subdir: train  # prevent data leakage for case of val_mode = test for now!
+
+  # Validation strategy:
+  # - test: use train_subdir for training and val_subdir for validation.
+  # - split: split train_subdir into train/val using val_split.
+  # - train: use selected train images as validation too (overfit/debug).
+  #
+  # Production default here: split (does not touch test data).
+  val_mode: split
+
+  # Fraction of train_subdir reserved for validation when val_mode = split.
+  # Example: 0.2 means 80% train / 20% val from train_subdir.
+  # Ignored for val_mode = test and train.
+  val_split: 0.2
+
+  # Fraction of candidate training images to keep after split/subdir selection.
+  # 1.0 = use all available training images.
+  train_fraction: 1.0
+
+  # Fraction of candidate validation images to keep after split/subdir selection.
+  # 1.0 = use all available validation images.
+  val_fraction: 1.0
+
+  # Optional hard cap on training image count after fractioning.
+  # null = no cap.
+  train_samples: null
+
+  # Optional hard cap on validation image count after fractioning.
+  # null = no cap.
+  val_samples: null
+
+training:
+  # Directory where best checkpoint, epoch checkpoints, and history.json are written.
+  output_dir: outputs/dinov3_melanoma
+
+  # Total number of epochs (HF baseline style for full fine-tuning).
+  epochs: 3
+
+  # Batch size for train and validation.
+  batch_size: 16
+
+  # Target crop size.
+  # Train pipeline uses RandomResizedCrop(image_size).
+  # Eval pipeline uses Resize(int(image_size * 256 / 224)) + CenterCrop(image_size).
+  image_size: 224
+
+  # AdamW learning rate.
+  # For full fine-tuning, 5e-5 is a solid default.
+  # For head-only training, increase this (e.g. 1e-3).
+  lr: 0.00005
+
+  # AdamW weight decay for non-bias/non-norm params.
+  # Bias and norm params are excluded from decay in code.
+  weight_decay: 0.01
+
+  # DataLoader worker processes.
+  # 0 is safest on macOS/MPS; increase on Linux/CUDA if stable.
+  num_workers: 0
+
+  # Random seed for split/sampling reproducibility.
+  seed: 42
+
+  # Device selection:
+  # - auto: cuda -> mps -> cpu
+  # - cuda / mps / cpu: force a specific device
+  device: auto
+
+  # true: train only classifier head
+  # false: full fine-tuning (HF-standard default)
+  freeze_backbone: false
+
+  # Gradient accumulation steps.
+  # Effective batch size = batch_size * gradient_accumulation_steps.
+  gradient_accumulation_steps: 1
+
+  # LR warmup as fraction of total optimizer steps.
+  warmup_ratio: 0.1
+
+  # Scheduler type (Transformers get_scheduler).
+  # Choices: linear, cosine, cosine_with_restarts, polynomial, constant, constant_with_warmup
+  lr_scheduler_type: linear
+
+  # Gradient clipping threshold (0 disables clipping).
+  max_grad_norm: 1.0
+
+  # Optional hard cap on train batches per epoch (debug only).
+  # null = no cap.
+  max_train_batches: null
+
+  # Optional hard cap on validation batches per epoch (debug only).
+  # null = no cap.
+  max_val_batches: null
+
+  # Resume training from checkpoint:
+  # - null: start fresh
+  # - latest: pick newest checkpoint in output_dir/checkpoints
+  # - /path/to/epoch_XXX.pt: explicit checkpoint file
+  resume_from_checkpoint: null
+
+  # Keep only the N newest epoch checkpoints (null = keep all).
+  save_total_limit: 5
+
+  # Load best_model.pt into memory at the end of training.
+  load_best_model_at_end: true
