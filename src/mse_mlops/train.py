@@ -4,12 +4,14 @@ import argparse
 import json
 import math
 import random
+from collections import defaultdict
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Sequence
 
 import numpy as np
+from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 import torch
 import yaml
 from torch import nn
@@ -40,6 +42,22 @@ class Metrics:
     train_acc: float
     val_loss: float
     val_acc: float
+    val_precision: float
+    val_recall: float
+    val_f1: float
+    val_roc_auc: float
+
+
+@dataclass
+class BestModelState:
+    metric_name: str
+    metric_value: float
+    epoch: int
+    model_state_dict: dict[str, torch.Tensor]
+    class_names: list[str]
+    model_name: str
+    image_size: int
+    freeze_backbone: bool
 
 
 def _optional_int(value: object) -> int | None:
@@ -90,7 +108,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-dir", type=Path, default=Path(str(defaults.get("data_dir", DEFAULT_DATA_DIR))))
     parser.add_argument("--train-subdir", type=str, default=str(defaults.get("train_subdir", "train")))
     parser.add_argument("--val-subdir", type=str, default=str(defaults.get("val_subdir", "test")))
-    parser.add_argument("--val-mode", choices=("test", "split", "train"), default=str(defaults.get("val_mode", "test")))
+    parser.add_argument("--val-mode", choices=("test", "split"), default=str(defaults.get("val_mode", "test")))
     parser.add_argument("--val-split", type=float, default=float(defaults.get("val_split", 0.2)))
     parser.add_argument("--train-fraction", type=float, default=float(defaults.get("train_fraction", 1.0)))
     parser.add_argument("--val-fraction", type=float, default=float(defaults.get("val_fraction", 1.0)))
@@ -149,6 +167,9 @@ def set_seed(seed: int) -> None:
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+    if hasattr(torch.backends, "cudnn"):
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
 def is_mps_available() -> bool:
@@ -223,11 +244,79 @@ def choose_indices(
     return indices[:keep]
 
 
+def seed_worker(worker_id: int) -> None:
+    worker_seed = torch.initial_seed() % (2**32)
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+
+
+def stratified_split_indices(
+    targets: Sequence[int],
+    val_split: float,
+    seed: int,
+) -> tuple[list[int], list[int]]:
+    by_class: dict[int, list[int]] = defaultdict(list)
+    for idx, label in enumerate(targets):
+        by_class[int(label)].append(idx)
+
+    train_indices: list[int] = []
+    val_indices: list[int] = []
+    rng = random.Random(seed)
+
+    for label, indices in by_class.items():
+        if len(indices) < 2:
+            raise ValueError(
+                f"Class index {label} has fewer than 2 samples; stratified split requires at least 2 samples per class."
+            )
+        shuffled = list(indices)
+        rng.shuffle(shuffled)
+        class_val_count = max(1, int(len(shuffled) * val_split))
+        if class_val_count >= len(shuffled):
+            class_val_count = len(shuffled) - 1
+        val_indices.extend(shuffled[:class_val_count])
+        train_indices.extend(shuffled[class_val_count:])
+
+    rng.shuffle(train_indices)
+    rng.shuffle(val_indices)
+    return train_indices, val_indices
+
+
+def compute_classification_metrics(
+    labels: list[int],
+    preds: list[int],
+    probs: list[list[float]],
+) -> tuple[float, float, float, float]:
+    precision = precision_score(labels, preds, average="weighted", zero_division=0)
+    recall = recall_score(labels, preds, average="weighted", zero_division=0)
+    f1 = f1_score(labels, preds, average="weighted", zero_division=0)
+
+    unique_labels = sorted(set(labels))
+    if len(unique_labels) < 2:
+        roc_auc = float("nan")
+    else:
+        try:
+            if len(probs[0]) == 2:
+                roc_auc = roc_auc_score(labels, [row[1] for row in probs])
+            else:
+                roc_auc = roc_auc_score(
+                    labels,
+                    probs,
+                    multi_class="ovr",
+                    average="weighted",
+                    labels=list(range(len(probs[0]))),
+                )
+        except ValueError:
+            roc_auc = float("nan")
+
+    return float(precision), float(recall), float(f1), float(roc_auc)
+
+
 class DinoV3Classifier(nn.Module):
     """Primary classifier wrapper for DINOv3 backbone checkpoints."""
 
     def __init__(self, model_name: str, num_labels: int, freeze_backbone: bool) -> None:
         super().__init__()
+        self.freeze_backbone = freeze_backbone
         self.backbone = AutoModel.from_pretrained(model_name)
 
         hidden_size = getattr(self.backbone.config, "hidden_size", None)
@@ -242,6 +331,13 @@ class DinoV3Classifier(nn.Module):
         if freeze_backbone:
             for param in self.backbone.parameters():
                 param.requires_grad = False
+            self.backbone.eval()
+
+    def train(self, mode: bool = True) -> "DinoV3Classifier":
+        super().train(mode)
+        if self.freeze_backbone:
+            self.backbone.eval()
+        return self
 
     def forward(self, pixel_values: torch.Tensor) -> SimpleNamespace:
         outputs = self.backbone(pixel_values=pixel_values)
@@ -289,6 +385,11 @@ def build_dataloaders(
     class_names = list(train_full.classes)
     all_train_indices = list(range(len(train_full)))
 
+    train_generator = torch.Generator()
+    train_generator.manual_seed(seed)
+    val_generator = torch.Generator()
+    val_generator.manual_seed(seed + 1)
+
     if val_mode == "test":
         if not val_dir.is_dir():
             raise FileNotFoundError(f"Validation directory not found: {val_dir}")
@@ -301,28 +402,12 @@ def build_dataloaders(
         train_ds = Subset(train_full, train_indices)
         val_ds = Subset(val_full, val_indices)
 
-    elif val_mode == "split":
+    else:
         if not (0.0 < val_split < 1.0):
             raise ValueError("--val-split must be between 0 and 1 when --val-mode split is used.")
-        if len(all_train_indices) < 2:
-            raise ValueError("Need at least 2 images in train directory for split mode.")
-
-        shuffled = list(all_train_indices)
-        random.Random(seed).shuffle(shuffled)
-        val_count = max(1, int(len(shuffled) * val_split))
-        if val_count >= len(shuffled):
-            val_count = len(shuffled) - 1
-
-        base_val_indices = shuffled[:val_count]
-        base_train_indices = shuffled[val_count:]
+        base_train_indices, base_val_indices = stratified_split_indices(train_full.targets, val_split=val_split, seed=seed)
         train_indices = choose_indices(base_train_indices, train_fraction, train_samples, seed + 2)
         val_indices = choose_indices(base_val_indices, val_fraction, val_samples, seed + 3)
-        train_ds = Subset(train_full, train_indices)
-        val_ds = Subset(train_full_eval, val_indices)
-
-    else:
-        train_indices = choose_indices(all_train_indices, train_fraction, train_samples, seed)
-        val_indices = choose_indices(train_indices, val_fraction, val_samples, seed + 1)
         train_ds = Subset(train_full, train_indices)
         val_ds = Subset(train_full_eval, val_indices)
 
@@ -338,6 +423,8 @@ def build_dataloaders(
         shuffle=True,
         num_workers=num_workers,
         pin_memory=pin_memory,
+        worker_init_fn=seed_worker,
+        generator=train_generator,
     )
     val_loader = DataLoader(
         val_ds,
@@ -345,6 +432,8 @@ def build_dataloaders(
         shuffle=False,
         num_workers=num_workers,
         pin_memory=pin_memory,
+        worker_init_fn=seed_worker,
+        generator=val_generator,
     )
     return train_loader, val_loader, class_names, len(train_ds), len(val_ds)
 
@@ -389,11 +478,14 @@ def evaluate(
     criterion: nn.Module,
     device: torch.device,
     max_batches: int | None = None,
-) -> tuple[float, float]:
+) -> tuple[float, float, float, float, float, float]:
     model.eval()
     running_loss = 0.0
     correct = 0
     total = 0
+    all_labels: list[int] = []
+    all_preds: list[int] = []
+    all_probs: list[list[float]] = []
 
     with torch.no_grad():
         for batch_idx, (images, labels) in enumerate(loader, start=1):
@@ -405,15 +497,20 @@ def evaluate(
 
             running_loss += loss.item() * labels.size(0)
             preds = torch.argmax(logits, dim=1)
+            probs = torch.softmax(logits, dim=1)
             correct += (preds == labels).sum().item()
             total += labels.size(0)
+            all_labels.extend(labels.detach().cpu().tolist())
+            all_preds.extend(preds.detach().cpu().tolist())
+            all_probs.extend(probs.detach().cpu().tolist())
 
             if max_batches is not None and batch_idx >= max_batches:
                 break
 
     avg_loss = running_loss / max(total, 1)
     acc = correct / max(total, 1)
-    return avg_loss, acc
+    precision, recall, f1, roc_auc = compute_classification_metrics(all_labels, all_preds, all_probs)
+    return avg_loss, acc, precision, recall, f1, roc_auc
 
 
 def train_one_epoch(
@@ -495,17 +592,25 @@ def save_epoch_checkpoint(
     optimizer: torch.optim.Optimizer,
     scheduler: object,
     epoch: int,
-    best_acc: float,
-    history: list[Metrics],
+    best_model_state: BestModelState | None,
 ) -> None:
     payload = {
         "epoch": epoch,
-        "best_acc": best_acc,
         "model_state_dict": model.state_dict(),
         "optimizer_state_dict": optimizer.state_dict(),
         "scheduler_state_dict": scheduler.state_dict(),
-        "history": [asdict(item) for item in history],
     }
+    if best_model_state is not None:
+        payload["best_model_state"] = {
+            "metric_name": best_model_state.metric_name,
+            "metric_value": best_model_state.metric_value,
+            "epoch": best_model_state.epoch,
+            "model_state_dict": best_model_state.model_state_dict,
+            "class_names": best_model_state.class_names,
+            "model_name": best_model_state.model_name,
+            "image_size": best_model_state.image_size,
+            "freeze_backbone": best_model_state.freeze_backbone,
+        }
     torch.save(payload, checkpoint_path)
 
 
@@ -515,15 +620,31 @@ def load_epoch_checkpoint(
     optimizer: torch.optim.Optimizer,
     scheduler: object,
     device: torch.device,
-) -> tuple[int, float, list[Metrics]]:
+) -> tuple[int, BestModelState | None, list[Metrics]]:
     payload = torch.load(checkpoint_path, map_location=device)
     model.load_state_dict(payload["model_state_dict"])
     optimizer.load_state_dict(payload["optimizer_state_dict"])
     scheduler.load_state_dict(payload["scheduler_state_dict"])
     loaded_epoch = int(payload["epoch"])
-    best_acc = float(payload.get("best_acc", -1.0))
-    history = [Metrics(**item) for item in payload.get("history", [])]
-    return loaded_epoch, best_acc, history
+    history_path = checkpoint_path.parent.parent / "history.json"
+    history: list[Metrics] = []
+    if history_path.exists():
+        with history_path.open("r", encoding="utf-8") as f:
+            history = [Metrics(**item) for item in json.load(f)]
+    best_payload = payload.get("best_model_state")
+    best_model_state = None
+    if isinstance(best_payload, dict):
+        best_model_state = BestModelState(
+            metric_name=str(best_payload["metric_name"]),
+            metric_value=float(best_payload["metric_value"]),
+            epoch=int(best_payload["epoch"]),
+            model_state_dict=best_payload["model_state_dict"],
+            class_names=list(best_payload["class_names"]),
+            model_name=str(best_payload["model_name"]),
+            image_size=int(best_payload["image_size"]),
+            freeze_backbone=bool(best_payload["freeze_backbone"]),
+        )
+    return loaded_epoch, best_model_state, history
 
 
 def main() -> None:
@@ -623,7 +744,7 @@ def main() -> None:
     )
 
     start_epoch = 1
-    best_acc = -1.0
+    best_model_state: BestModelState | None = None
     history: list[Metrics] = []
 
     if args.resume_from_checkpoint:
@@ -638,7 +759,7 @@ def main() -> None:
             if not checkpoint_path.exists():
                 raise FileNotFoundError(f"Resume checkpoint not found: {checkpoint_path}")
 
-        loaded_epoch, best_acc, history = load_epoch_checkpoint(
+        loaded_epoch, best_model_state, history = load_epoch_checkpoint(
             checkpoint_path=checkpoint_path,
             model=model,
             optimizer=optimizer,
@@ -662,7 +783,7 @@ def main() -> None:
             max_grad_norm=args.max_grad_norm,
             max_batches=args.max_train_batches,
         )
-        val_loss, val_acc = evaluate(
+        val_loss, val_acc, val_precision, val_recall, val_f1, val_roc_auc = evaluate(
             model=model,
             loader=val_loader,
             criterion=criterion,
@@ -675,27 +796,49 @@ def main() -> None:
             train_acc=train_acc,
             val_loss=val_loss,
             val_acc=val_acc,
+            val_precision=val_precision,
+            val_recall=val_recall,
+            val_f1=val_f1,
+            val_roc_auc=val_roc_auc,
         )
         history.append(metrics)
 
         print(
             f"Epoch {epoch}/{args.epochs} | "
             f"train_loss={train_loss:.4f} train_acc={train_acc:.4f} | "
-            f"val_loss={val_loss:.4f} val_acc={val_acc:.4f} | "
+            f"val_loss={val_loss:.4f} val_acc={val_acc:.4f} "
+            f"val_precision={val_precision:.4f} val_recall={val_recall:.4f} "
+            f"val_f1={val_f1:.4f} val_roc_auc={val_roc_auc:.4f} | "
             f"opt_steps={optimizer_steps}"
         )
 
-        if val_acc > best_acc:
-            best_acc = val_acc
+        current_metric = val_roc_auc
+        previous_metric = best_model_state.metric_value if best_model_state is not None else float("nan")
+        is_better = (
+            best_model_state is None
+            or (math.isnan(previous_metric) and not math.isnan(current_metric))
+            or (not math.isnan(current_metric) and current_metric > previous_metric)
+        )
+        if is_better:
+            best_model_state = BestModelState(
+                metric_name="val_roc_auc",
+                metric_value=val_roc_auc,
+                epoch=epoch,
+                model_state_dict={key: value.detach().cpu().clone() for key, value in model.state_dict().items()},
+                class_names=list(class_names),
+                model_name=args.model_name,
+                image_size=args.image_size,
+                freeze_backbone=args.freeze_backbone,
+            )
             torch.save(
                 {
-                    "model_state_dict": model.state_dict(),
-                    "class_names": class_names,
-                    "model_name": args.model_name,
-                    "image_size": args.image_size,
-                    "freeze_backbone": args.freeze_backbone,
-                    "val_acc": val_acc,
-                    "epoch": epoch,
+                    "model_state_dict": best_model_state.model_state_dict,
+                    "class_names": best_model_state.class_names,
+                    "model_name": best_model_state.model_name,
+                    "image_size": best_model_state.image_size,
+                    "freeze_backbone": best_model_state.freeze_backbone,
+                    "val_roc_auc": best_model_state.metric_value,
+                    "epoch": best_model_state.epoch,
                 },
                 best_model_path,
             )
@@ -707,8 +850,7 @@ def main() -> None:
             optimizer=optimizer,
             scheduler=scheduler,
             epoch=epoch,
-            best_acc=best_acc,
-            history=history,
+            best_model_state=best_model_state,
         )
         cleanup_old_checkpoints(checkpoint_dir=checkpoint_dir, keep_last=args.save_total_limit)
 
@@ -716,12 +858,15 @@ def main() -> None:
         with (args.output_dir / "history.json").open("w", encoding="utf-8") as f:
             json.dump(history_payload, f, indent=2)
 
-    if args.load_best_model_at_end and best_model_path.exists():
-        best_payload = torch.load(best_model_path, map_location=device)
-        model.load_state_dict(best_payload["model_state_dict"])
-        print(f"Loaded best model from epoch {best_payload.get('epoch')} (val_acc={best_payload.get('val_acc'):.4f})")
+    if args.load_best_model_at_end and best_model_state is not None:
+        model.load_state_dict(best_model_state.model_state_dict)
+        print(
+            f"Loaded best model from epoch {best_model_state.epoch} "
+            f"({best_model_state.metric_name}={best_model_state.metric_value:.4f})"
+        )
 
-    print(f"Best validation accuracy: {best_acc:.4f}")
+    if best_model_state is not None:
+        print(f"Best validation {best_model_state.metric_name}: {best_model_state.metric_value:.4f}")
     print(f"Artifacts saved to: {args.output_dir}")
 
 

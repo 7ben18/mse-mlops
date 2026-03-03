@@ -4,14 +4,14 @@ model:
 
 data:
   # Root data folder that contains class subfolders.
-  data_dir: data/melanoma_cancer_dataset
+  data_dir: data/raw/melanoma_cancer_dataset
 
   # Subfolder under data_dir used as training source.
   train_subdir: train
 
   # Subfolder under data_dir used only when val_mode = test.
   # Ignored when val_mode = split or train.
-  val_subdir: train  # prevent data leakage for case of val_mode = test for now!
+  val_subdir: test  # prevent data leakage for case of val_mode = test for now!
 
   # Validation strategy:
   # - test: use train_subdir for training and val_subdir for validation.
@@ -47,7 +47,7 @@ training:
   output_dir: outputs/dinov3_melanoma
 
   # Total number of epochs (HF baseline style for full fine-tuning).
-  epochs: 3
+  epochs: 30
 
   # Batch size for train and validation.
   batch_size: 16
@@ -80,7 +80,7 @@ training:
 
   # true: train only classifier head
   # false: full fine-tuning (HF-standard default)
-  freeze_backbone: false
+  freeze_backbone: true
 
   # Gradient accumulation steps.
   # Effective batch size = batch_size * gradient_accumulation_steps.
