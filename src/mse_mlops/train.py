@@ -5,21 +5,20 @@ import json
 import math
 import random
 from collections import defaultdict
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Sequence
 
 import numpy as np
-from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 import torch
 import yaml
+from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 from torch import nn
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 from tqdm import tqdm
 from transformers import AutoImageProcessor, AutoModel, get_scheduler
-
 
 DEFAULT_MODEL = "facebook/dinov3-vits16-pretrain-lvd1689m"
 DEFAULT_DATA_DIR = "data/melanoma_cancer_dataset"
@@ -205,25 +204,23 @@ def resolve_mean_std(processor: AutoImageProcessor) -> tuple[Sequence[float], Se
     return mean, std
 
 
-def build_transforms(mean: Sequence[float], std: Sequence[float], image_size: int) -> tuple[transforms.Compose, transforms.Compose]:
+def build_transforms(
+    mean: Sequence[float], std: Sequence[float], image_size: int
+) -> tuple[transforms.Compose, transforms.Compose]:
     # HF-style augmentation for train/eval image classification pipelines.
-    train_tf = transforms.Compose(
-        [
-            transforms.RandomResizedCrop(image_size),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=mean, std=std),
-        ]
-    )
+    train_tf = transforms.Compose([
+        transforms.RandomResizedCrop(image_size),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=mean, std=std),
+    ])
     resize_size = max(image_size, int(image_size * 256 / 224))
-    eval_tf = transforms.Compose(
-        [
-            transforms.Resize(resize_size),
-            transforms.CenterCrop(image_size),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=mean, std=std),
-        ]
-    )
+    eval_tf = transforms.Compose([
+        transforms.Resize(resize_size),
+        transforms.CenterCrop(image_size),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=mean, std=std),
+    ])
     return train_tf, eval_tf
 
 
@@ -333,7 +330,7 @@ class DinoV3Classifier(nn.Module):
                 param.requires_grad = False
             self.backbone.eval()
 
-    def train(self, mode: bool = True) -> "DinoV3Classifier":
+    def train(self, mode: bool = True) -> DinoV3Classifier:
         super().train(mode)
         if self.freeze_backbone:
             self.backbone.eval()
@@ -405,7 +402,9 @@ def build_dataloaders(
     else:
         if not (0.0 < val_split < 1.0):
             raise ValueError("--val-split must be between 0 and 1 when --val-mode split is used.")
-        base_train_indices, base_val_indices = stratified_split_indices(train_full.targets, val_split=val_split, seed=seed)
+        base_train_indices, base_val_indices = stratified_split_indices(
+            train_full.targets, val_split=val_split, seed=seed
+        )
         train_indices = choose_indices(base_train_indices, train_fraction, train_samples, seed + 2)
         val_indices = choose_indices(base_val_indices, val_fraction, val_samples, seed + 3)
         train_ds = Subset(train_full, train_indices)
@@ -751,9 +750,7 @@ def main() -> None:
         if args.resume_from_checkpoint == "latest":
             checkpoint_path = find_latest_checkpoint(checkpoint_dir)
             if checkpoint_path is None:
-                raise FileNotFoundError(
-                    f"--resume-from-checkpoint=latest but no checkpoint found in {checkpoint_dir}"
-                )
+                raise FileNotFoundError(f"--resume-from-checkpoint=latest but no checkpoint found in {checkpoint_dir}")
         else:
             checkpoint_path = Path(args.resume_from_checkpoint)
             if not checkpoint_path.exists():
