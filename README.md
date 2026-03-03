@@ -1,19 +1,15 @@
-# mse-mlops-project
+# mse-mlops
 
-[![Build status](https://img.shields.io/github/actions/workflow/status/github_handle/mse-mlops-project/main.yml?branch=main)](https://github.com/github_handle/mse-mlops-project/actions/workflows/main.yml?query=branch%3Amain)
-[![Commit activity](https://img.shields.io/github/commit-activity/m/github_handle/mse-mlops-project)](https://img.shields.io/github/commit-activity/m/github_handle/mse-mlops-project)
-[![License](https://img.shields.io/github/license/github_handle/mse-mlops-project)](https://img.shields.io/github/license/github_handle/mse-mlops-project)
+[![Build status](https://img.shields.io/github/actions/workflow/status/7ben18/mse-mlops/main.yml?branch=main)](https://github.com/7ben18/mse-mlops/actions/workflows/main.yml?query=branch%3Amain)
+[![Commit activity](https://img.shields.io/github/commit-activity/m/7ben18/mse-mlops)](https://img.shields.io/github/commit-activity/m/7ben18/mse-mlops)
+[![License](https://img.shields.io/github/license/7ben18/mse-mlops)](https://img.shields.io/github/license/7ben18/mse-mlops)
 
-A short description of the project
+DINOv3 fine-tuning setup for melanoma skin cancer classification.
 
 ## Resources
 
-- 🚀 [Repository](https://github.com/github_handle/mse-mlops-project/)
-- 📖 [Documentation](https://github_handle.github.io/mse-mlops-project/)
-
-## Getting started with your project
-
-Follow the instructions under https://gabrieltorresgamez.github.io/gabocutter/tutorial/ to get started.
+- 🚀 [Repository](https://github.com/7ben18/mse-mlops)
+- 📖 [Documentation](https://7ben18.github.io/mse-mlops/)
 
 ## DINOv3 Fine-Tuning
 
@@ -56,13 +52,13 @@ Training settings:
     │   ├── actions        <- Github Actions configuration.
     │   └── workflows      <- Github Actions workflows.
     │
-    ├── mse-mlops-project <- Source code for use in this project.
+    ├── src/mse_mlops      <- Source code for this project.
     ├── data
     │   ├── processed      <- The final, canonical data sets for modeling.
     │   └── raw            <- The original, immutable data dump.
     │
     ├── docs               <- MkDocs documentation for the project.
-    ├── models             <- Modelcheckpoints, model predictions, metrics, and model summaries.
+    ├── models             <- Model checkpoints, predictions, metrics, and summaries.
     ├── notebooks          <- Jupyter notebooks or Quarto Markdown Notebooks.
     │                         Naming convention is a number (for ordering) and a short `-`
     │                         delimited description, e.g. `00-example.qmd`.

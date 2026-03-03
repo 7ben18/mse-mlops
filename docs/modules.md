@@ -1,1 +1,1 @@
-::: mse_mlops_project.foo
+::: mse_mlops.train

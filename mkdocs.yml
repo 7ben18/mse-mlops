@@ -10,12 +10,17 @@ copyright: Maintained by <a href="https://github_handle.com">github_handle</a>.
 nav:
   - Home: index.md
   - Modules: modules.md
+  - Notebooks:
+      - EDA: notebooks/melanoma_dataset_eda.ipynb
 plugins:
   - search
+  - mkdocs-jupyter:
+      execute: false
+      include_source: true
   - mkdocstrings:
       handlers:
         python:
-          paths: [mse_mlops_project]
+          paths: [src]
 theme:
   name: material
   feature:
