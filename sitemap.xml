@@ -2,22 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://github_handle.github.io/mse-mlops-project/</loc>
-         <lastmod>2026-03-07</lastmod>
+         <lastmod>2026-03-11</lastmod>
     </url>
     <url>
          <loc>https://github_handle.github.io/mse-mlops-project/modules/</loc>
-         <lastmod>2026-03-07</lastmod>
+         <lastmod>2026-03-11</lastmod>
     </url>
     <url>
          <loc>https://github_handle.github.io/mse-mlops-project/notebooks/melanoma_dataset_eda/</loc>
-         <lastmod>2026-03-07</lastmod>
+         <lastmod>2026-03-11</lastmod>
     </url>
     <url>
          <loc>https://github_handle.github.io/mse-mlops-project/notebooks/EDA/EDA_HAM_ISIC/</loc>
-         <lastmod>2026-03-07</lastmod>
+         <lastmod>2026-03-11</lastmod>
     </url>
     <url>
          <loc>https://github_handle.github.io/mse-mlops-project/notebooks/EDA/EDA_src/</loc>
-         <lastmod>2026-03-07</lastmod>
+         <lastmod>2026-03-11</lastmod>
     </url>
 </urlset>
