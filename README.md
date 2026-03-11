@@ -1,8 +1,8 @@
 # mse-mlops
 
 [![Build status](https://img.shields.io/github/actions/workflow/status/7ben18/mse-mlops/main.yml?branch=main)](https://github.com/7ben18/mse-mlops/actions/workflows/main.yml?query=branch%3Amain)
-[![Commit activity](https://img.shields.io/github/commit-activity/m/7ben18/mse-mlops)](https://img.shields.io/github/commit-activity/m/7ben18/mse-mlops)
-[![License](https://img.shields.io/github/license/7ben18/mse-mlops)](https://img.shields.io/github/license/7ben18/mse-mlops)
+[![Commit activity](https://img.shields.io/github/commit-activity/m/7ben18/mse-mlops)](https://github.com/7ben18/mse-mlops/commits/main)
+[![License](https://img.shields.io/github/license/7ben18/mse-mlops)](https://github.com/7ben18/mse-mlops/blob/main/LICENSE)
 
 DINOv3 fine-tuning setup for melanoma skin cancer classification.
 
