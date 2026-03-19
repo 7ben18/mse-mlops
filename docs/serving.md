@@ -4,14 +4,12 @@ Stage 4 of the MLOps pipeline. Exposes the trained DINOv3 melanoma classifier to
 medical staff through a REST API and a web UI, and collects verified labels back into the
 feedback store.
 
----
-
 ## What it is
 
-Two Docker containers, one command:
+Two root-level services in the main project:
 
 ```bash
-cd serving && docker compose up --build
+docker compose up --build
 ```
 
 | Service | URL | Audience |
@@ -19,7 +17,14 @@ cd serving && docker compose up --build
 | Streamlit UI | http://localhost:7777 | Patients + doctors |
 | FastAPI API | http://localhost:8000 | UI + external tooling |
 
----
+`train` is excluded from this command because it sits behind the `train` Compose profile.
+
+The serving code is now part of the main Python package:
+
+- `mse_mlops.serving.api`
+- `mse_mlops.serving.inference`
+- `mse_mlops.serving.feedback_store`
+- `mse_mlops.serving.ui`
 
 ## Architecture
 
@@ -31,8 +36,8 @@ cd serving && docker compose up --build
 │  │  ui (Streamlit)  │ ────────► │     api (FastAPI)        │ │
 │  │  port 7777       │           │     port 8000            │ │
 │  └──────────────────┘           │                          │ │
-│                                 │  DinoV3Classifier        │ │
-│  ../models/ (read-only) ───────►│  + eval preprocessing    │ │
+│  outputs/ (read-only) ─────────►│  DinoV3Classifier        │ │
+│                                 │  + eval preprocessing    │ │
 │                                 │                          │ │
 │  feedback_data (volume) ───────►│  /feedback/              │ │
 │                                 │  ├── feedback.jsonl      │ │
@@ -83,10 +88,6 @@ Password-protected. Two modes:
 | `POST` | `/feedback` | Assign a verified label to a prediction entry |
 | `POST` | `/upload-labeled` | Save image + label directly (no inference) |
 
-Full route documentation and request/response shapes: [`serving/api/README.md`](../serving/api/README.md).
-
----
-
 ## Feedback store
 
 Every prediction and labeled upload is appended to `/feedback/feedback.jsonl` as a JSON line:
@@ -109,26 +110,22 @@ Every prediction and labeled upload is appended to `/feedback/feedback.jsonl` as
 Images uploaded via Tab 3 are stored at `/feedback/images/{image_id}{ext}`.
 
 The store is designed to be swapped out: replace `_save_feedback()` and `_load_feedback()` in
-`serving/api/main.py` to point at a database or MLflow artifact store.
-
----
+`mse_mlops.serving.feedback_store` to point at a database or MLflow artifact store.
 
 ## Configuration
 
 | Variable | Default | Service | Description |
 |----------|---------|---------|-------------|
-| `MODEL_PATH` | `/models/best_model.pt` | API | Path to trained `.pt` checkpoint |
+| `MODEL_PATH` | `/app/outputs/dinov3_melanoma/best_model.pt` | API | Path to trained `.pt` checkpoint |
 | `FEEDBACK_DIR` | `/feedback` | API | Root of the feedback volume |
 | `API_URL` | `http://api:8000` | UI | API base URL |
 | `DOCTOR_PASSWORD` | `doctor123` | UI | Password for doctor tabs — change in production |
 
-Set overrides in `serving/.env`:
+Set overrides in the repo-root `.env`:
 
 ```
 DOCTOR_PASSWORD=your_secure_password
 ```
-
----
 
 ## Model checkpoint
 
@@ -147,11 +144,9 @@ The API expects a `.pt` file written by `src/mse_mlops/train.py` (`best_model.pt
 Preprocessing (resize → center crop → normalize) is derived from the checkpoint's `model_name`
 at load time, ensuring it always matches what was used during training.
 
----
-
 ## Future integration points
 
-Two no-op stubs in `serving/api/model.py` are already wired into the request lifecycle:
+Two no-op stubs in `mse_mlops.serving.inference` are already wired into the request lifecycle:
 
 ```python
 def log_prediction_to_mlflow(image_id, prediction): pass  # TODO
@@ -160,13 +155,7 @@ def notify_curation_pipeline(image_id, label):      pass  # TODO
 
 When MLflow and the retraining pipeline are ready, fill these in — no other code changes needed.
 
----
-
 ## Further reading
 
-| File | Contents |
-|------|---------|
-| [`serving/AGENT.md`](../serving/AGENT.md) | AI/developer guide: design decisions, extension patterns, pitfalls |
-| [`serving/Architecture.md`](../serving/Architecture.md) | Detailed component diagram and all data flows |
-| [`serving/api/README.md`](../serving/api/README.md) | API routes, model internals, how to add endpoints |
-| [`serving/ui/README.md`](../serving/ui/README.md) | UI tabs, auth, how to extend |
+- Full architecture note: [serving-architecture.md](serving-architecture.md)
+- Source package: `src/mse_mlops/serving`

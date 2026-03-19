@@ -1,12 +1,41 @@
 services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    image: mse-mlops-api:latest
+    environment:
+      FEEDBACK_DIR: /feedback
+      HF_HOME: /app/outputs/.hf-cache
+      MODEL_PATH: /app/outputs/dinov3_melanoma/best_model.pt
+      TRANSFORMERS_CACHE: /app/outputs/.hf-cache
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./outputs:/app/outputs:ro
+      - feedback_data:/feedback
+
+  ui:
+    build:
+      context: .
+      dockerfile: docker/ui.Dockerfile
+    image: mse-mlops-ui:latest
+    depends_on:
+      - api
+    environment:
+      API_URL: http://api:8000
+      DOCTOR_PASSWORD: ${DOCTOR_PASSWORD:-doctor123}
+    ports:
+      - "7777:7777"
+
   train:
     profiles: ["train"]
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/train.Dockerfile
     image: mse-mlops:latest
     working_dir: /app
-    command: ["uv", "run", "python", "-m", "mse_mlops.train"]
+    command: ["uv", "run", "--no-sync", "--frozen", "--no-dev", "python", "-m", "mse_mlops.train"]
     environment:
       HF_HOME: /app/outputs/.hf-cache
       TRANSFORMERS_CACHE: /app/outputs/.hf-cache
@@ -14,3 +43,6 @@ services:
       - ./config:/app/config:ro
       - ./data:/app/data
       - ./outputs:/app/outputs
+
+volumes:
+  feedback_data:

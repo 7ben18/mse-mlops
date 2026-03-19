@@ -45,3 +45,16 @@ The container mounts:
 - `outputs/` at `/app/outputs`
 
 So config changes in `config/train.yaml` are picked up on the next Docker training run without rebuilding the image.
+
+## Serving
+
+Serving code now lives under `src/mse_mlops/serving`, and the repo-root `compose.yaml` orchestrates the API and UI.
+
+Start the serving stack with:
+
+`docker compose up --build`
+
+This starts:
+
+- FastAPI at `http://localhost:8000`
+- Streamlit at `http://localhost:7777`

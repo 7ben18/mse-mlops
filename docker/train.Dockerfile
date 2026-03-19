@@ -10,12 +10,12 @@ COPY uv.lock /app/uv.lock
 COPY pyproject.toml /app/pyproject.toml
 
 # Install dependencies
-RUN uv sync --locked --no-install-project
+RUN uv sync --locked --no-install-project --no-dev
 
 # Copy the project into the image
 COPY . /app
 
 # Sync the project
-RUN uv sync --locked
+RUN uv sync --locked --no-dev
 
-CMD [ "uv", "run", "python", "-m", "mse_mlops.train"]
+CMD ["uv", "run", "--no-sync", "--frozen", "--no-dev", "python", "-m", "mse_mlops.train"]

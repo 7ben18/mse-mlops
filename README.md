@@ -81,13 +81,39 @@ Training artifacts are written under `outputs/`:
 - `checkpoints/epoch_*.pt`: resumable epoch checkpoints.
 - `history.json`: per-epoch training and validation metrics.
 
+## Serving
+
+Serving now follows the main project layout instead of living as a nested standalone app. Importable API and UI code lives under `src/mse_mlops/serving`, while service Dockerfiles live under `docker/`.
+
+Start the inference API and Streamlit UI from the repo root:
+
+`docker compose up --build`
+
+This starts:
+
+- `api`: FastAPI on `http://localhost:8000`
+- `ui`: Streamlit on `http://localhost:7777`
+
+The `train` service is still opt-in only and is not started by a plain `docker compose up`.
+
+For local development outside Docker:
+
+- `uv run --group api serve-api`
+- `uv run --group ui serve-ui`
+
+The API expects a trained checkpoint at:
+
+`outputs/dinov3_melanoma/best_model.pt`
+
 ## Project Conventions
 
 - Importable and reusable Python code belongs under `src/mse_mlops`.
 - Exploratory notebooks belong under `notebooks/`.
 - Reusable notebook helper code belongs under `src/mse_mlops`, not under `notebooks/`.
 - Raw data, derived tables, and dataset metadata belong under `data/` and should be managed outside git with DVC or another data-management layer.
+- Explanatory project material belongs under `docs/`.
 - Reports and exported analysis outputs belong under `reports/`.
+- Service-specific Dockerfiles belong under `docker/`, not in nested app subtrees.
 
 ## Structure
 
@@ -96,8 +122,10 @@ Training artifacts are written under `outputs/`:
     │   └── workflows      <- Github Actions workflows.
     │
     ├── config            <- Training and experiment configuration.
+    ├── docker            <- Service Dockerfiles for API and UI.
     ├── scripts           <- Utility scripts for local and overnight runs.
-    ├── src/mse_mlops      <- Source code for this project.
+    ├── src/mse_mlops     <- Source code for this project.
+    │   └── serving       <- FastAPI API, Streamlit UI, and serving helpers.
     ├── data
     │   ├── raw            <- DVC-managed source data and curated splits.
     │   └── processed      <- Derived datasets and exported tables.
@@ -107,11 +135,10 @@ Training artifacts are written under `outputs/`:
     ├── notebooks          <- Exploratory notebooks only.
     ├── outputs            <- Local training outputs and resumable checkpoints.
     ├── logs               <- Local training and smoke-test logs.
-    ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
     ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
     ├── tests              <- Unit tests for the project.
     ├── .gitignore         <- Files to be ignored by git.
-    ├── Dockerfile         <- Dockerfile for the Docker image.
+    ├── docker/train.Dockerfile <- Dockerfile for the training image.
     ├── LICENSE            <- MIT License.
     ├── Makefile           <- Makefile with commands like `make install` or `make test`.
     ├── mkdocs.yml         <- MkDocs configuration.

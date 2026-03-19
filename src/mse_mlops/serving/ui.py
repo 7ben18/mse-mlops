@@ -16,19 +16,15 @@ st.set_page_config(page_title="Skin Cancer Detection", layout="centered")
 st.title("Skin Cancer Detection")
 st.caption("Upload a photo of a skin lesion and our AI will analyse whether it may be cancerous.")
 
-# ---------------------------------------------------------------------------
-# Session state
-# ---------------------------------------------------------------------------
 if "doctor_auth" not in st.session_state:
     st.session_state.doctor_auth = False
 
 
 def _doctor_login_form(key: str) -> None:
-    """Render a password gate. Sets st.session_state.doctor_auth on success."""
     st.warning("This section is for medical staff only.")
-    pwd = st.text_input("Enter doctor password", type="password", key=f"pwd_{key}")
+    password = st.text_input("Enter doctor password", type="password", key=f"pwd_{key}")
     if st.button("Unlock", key=f"unlock_{key}"):
-        if pwd == DOCTOR_PASSWORD:
+        if password == DOCTOR_PASSWORD:
             st.session_state.doctor_auth = True
             st.rerun()
         else:
@@ -37,19 +33,15 @@ def _doctor_login_form(key: str) -> None:
 
 tab1, tab2, tab3 = st.tabs(["Skin Analysis", "Review & Label", "Bulk Dataset Upload"])
 
-# ---------------------------------------------------------------------------
-# Tab 1 — Public: Skin Analysis
-# ---------------------------------------------------------------------------
 with tab1:
     st.header("Check Your Skin")
     st.write(
         "Upload a clear, close-up photo of the skin lesion you are concerned about. "
-        "The AI will predict whether it appears **benign** (non-cancerous) or **malignant** (potentially cancerous)."
+        "The AI will predict whether it appears benign or malignant."
     )
     st.info(
         "This tool is for informational purposes only and does not replace a professional medical diagnosis. "
         "Always consult a qualified dermatologist.",
-        icon="ℹ️",
     )
 
     uploaded = st.file_uploader(
@@ -65,42 +57,39 @@ with tab1:
             uploaded.seek(0)
             with st.spinner("Analysing..."):
                 try:
-                    resp = requests.post(
+                    response = requests.post(
                         f"{API_URL}/predict",
                         files={"file": (uploaded.name, uploaded.read(), "image/jpeg")},
                         timeout=60,
                     )
-                    resp.raise_for_status()
-                    result = resp.json()
-                except Exception as e:
-                    st.error(f"Analysis failed: {e}")
+                    response.raise_for_status()
+                    result = response.json()
+                except Exception as exc:
+                    st.error(f"Analysis failed: {exc}")
                     st.stop()
 
             label = result["class"]
             confidence = result["confidence"]
 
             if label.lower() == "malignant":
-                st.error(f"Result: **Potentially Malignant** — {confidence:.1%} confidence")
+                st.error(f"Result: Potentially Malignant - {confidence:.1%} confidence")
                 st.write(
                     "The model flagged this lesion as potentially malignant. "
                     "Please consult a dermatologist as soon as possible."
                 )
             else:
-                st.success(f"Result: **Likely Benign** — {confidence:.1%} confidence")
+                st.success(f"Result: Likely Benign - {confidence:.1%} confidence")
                 st.write(
                     "The model considers this lesion likely benign. "
                     "If you have any concerns, a professional check is always recommended."
                 )
 
             st.subheader("Detailed probabilities")
-            for cls, prob in result["probabilities"].items():
-                st.progress(prob, text=f"{cls.capitalize()}: {prob:.1%}")
+            for class_name, probability in result["probabilities"].items():
+                st.progress(probability, text=f"{class_name.capitalize()}: {probability:.1%}")
 
             st.caption(f"Reference ID: `{result['image_id']}`")
 
-# ---------------------------------------------------------------------------
-# Tab 2 — Doctor only: Review & Label
-# ---------------------------------------------------------------------------
 with tab2:
     st.header("Review & Label Predictions")
 
@@ -119,34 +108,31 @@ with tab2:
                 st.rerun()
 
         try:
-            resp = requests.get(f"{API_URL}/feedback", timeout=10)
-            resp.raise_for_status()
-            entries = resp.json()
-        except Exception as e:
-            st.error(f"Could not fetch entries: {e}")
+            response = requests.get(f"{API_URL}/feedback", timeout=10)
+            response.raise_for_status()
+            entries = response.json()
+        except Exception as exc:
+            st.error(f"Could not fetch entries: {exc}")
             entries = []
 
-        unlabeled = [
-            e for e in entries
-            if e.get("label") is None and e.get("prediction") is not None
-        ]
+        unlabeled = [entry for entry in entries if entry.get("label") is None and entry.get("prediction") is not None]
 
         if not unlabeled:
             st.info("No unlabeled predictions in the queue.")
         else:
             st.write(f"**{len(unlabeled)} unlabeled prediction(s) awaiting review**")
             for entry in unlabeled:
-                conf = entry.get("confidence") or 0.0
+                confidence = entry.get("confidence") or 0.0
                 with st.expander(
-                    f"{entry.get('filename') or 'unknown'} — AI: {entry['prediction']} ({conf:.1%})"
+                    f"{entry.get('filename') or 'unknown'} - AI: {entry['prediction']} ({confidence:.1%})"
                 ):
-                    col1, col2 = st.columns([2, 1])
-                    with col1:
+                    col_left, col_right = st.columns([2, 1])
+                    with col_left:
                         st.write(f"**Reference ID:** `{entry['image_id']}`")
                         st.write(f"**AI prediction:** {entry['prediction']}")
-                        st.write(f"**Confidence:** {conf:.1%}")
+                        st.write(f"**Confidence:** {confidence:.1%}")
                         st.write(f"**Submitted:** {entry['timestamp']}")
-                    with col2:
+                    with col_right:
                         label_choice = st.selectbox(
                             "Verified label",
                             options=["benign", "malignant"],
@@ -154,7 +140,7 @@ with tab2:
                         )
                         if st.button("Save label", key=f"submit_{entry['image_id']}"):
                             try:
-                                r = requests.post(
+                                response = requests.post(
                                     f"{API_URL}/feedback",
                                     json={
                                         "image_id": entry["image_id"],
@@ -163,15 +149,12 @@ with tab2:
                                     },
                                     timeout=10,
                                 )
-                                r.raise_for_status()
+                                response.raise_for_status()
                                 st.success(f"Saved as **{label_choice}**")
                                 st.rerun()
                             except Exception as exc:
                                 st.error(f"Failed: {exc}")
 
-# ---------------------------------------------------------------------------
-# Tab 3 — Doctor only: Bulk Dataset Upload
-# ---------------------------------------------------------------------------
 with tab3:
     st.header("Bulk Dataset Upload")
 
@@ -187,15 +170,10 @@ with tab3:
             st.session_state.doctor_auth = False
             st.rerun()
 
-        upload_mode = st.radio(
-            "Upload mode", ["Single image", "ZIP + label sheet"], horizontal=True
-        )
+        upload_mode = st.radio("Upload mode", ["Single image", "ZIP + label sheet"], horizontal=True)
 
-        # --- Single image ---
         if upload_mode == "Single image":
-            single_file = st.file_uploader(
-                "Choose an image", type=["jpg", "jpeg", "png"], key="single_uploader"
-            )
+            single_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"], key="single_uploader")
             single_label = st.selectbox("Label", options=["benign", "malignant"], key="single_label")
 
             if single_file is not None:
@@ -205,21 +183,17 @@ with tab3:
                     single_file.seek(0)
                     with st.spinner("Uploading..."):
                         try:
-                            r = requests.post(
+                            response = requests.post(
                                 f"{API_URL}/upload-labeled",
                                 files={"file": (single_file.name, single_file.read(), "image/jpeg")},
                                 data={"label": single_label},
                                 timeout=30,
                             )
-                            r.raise_for_status()
-                            result = r.json()
-                            st.success(
-                                f"Saved! ID: `{result['image_id']}` — label: **{result['label']}**"
-                            )
-                        except Exception as e:
-                            st.error(f"Upload failed: {e}")
-
-        # --- ZIP + label sheet ---
+                            response.raise_for_status()
+                            result = response.json()
+                            st.success(f"Saved! ID: `{result['image_id']}` - label: **{result['label']}**")
+                        except Exception as exc:
+                            st.error(f"Upload failed: {exc}")
         else:
             st.markdown(
                 "**Expected format:**\n"
@@ -231,57 +205,50 @@ with tab3:
 
             zip_file = st.file_uploader("ZIP archive", type=["zip"], key="zip_uploader")
             label_sheet = st.file_uploader(
-                "Label sheet (CSV or Excel)", type=["csv", "xlsx", "xls"], key="sheet_uploader"
+                "Label sheet (CSV or Excel)",
+                type=["csv", "xlsx", "xls"],
+                key="sheet_uploader",
             )
 
             if zip_file is not None and label_sheet is not None:
-                # Parse label sheet
                 try:
-                    if label_sheet.name.endswith(".csv"):
-                        df = pd.read_csv(label_sheet)
-                    else:
-                        df = pd.read_excel(label_sheet)
-                except Exception as e:
-                    st.error(f"Could not read label sheet: {e}")
+                    df = pd.read_csv(label_sheet) if label_sheet.name.endswith(".csv") else pd.read_excel(label_sheet)
+                except Exception as exc:
+                    st.error(f"Could not read label sheet: {exc}")
                     st.stop()
 
                 if "filename" not in df.columns or "label" not in df.columns:
                     st.error("Label sheet must have `filename` and `label` columns.")
                     st.stop()
 
-                label_map: dict[str, str] = dict(zip(df["filename"].astype(str), df["label"].astype(str)))
+                label_map = dict(zip(df["filename"].astype(str), df["label"].astype(str), strict=False))
 
-                # Preview
                 st.write(f"Label sheet loaded: **{len(label_map)} entries**")
                 st.dataframe(df[["filename", "label"]].head(10), use_container_width=True)
 
-                # Read ZIP
                 try:
-                    zf = zipfile.ZipFile(io.BytesIO(zip_file.read()))
+                    zip_archive = zipfile.ZipFile(io.BytesIO(zip_file.read()))
                     image_names = [
-                        n for n in zf.namelist()
-                        if not n.endswith("/") and n.split("/")[-1].lower().endswith((".jpg", ".jpeg", ".png"))
+                        name
+                        for name in zip_archive.namelist()
+                        if not name.endswith("/") and name.split("/")[-1].lower().endswith((".jpg", ".jpeg", ".png"))
                     ]
-                except Exception as e:
-                    st.error(f"Could not open ZIP: {e}")
+                except Exception as exc:
+                    st.error(f"Could not open ZIP: {exc}")
                     st.stop()
 
                 st.write(f"ZIP contains **{len(image_names)} image(s)**")
 
-                # Match images to labels
                 matched = [
                     (name, label_map[name.split("/")[-1]])
                     for name in image_names
                     if name.split("/")[-1] in label_map
                 ]
-                unmatched = [
-                    name.split("/")[-1] for name in image_names
-                    if name.split("/")[-1] not in label_map
-                ]
+                unmatched = [name.split("/")[-1] for name in image_names if name.split("/")[-1] not in label_map]
 
                 st.write(f"**{len(matched)} matched**, {len(unmatched)} unmatched")
                 if unmatched:
-                    with st.expander(f"Unmatched images ({len(unmatched)}) — will be skipped"):
+                    with st.expander(f"Unmatched images ({len(unmatched)}) - will be skipped"):
                         st.write(unmatched)
 
                 if matched and st.button(f"Upload {len(matched)} images", type="primary"):
@@ -289,29 +256,29 @@ with tab3:
                     success_count = 0
                     errors = []
 
-                    for i, (img_name, img_label) in enumerate(matched):
+                    for index, (image_name, image_label) in enumerate(matched):
                         try:
-                            img_bytes = zf.read(img_name)
-                            basename = img_name.split("/")[-1]
-                            r = requests.post(
+                            image_bytes = zip_archive.read(image_name)
+                            basename = image_name.split("/")[-1]
+                            response = requests.post(
                                 f"{API_URL}/upload-labeled",
-                                files={"file": (basename, img_bytes, "image/jpeg")},
-                                data={"label": img_label},
+                                files={"file": (basename, image_bytes, "image/jpeg")},
+                                data={"label": image_label},
                                 timeout=30,
                             )
-                            r.raise_for_status()
+                            response.raise_for_status()
                             success_count += 1
                         except Exception as exc:
-                            errors.append(f"{img_name}: {exc}")
+                            errors.append(f"{image_name}: {exc}")
 
                         progress.progress(
-                            (i + 1) / len(matched),
-                            text=f"Uploading {i + 1}/{len(matched)}...",
+                            (index + 1) / len(matched),
+                            text=f"Uploading {index + 1}/{len(matched)}...",
                         )
 
                     if errors:
                         st.warning(f"Completed with {len(errors)} error(s):")
-                        for err in errors:
-                            st.text(err)
+                        for error in errors:
+                            st.text(error)
                     else:
                         st.success(f"Successfully uploaded **{success_count} images**!")

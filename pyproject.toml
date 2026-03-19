@@ -33,8 +33,21 @@ Documentation = "https://7ben18.github.io/mse-mlops/"
 
 [project.scripts]
 train-dinov3 = "mse_mlops.train:main"
+serve-api = "mse_mlops.serving.launchers:run_api"
+serve-ui = "mse_mlops.serving.launchers:run_ui"
 
 [dependency-groups]
+api = [
+    "fastapi",
+    "pydantic",
+    "python-multipart",
+    "uvicorn[standard]",
+]
+ui = [
+    "openpyxl",
+    "requests",
+    "streamlit",
+]
 dev = [
     "pytest>=7.2.0",
     "ruff>=0.6.9",
