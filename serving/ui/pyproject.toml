@@ -1,0 +1,11 @@
+[project]
+name = "melanoma-ui"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "streamlit>=1.35",
+    "requests>=2.31",
+    "pillow>=10.0",
+    "pandas>=2.0",
+    "openpyxl>=3.1",
+]

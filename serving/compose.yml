@@ -1,0 +1,24 @@
+services:
+  api:
+    build: ./api
+    volumes:
+      - ../models:/models:ro
+      - feedback_data:/feedback
+    environment:
+      - MODEL_PATH=/models/best_model.pt
+      - FEEDBACK_DIR=/feedback
+    ports:
+      - "8000:8000"
+
+  ui:
+    build: ./ui
+    environment:
+      - API_URL=http://api:8000
+      - DOCTOR_PASSWORD=${DOCTOR_PASSWORD:-doctor123}
+    ports:
+      - "7777:7777"
+    depends_on:
+      - api
+
+volumes:
+  feedback_data:
