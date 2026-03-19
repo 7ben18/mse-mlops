@@ -22,7 +22,14 @@ DINOv3 fine-tuning setup for melanoma skin cancer classification.
 
 ## Training Prerequisite
 
-Before the first training run, download the pretrained backbone locally:
+Before the first training run:
+
+1. Request access to `facebook/dinov3-vits16-pretrain-lvd1689m` on Hugging Face.
+2. Log in locally with:
+
+`hf auth login`
+
+3. Download the pretrained backbone locally:
 
 `uv run python scripts/download_model.py`
 

@@ -39,13 +39,24 @@ Current default training does not use `test` for validation. It uses `val_mode: 
 
 If a dedicated validation directory is introduced later, switch to `val_mode: test` and point `val_subdir` at that held-out validation folder.
 
+Dataset provenance and local acquisition notes live in:
+
+`data/raw/melanoma_cancer_dataset/README.md`
+
 ## Training
 
 Model:
 
 `facebook/dinov3-vits16-pretrain-lvd1689m`
 
-Before the first training run, download the pretrained backbone locally:
+Before the first training run:
+
+1. Request access to the model on Hugging Face.
+2. Log in locally with the Hugging Face CLI:
+
+`hf auth login`
+
+3. Download the pretrained backbone locally:
 
 `uv run python scripts/download_model.py`
 
@@ -70,6 +81,8 @@ Docker training mounts these host folders into the container:
 - `outputs/` -> `/app/outputs`
 
 That means edits to `config/train.yaml` apply to the next Docker training run without rebuilding the image. Rebuilds are still needed after code or dependency changes.
+
+On Apple Silicon Macs, local host training can use `mps` when `device: auto` resolves it, but Docker training currently does not expose MPS and should be assumed to run on CPU.
 
 Training settings:
 

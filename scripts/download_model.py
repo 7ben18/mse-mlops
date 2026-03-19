@@ -8,7 +8,13 @@ DEFAULT_OUTPUT_DIR = Path("outputs/pretrained/dinov3-vits16-pretrain-lvd1689m")
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Download a pretrained backbone and image processor locally.")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Download a pretrained backbone and image processor locally. "
+            "Before running this script, request access to the Hugging Face model "
+            "and log in locally with `hf auth login`."
+        )
+    )
     parser.add_argument(
         "--model-id",
         type=str,

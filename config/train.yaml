@@ -1,7 +1,10 @@
 model:
   # Hugging Face model id or a local folder path with model files.
-  # Download the default local model first with:
+  # For the default DINOv3 backbone, request model access on Hugging Face first,
+  # then log in locally with `hf auth login`, then download the default local model with:
   # uv run python scripts/download_model.py
+  # Default local path:
+  # outputs/pretrained/dinov3-vits16-pretrain-lvd1689m
   model_name: outputs/pretrained/dinov3-vits16-pretrain-lvd1689m
 
 data:
@@ -77,6 +80,8 @@ training:
   # Device selection:
   # - auto: cuda -> mps -> cpu
   # - cuda / mps / cpu: force a specific device
+  # On Apple Silicon hosts, local runs can use mps.
+  # Docker training on the current macOS setup should be treated as CPU-only.
   device: auto
 
   # true: train only classifier head
