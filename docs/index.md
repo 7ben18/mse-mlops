@@ -29,3 +29,19 @@ Before the first training run, download the pretrained backbone locally:
 The default config expects the downloaded model at:
 
 `outputs/pretrained/dinov3-vits16-pretrain-lvd1689m`
+
+## Docker Training
+
+Run Docker training with:
+
+`docker compose --profile train run --build --rm train`
+
+The `train` service is opt-in and is not started by a plain `docker compose up`.
+
+The container mounts:
+
+- `config/` at `/app/config` read-only
+- `data/` at `/app/data`
+- `outputs/` at `/app/outputs`
+
+So config changes in `config/train.yaml` are picked up on the next Docker training run without rebuilding the image.

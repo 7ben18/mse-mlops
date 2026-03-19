@@ -57,6 +57,20 @@ Run training:
 
 `uv run train-dinov3`
 
+Run training in Docker:
+
+`docker compose --profile train run --build --rm train`
+
+The train container is opt-in only. A plain `docker compose up` will not start training.
+
+Docker training mounts these host folders into the container:
+
+- `config/` -> `/app/config` (read-only)
+- `data/` -> `/app/data`
+- `outputs/` -> `/app/outputs`
+
+That means edits to `config/train.yaml` apply to the next Docker training run without rebuilding the image. Rebuilds are still needed after code or dependency changes.
+
 Training settings:
 
 `config/train.yaml`

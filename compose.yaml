@@ -1,5 +1,6 @@
 services:
   train:
+    profiles: ["train"]
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,5 +11,6 @@ services:
       HF_HOME: /app/outputs/.hf-cache
       TRANSFORMERS_CACHE: /app/outputs/.hf-cache
     volumes:
+      - ./config:/app/config:ro
       - ./data:/app/data
       - ./outputs:/app/outputs
