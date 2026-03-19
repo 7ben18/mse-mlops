@@ -1,0 +1,14 @@
+services:
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mse-mlops:latest
+    working_dir: /app
+    command: ["uv", "run", "python", "-m", "mse_mlops.train"]
+    environment:
+      HF_HOME: /app/outputs/.hf-cache
+      TRANSFORMERS_CACHE: /app/outputs/.hf-cache
+    volumes:
+      - ./data:/app/data
+      - ./outputs:/app/outputs

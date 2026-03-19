@@ -1,6 +1,8 @@
 model:
   # Hugging Face model id or a local folder path with model files.
-  model_name: facebook/dinov3-vits16-pretrain-lvd1689m
+  # Download the default local model first with:
+  # uv run python scripts/download_model.py
+  model_name: outputs/pretrained/dinov3-vits16-pretrain-lvd1689m
 
 data:
   # Root data folder that contains class subfolders.
@@ -10,20 +12,19 @@ data:
   train_subdir: train
 
   # Subfolder under data_dir used only when val_mode = test.
-  # Ignored when val_mode = split or train.
-  val_subdir: test  # prevent data leakage for case of val_mode = test for now!
+  # Ignored when val_mode = split.
+  val_subdir: val
 
   # Validation strategy:
   # - test: use train_subdir for training and val_subdir for validation.
   # - split: split train_subdir into train/val using val_split.
-  # - train: use selected train images as validation too (overfit/debug).
   #
-  # Production default here: split (does not touch test data).
+  # Default here: split train into train/validation and keep the final test set untouched.
   val_mode: split
 
   # Fraction of train_subdir reserved for validation when val_mode = split.
   # Example: 0.2 means 80% train / 20% val from train_subdir.
-  # Ignored for val_mode = test and train.
+  # Ignored for val_mode = test.
   val_split: 0.2
 
   # Fraction of candidate training images to keep after split/subdir selection.

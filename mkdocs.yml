@@ -1,11 +1,11 @@
-site_name: mse-mlops-project
-repo_url: https://github.com/github_handle/mse-mlops-project
-site_url: https://github_handle.github.io/mse-mlops-project
-site_description: A short description of the project
-site_author: Firstname Lastname
+site_name: mse-mlops
+repo_url: https://github.com/7ben18/mse-mlops
+site_url: https://7ben18.github.io/mse-mlops
+site_description: DINOv3 fine-tuning setup for melanoma skin cancer classification.
+site_author: mse-mlops contributors
 edit_uri: edit/main/docs/
-repo_name: github_handle/mse-mlops-project
-copyright: Maintained by <a href="https://github_handle.com">github_handle</a>.
+repo_name: 7ben18/mse-mlops
+copyright: Maintained by mse-mlops contributors.
 
 nav:
   - Home: index.md
@@ -49,7 +49,7 @@ theme:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/github_handle/mse-mlops-project
+      link: https://github.com/7ben18/mse-mlops
 
 markdown_extensions:
   - toc:

@@ -6,16 +6,16 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 WORKDIR /app
 
 # Copy the lockfile and `pyproject.toml` into the image
-ADD uv.lock /app/uv.lock
-ADD pyproject.toml /app/pyproject.toml
+COPY uv.lock /app/uv.lock
+COPY pyproject.toml /app/pyproject.toml
 
 # Install dependencies
-RUN uv sync --frozen --no-install-project
+RUN uv sync --locked --no-install-project
 
 # Copy the project into the image
-ADD . /app
+COPY . /app
 
 # Sync the project
-RUN uv sync --frozen
+RUN uv sync --locked
 
-CMD [ "python", "mse_mlops_project/foo.py"]
+CMD [ "uv", "run", "python", "-m", "mse_mlops.train"]

@@ -11,27 +11,47 @@ DINOv3 fine-tuning setup for melanoma skin cancer classification.
 - 🚀 [Repository](https://github.com/7ben18/mse-mlops)
 - 📖 [Documentation](https://7ben18.github.io/mse-mlops/)
 
-## DINOv3 Fine-Tuning
+## Data Lifecycle
 
-Fine-tuning DINOv3 for melanoma skin cancer classification.
+The project is organized around four dataset buckets:
+
+- `train`: supervised data used for fitting model weights.
+- `val`: held-out validation data used during experimentation and future hyperparameter tuning.
+- `future`: newly collected production data. Keep it separate until it has been reviewed and selected samples are promoted into `train` for later fine-tuning.
+- `test`: final hold-out set. Do not use it during normal development; touch it only for the final pre-production evaluation.
+
+Long-term target layout:
+
+```text
+data/
+  raw/
+    melanoma_cancer_dataset/
+      train/
+        benign/
+        malignant/
+      future/
+      test/
+        benign/
+        malignant/
+```
+
+Current default training does not use `test` for validation. It uses `val_mode: split` and carves validation data out of `train`, while keeping `test` untouched until the final evaluation.
+
+If a dedicated validation directory is introduced later, switch to `val_mode: test` and point `val_subdir` at that held-out validation folder.
+
+## Training
 
 Model:
 
 `facebook/dinov3-vits16-pretrain-lvd1689m`
 
-Dataset download (manual):
+Before the first training run, download the pretrained backbone locally:
 
-https://www.kaggle.com/datasets/hasnainjaved/melanoma-skin-cancer-dataset-of-10000-images
+`uv run python scripts/download_model.py`
 
-Extract into `data/` so this path exists:
+The default training config expects the downloaded model at:
 
-`data/melanoma_cancer_dataset`
-
-Expected dataset structure:
-
-`data/melanoma_cancer_dataset/train/{benign,malignant}`
-
-`data/melanoma_cancer_dataset/test/{benign,malignant}`
+`outputs/pretrained/dinov3-vits16-pretrain-lvd1689m`
 
 Run training:
 
@@ -41,10 +61,19 @@ Training settings:
 
 `config/train.yaml`
 
-## TODO
+Training artifacts are written under `outputs/`:
 
-- Move the dataset from `data/melanoma_cancer_dataset` into either `data/raw` or `data/processed`.
-- Update and align all dataset path documentation after that move.
+- `best_model.pt`: best checkpoint selected on validation ROC AUC.
+- `checkpoints/epoch_*.pt`: resumable epoch checkpoints.
+- `history.json`: per-epoch training and validation metrics.
+
+## Project Conventions
+
+- Importable and reusable Python code belongs under `src/mse_mlops`.
+- Exploratory notebooks belong under `notebooks/`.
+- Reusable notebook helper code belongs under `src/mse_mlops`, not under `notebooks/`.
+- Raw data, derived tables, and dataset metadata belong under `data/` and should be managed outside git with DVC or another data-management layer.
+- Reports and exported analysis outputs belong under `reports/`.
 
 ## Structure
 
@@ -52,16 +81,18 @@ Training settings:
     │   ├── actions        <- Github Actions configuration.
     │   └── workflows      <- Github Actions workflows.
     │
+    ├── config            <- Training and experiment configuration.
+    ├── scripts           <- Utility scripts for local and overnight runs.
     ├── src/mse_mlops      <- Source code for this project.
     ├── data
-    │   ├── processed      <- The final, canonical data sets for modeling.
-    │   └── raw            <- The original, immutable data dump.
+    │   ├── raw            <- DVC-managed source data and curated splits.
+    │   └── processed      <- Derived datasets and exported tables.
     │
     ├── docs               <- MkDocs documentation for the project.
     ├── models             <- Model checkpoints, predictions, metrics, and summaries.
-    ├── notebooks          <- Jupyter notebooks or Quarto Markdown Notebooks.
-    │                         Naming convention is a number (for ordering) and a short `-`
-    │                         delimited description, e.g. `00-example.qmd`.
+    ├── notebooks          <- Exploratory notebooks only.
+    ├── outputs            <- Local training outputs and resumable checkpoints.
+    ├── logs               <- Local training and smoke-test logs.
     ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
     ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
     ├── tests              <- Unit tests for the project.

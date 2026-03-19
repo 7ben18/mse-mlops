@@ -2,7 +2,7 @@
 name = "mse-mlops"
 version = "0.1.0"
 description = "DINOv3 fine-tuning setup for melanoma classification."
-authors = [{ name = "Firstname Lastname", email = "example@example.com" }]
+authors = [{ name = "mse-mlops contributors" }]
 readme = "README.md"
 keywords = ["python"]
 requires-python = ">=3.12,<3.13"
@@ -27,9 +27,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github_handle.github.io/mse-mlops-project/"
-Repository = "https://github.com/github_handle/mse-mlops-project"
-Documentation = "https://github_handle.github.io/mse-mlops-project/"
+Homepage = "https://7ben18.github.io/mse-mlops/"
+Repository = "https://github.com/7ben18/mse-mlops"
+Documentation = "https://7ben18.github.io/mse-mlops/"
 
 [project.scripts]
 train-dinov3 = "mse_mlops.train:main"
@@ -45,7 +45,7 @@ dev = [
 ]
 
 [build-system]
-requires = ["uv_build>=0.9.18,<0.10.0"]
+requires = ["uv_build>=0.10.10,<0.11.0"]
 build-backend = "uv_build"
 
 [tool.ruff]

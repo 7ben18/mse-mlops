@@ -166,3 +166,8 @@ outputs/
 
 # ignore logs
 logs/
+
+# LLMs
+AGENT.md
+STATUS.md
+CLAUDE.md

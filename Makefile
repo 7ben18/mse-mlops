@@ -16,7 +16,7 @@ test: ## Test the code with pytest
 .PHONY: build
 build: clean-build ## Build wheel file
 	@echo "🚀 Creating wheel file"
-	@uvx --from build pyproject-build --installer uv
+	@uv build
 
 .PHONY: clean-build
 clean-build: ## Clean build artifacts

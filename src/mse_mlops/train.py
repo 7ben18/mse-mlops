@@ -21,7 +21,7 @@ from tqdm import tqdm
 from transformers import AutoImageProcessor, AutoModel, get_scheduler
 
 DEFAULT_MODEL = "facebook/dinov3-vits16-pretrain-lvd1689m"
-DEFAULT_DATA_DIR = "data/melanoma_cancer_dataset"
+DEFAULT_DATA_DIR = "data/raw/melanoma_cancer_dataset"
 DEFAULT_OUTPUT_DIR = "outputs/dinov3_melanoma"
 DEFAULT_CONFIG_PATH = "config/train.yaml"
 
@@ -106,8 +106,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--data-dir", type=Path, default=Path(str(defaults.get("data_dir", DEFAULT_DATA_DIR))))
     parser.add_argument("--train-subdir", type=str, default=str(defaults.get("train_subdir", "train")))
-    parser.add_argument("--val-subdir", type=str, default=str(defaults.get("val_subdir", "test")))
-    parser.add_argument("--val-mode", choices=("test", "split"), default=str(defaults.get("val_mode", "test")))
+    parser.add_argument("--val-subdir", type=str, default=str(defaults.get("val_subdir", "val")))
+    parser.add_argument("--val-mode", choices=("test", "split"), default=str(defaults.get("val_mode", "split")))
     parser.add_argument("--val-split", type=float, default=float(defaults.get("val_split", 0.2)))
     parser.add_argument("--train-fraction", type=float, default=float(defaults.get("train_fraction", 1.0)))
     parser.add_argument("--val-fraction", type=float, default=float(defaults.get("val_fraction", 1.0)))
