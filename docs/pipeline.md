@@ -51,7 +51,7 @@ flowchart TD
     classDef train   fill:#1d6a96,stroke:#0f4a6e,color:#fff
     classDef exp     fill:#6a0572,stroke:#45024d,color:#fff
     classDef serve   fill:#e07a5f,stroke:#b85c43,color:#fff
-    classDef monitor fill:#f2cc8f,stroke:#c9a227,color:#222
+    classDef monitor fill:#2d6a4f,stroke:#1b4332,color:#fff
 
     class DS,RS,DVC data
     class GIT code
