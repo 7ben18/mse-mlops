@@ -9,6 +9,7 @@ copyright: Maintained by <a href="https://github_handle.com">github_handle</a>.
 
 nav:
   - Home: index.md
+  - Pipeline: pipeline.md
   - Modules: modules.md
   - Notebooks:
       - EDA: notebooks/melanoma_dataset_eda.ipynb
@@ -61,4 +62,8 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
