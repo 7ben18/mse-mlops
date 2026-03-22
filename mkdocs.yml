@@ -11,6 +11,7 @@ exclude_docs: README.md
 nav:
   - Home: index.md
   - Pipeline: pipeline.md
+  - MLflow Tracking: mlflow-tracking.md
   - Serving: serving.md
   - Serving Architecture: serving-architecture.md
   - Modules: modules.md

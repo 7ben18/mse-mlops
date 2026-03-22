@@ -51,7 +51,7 @@ training:
   output_dir: outputs/dinov3_melanoma
 
   # Total number of epochs (HF baseline style for full fine-tuning).
-  epochs: 30
+  epochs: 1
 
   # Batch size for train and validation.
   batch_size: 16
@@ -121,3 +121,20 @@ training:
 
   # Load best_model.pt into memory at the end of training.
   load_best_model_at_end: true
+
+tracking:
+  # MLflow tracking backend URI, for example:
+  # - local file store (deprecated): file:./mlruns
+  # - local server (recommended): http://127.0.0.1:5000
+  # - remote server: http://mlflow:5000
+  mlflow_tracking_uri: http://127.0.0.1:5000
+
+  # MLflow experiment name for training runs.
+  mlflow_experiment_name: mse-mlops-training
+
+  # Optional run name (null lets MLflow auto-generate one).
+  mlflow_run_name: null
+
+  # Optional static tags attached to each run.
+  mlflow_tags:
+    project: mse-mlops

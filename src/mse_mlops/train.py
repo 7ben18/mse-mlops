@@ -20,6 +20,14 @@ from torchvision import datasets, transforms
 from tqdm import tqdm
 from transformers import AutoImageProcessor, AutoModel, get_scheduler
 
+from mse_mlops.tracking import (
+    init_mlflow,
+    log_epoch_metrics,
+    log_final_artifacts,
+    log_run_params,
+    log_summary_metrics,
+)
+
 DEFAULT_MODEL = "facebook/dinov3-vits16-pretrain-lvd1689m"
 DEFAULT_DATA_DIR = "data/raw/melanoma_cancer_dataset"
 DEFAULT_OUTPUT_DIR = "outputs/dinov3_melanoma"
@@ -76,13 +84,13 @@ def load_config_defaults(config_path: Path) -> dict[str, object]:
         raise ValueError(f"Config file must contain a YAML mapping: {config_path}")
 
     defaults: dict[str, object] = {}
-    for section in ("model", "data", "training"):
+    for section in ("model", "data", "training", "tracking"):
         section_payload = data.get(section)
         if isinstance(section_payload, dict):
             defaults.update(section_payload)
 
     for key, value in data.items():
-        if key not in {"model", "data", "training"}:
+        if key not in {"model", "data", "training", "tracking"}:
             defaults[key] = value
 
     return defaults
@@ -156,6 +164,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--load-best-model-at-end", action="store_true", dest="load_best_model_at_end")
     parser.add_argument("--no-load-best-model-at-end", action="store_false", dest="load_best_model_at_end")
     parser.set_defaults(load_best_model_at_end=load_best_default)
+
+    parser.add_argument("--mlflow-tracking-uri", type=str, default=str(defaults.get("mlflow_tracking_uri", "")))
+    parser.add_argument(
+        "--mlflow-experiment-name",
+        type=str,
+        default=str(defaults.get("mlflow_experiment_name", "mse-mlops-training")),
+    )
+    parser.add_argument("--mlflow-run-name", type=str, default=defaults.get("mlflow_run_name"))
+    parser.add_argument("--mlflow-tags", type=str, default=json.dumps(defaults.get("mlflow_tags", {})))
 
     return parser.parse_args()
 
@@ -592,12 +609,14 @@ def save_epoch_checkpoint(
     scheduler: object,
     epoch: int,
     best_model_state: BestModelState | None,
+    history: list[Metrics],
 ) -> None:
     payload = {
         "epoch": epoch,
         "model_state_dict": model.state_dict(),
         "optimizer_state_dict": optimizer.state_dict(),
         "scheduler_state_dict": scheduler.state_dict(),
+        "history": [asdict(item) for item in history],
     }
     if best_model_state is not None:
         payload["best_model_state"] = {
@@ -625,11 +644,10 @@ def load_epoch_checkpoint(
     optimizer.load_state_dict(payload["optimizer_state_dict"])
     scheduler.load_state_dict(payload["scheduler_state_dict"])
     loaded_epoch = int(payload["epoch"])
-    history_path = checkpoint_path.parent.parent / "history.json"
+    history_payload = payload.get("history", [])
     history: list[Metrics] = []
-    if history_path.exists():
-        with history_path.open("r", encoding="utf-8") as f:
-            history = [Metrics(**item) for item in json.load(f)]
+    if isinstance(history_payload, list):
+        history = [Metrics(**item) for item in history_payload]
     best_payload = payload.get("best_model_state")
     best_model_state = None
     if isinstance(best_payload, dict):
@@ -681,190 +699,207 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_dir = args.output_dir / "checkpoints"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
-
-    device = resolve_device(args.device)
-    print(f"Config: {args.config}")
-    print(f"Using device: {device.type}")
-    print(f"Model: {args.model_name}")
-    print(f"Data: {args.data_dir}")
-    print(
-        f"Validation mode: {args.val_mode} "
-        f"(val_split={args.val_split}, train_fraction={args.train_fraction}, val_fraction={args.val_fraction})"
-    )
-
-    train_loader, val_loader, class_names, train_count, val_count = build_dataloaders(
-        data_dir=args.data_dir,
-        batch_size=args.batch_size,
-        num_workers=args.num_workers,
-        image_size=args.image_size,
-        model_name=args.model_name,
-        device=device,
-        seed=args.seed,
-        train_subdir=args.train_subdir,
-        val_subdir=args.val_subdir,
-        val_mode=args.val_mode,
-        val_split=args.val_split,
-        train_fraction=args.train_fraction,
-        val_fraction=args.val_fraction,
-        train_samples=args.train_samples,
-        val_samples=args.val_samples,
-    )
-    print(f"Selected samples -> train: {train_count}, val: {val_count}")
-
-    model = build_model(
-        model_name=args.model_name,
-        class_names=class_names,
-        freeze_backbone=args.freeze_backbone,
-    ).to(device)
-
-    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    all_params = sum(p.numel() for p in model.parameters())
-    print(f"Trainable params: {trainable_params}/{all_params}")
-
-    criterion = nn.CrossEntropyLoss()
-    optimizer = build_optimizer(model=model, lr=args.lr, weight_decay=args.weight_decay)
-
-    train_batches_per_epoch = len(train_loader)
-    if args.max_train_batches is not None:
-        train_batches_per_epoch = min(train_batches_per_epoch, args.max_train_batches)
-    updates_per_epoch = max(1, math.ceil(train_batches_per_epoch / args.gradient_accumulation_steps))
-    total_training_steps = updates_per_epoch * args.epochs
-    warmup_steps = int(total_training_steps * args.warmup_ratio)
-
-    scheduler = get_scheduler(
-        name=args.lr_scheduler_type,
-        optimizer=optimizer,
-        num_warmup_steps=warmup_steps,
-        num_training_steps=total_training_steps,
-    )
-    print(
-        f"Scheduler: {args.lr_scheduler_type} | "
-        f"updates/epoch={updates_per_epoch} total_updates={total_training_steps} warmup_steps={warmup_steps}"
-    )
-
-    start_epoch = 1
-    best_model_state: BestModelState | None = None
-    history: list[Metrics] = []
-
-    if args.resume_from_checkpoint:
-        if args.resume_from_checkpoint == "latest":
-            checkpoint_path = find_latest_checkpoint(checkpoint_dir)
-            if checkpoint_path is None:
-                raise FileNotFoundError(f"--resume-from-checkpoint=latest but no checkpoint found in {checkpoint_dir}")
-        else:
-            checkpoint_path = Path(args.resume_from_checkpoint)
-            if not checkpoint_path.exists():
-                raise FileNotFoundError(f"Resume checkpoint not found: {checkpoint_path}")
-
-        loaded_epoch, best_model_state, history = load_epoch_checkpoint(
-            checkpoint_path=checkpoint_path,
-            model=model,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            device=device,
-        )
-        start_epoch = loaded_epoch + 1
-        print(f"Resumed from: {checkpoint_path} (next epoch: {start_epoch})")
-
-    best_model_path = args.output_dir / "best_model.pt"
-
-    for epoch in range(start_epoch, args.epochs + 1):
-        train_loss, train_acc, optimizer_steps = train_one_epoch(
-            model=model,
-            loader=train_loader,
-            criterion=criterion,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            device=device,
-            gradient_accumulation_steps=args.gradient_accumulation_steps,
-            max_grad_norm=args.max_grad_norm,
-            max_batches=args.max_train_batches,
-        )
-        val_loss, val_acc, val_precision, val_recall, val_f1, val_roc_auc = evaluate(
-            model=model,
-            loader=val_loader,
-            criterion=criterion,
-            device=device,
-            max_batches=args.max_val_batches,
-        )
-
-        metrics = Metrics(
-            train_loss=train_loss,
-            train_acc=train_acc,
-            val_loss=val_loss,
-            val_acc=val_acc,
-            val_precision=val_precision,
-            val_recall=val_recall,
-            val_f1=val_f1,
-            val_roc_auc=val_roc_auc,
-        )
-        history.append(metrics)
-
+    with init_mlflow(args):
+        device = resolve_device(args.device)
+        print(f"Config: {args.config}")
+        print(f"Using device: {device.type}")
+        print(f"Model: {args.model_name}")
+        print(f"Data: {args.data_dir}")
         print(
-            f"Epoch {epoch}/{args.epochs} | "
-            f"train_loss={train_loss:.4f} train_acc={train_acc:.4f} | "
-            f"val_loss={val_loss:.4f} val_acc={val_acc:.4f} "
-            f"val_precision={val_precision:.4f} val_recall={val_recall:.4f} "
-            f"val_f1={val_f1:.4f} val_roc_auc={val_roc_auc:.4f} | "
-            f"opt_steps={optimizer_steps}"
+            f"Validation mode: {args.val_mode} "
+            f"(val_split={args.val_split}, train_fraction={args.train_fraction}, val_fraction={args.val_fraction})"
         )
 
-        current_metric = val_roc_auc
-        previous_metric = best_model_state.metric_value if best_model_state is not None else float("nan")
-        is_better = (
-            best_model_state is None
-            or (math.isnan(previous_metric) and not math.isnan(current_metric))
-            or (not math.isnan(current_metric) and current_metric > previous_metric)
+        train_loader, val_loader, class_names, train_count, val_count = build_dataloaders(
+            data_dir=args.data_dir,
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            image_size=args.image_size,
+            model_name=args.model_name,
+            device=device,
+            seed=args.seed,
+            train_subdir=args.train_subdir,
+            val_subdir=args.val_subdir,
+            val_mode=args.val_mode,
+            val_split=args.val_split,
+            train_fraction=args.train_fraction,
+            val_fraction=args.val_fraction,
+            train_samples=args.train_samples,
+            val_samples=args.val_samples,
         )
-        if is_better:
-            best_model_state = BestModelState(
-                metric_name="val_roc_auc",
-                metric_value=val_roc_auc,
-                epoch=epoch,
-                model_state_dict={key: value.detach().cpu().clone() for key, value in model.state_dict().items()},
-                class_names=list(class_names),
-                model_name=args.model_name,
-                image_size=args.image_size,
-                freeze_backbone=args.freeze_backbone,
-            )
-            torch.save(
-                {
-                    "model_state_dict": best_model_state.model_state_dict,
-                    "class_names": best_model_state.class_names,
-                    "model_name": best_model_state.model_name,
-                    "image_size": best_model_state.image_size,
-                    "freeze_backbone": best_model_state.freeze_backbone,
-                    "val_roc_auc": best_model_state.metric_value,
-                    "epoch": best_model_state.epoch,
-                },
-                best_model_path,
-            )
+        print(f"Selected samples -> train: {train_count}, val: {val_count}")
+        log_run_params(args=args, train_count=train_count, val_count=val_count, class_names=class_names)
 
-        epoch_ckpt = checkpoint_dir / f"epoch_{epoch:03d}.pt"
-        save_epoch_checkpoint(
-            checkpoint_path=epoch_ckpt,
-            model=model,
+        model = build_model(
+            model_name=args.model_name,
+            class_names=class_names,
+            freeze_backbone=args.freeze_backbone,
+        ).to(device)
+
+        trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        all_params = sum(p.numel() for p in model.parameters())
+        print(f"Trainable params: {trainable_params}/{all_params}")
+
+        criterion = nn.CrossEntropyLoss()
+        optimizer = build_optimizer(model=model, lr=args.lr, weight_decay=args.weight_decay)
+
+        train_batches_per_epoch = len(train_loader)
+        if args.max_train_batches is not None:
+            train_batches_per_epoch = min(train_batches_per_epoch, args.max_train_batches)
+        updates_per_epoch = max(1, math.ceil(train_batches_per_epoch / args.gradient_accumulation_steps))
+        total_training_steps = updates_per_epoch * args.epochs
+        warmup_steps = int(total_training_steps * args.warmup_ratio)
+
+        scheduler = get_scheduler(
+            name=args.lr_scheduler_type,
             optimizer=optimizer,
-            scheduler=scheduler,
-            epoch=epoch,
-            best_model_state=best_model_state,
+            num_warmup_steps=warmup_steps,
+            num_training_steps=total_training_steps,
         )
-        cleanup_old_checkpoints(checkpoint_dir=checkpoint_dir, keep_last=args.save_total_limit)
+        print(
+            f"Scheduler: {args.lr_scheduler_type} | "
+            f"updates/epoch={updates_per_epoch} total_updates={total_training_steps} warmup_steps={warmup_steps}"
+        )
+
+        start_epoch = 1
+        best_model_state: BestModelState | None = None
+        history: list[Metrics] = []
+
+        if args.resume_from_checkpoint:
+            if args.resume_from_checkpoint == "latest":
+                checkpoint_path = find_latest_checkpoint(checkpoint_dir)
+                if checkpoint_path is None:
+                    raise FileNotFoundError(
+                        f"--resume-from-checkpoint=latest but no checkpoint found in {checkpoint_dir}"
+                    )
+            else:
+                checkpoint_path = Path(args.resume_from_checkpoint)
+                if not checkpoint_path.exists():
+                    raise FileNotFoundError(f"Resume checkpoint not found: {checkpoint_path}")
+
+            loaded_epoch, best_model_state, history = load_epoch_checkpoint(
+                checkpoint_path=checkpoint_path,
+                model=model,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                device=device,
+            )
+            start_epoch = loaded_epoch + 1
+            print(f"Resumed from: {checkpoint_path} (next epoch: {start_epoch})")
+
+        for epoch in range(start_epoch, args.epochs + 1):
+            train_loss, train_acc, optimizer_steps = train_one_epoch(
+                model=model,
+                loader=train_loader,
+                criterion=criterion,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                device=device,
+                gradient_accumulation_steps=args.gradient_accumulation_steps,
+                max_grad_norm=args.max_grad_norm,
+                max_batches=args.max_train_batches,
+            )
+            val_loss, val_acc, val_precision, val_recall, val_f1, val_roc_auc = evaluate(
+                model=model,
+                loader=val_loader,
+                criterion=criterion,
+                device=device,
+                max_batches=args.max_val_batches,
+            )
+
+            metrics = Metrics(
+                train_loss=train_loss,
+                train_acc=train_acc,
+                val_loss=val_loss,
+                val_acc=val_acc,
+                val_precision=val_precision,
+                val_recall=val_recall,
+                val_f1=val_f1,
+                val_roc_auc=val_roc_auc,
+            )
+            history.append(metrics)
+
+            print(
+                f"Epoch {epoch}/{args.epochs} | "
+                f"train_loss={train_loss:.4f} train_acc={train_acc:.4f} | "
+                f"val_loss={val_loss:.4f} val_acc={val_acc:.4f} "
+                f"val_precision={val_precision:.4f} val_recall={val_recall:.4f} "
+                f"val_f1={val_f1:.4f} val_roc_auc={val_roc_auc:.4f} | "
+                f"opt_steps={optimizer_steps}"
+            )
+            log_epoch_metrics(
+                metrics={
+                    "train_loss": train_loss,
+                    "train_acc": train_acc,
+                    "val_loss": val_loss,
+                    "val_acc": val_acc,
+                    "val_precision": val_precision,
+                    "val_recall": val_recall,
+                    "val_f1": val_f1,
+                    "val_roc_auc": val_roc_auc,
+                },
+                epoch=epoch,
+                optimizer_steps=optimizer_steps,
+            )
+
+            current_metric = val_roc_auc
+            previous_metric = best_model_state.metric_value if best_model_state is not None else float("nan")
+            is_better = (
+                best_model_state is None
+                or (math.isnan(previous_metric) and not math.isnan(current_metric))
+                or (not math.isnan(current_metric) and current_metric > previous_metric)
+            )
+            if is_better:
+                best_model_state = BestModelState(
+                    metric_name="val_roc_auc",
+                    metric_value=val_roc_auc,
+                    epoch=epoch,
+                    model_state_dict={key: value.detach().cpu().clone() for key, value in model.state_dict().items()},
+                    class_names=list(class_names),
+                    model_name=args.model_name,
+                    image_size=args.image_size,
+                    freeze_backbone=args.freeze_backbone,
+                )
+
+            epoch_ckpt = checkpoint_dir / f"epoch_{epoch:03d}.pt"
+            save_epoch_checkpoint(
+                checkpoint_path=epoch_ckpt,
+                model=model,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                epoch=epoch,
+                best_model_state=best_model_state,
+                history=history,
+            )
+            cleanup_old_checkpoints(checkpoint_dir=checkpoint_dir, keep_last=args.save_total_limit)
+
+        if args.load_best_model_at_end and best_model_state is not None:
+            model.load_state_dict(best_model_state.model_state_dict)
+            print(
+                f"Loaded best model from epoch {best_model_state.epoch} "
+                f"({best_model_state.metric_name}={best_model_state.metric_value:.4f})"
+            )
 
         history_payload = [asdict(item) for item in history]
-        with (args.output_dir / "history.json").open("w", encoding="utf-8") as f:
-            json.dump(history_payload, f, indent=2)
+        best_model_for_mlflow = None
+        if best_model_state is not None:
+            if not args.load_best_model_at_end:
+                model.load_state_dict(best_model_state.model_state_dict)
+            best_model_for_mlflow = model
+            print(f"Best validation {best_model_state.metric_name}: {best_model_state.metric_value:.4f}")
+            log_summary_metrics(
+                {
+                    "best_val_roc_auc": best_model_state.metric_value,
+                    "best_epoch": float(best_model_state.epoch),
+                }
+            )
 
-    if args.load_best_model_at_end and best_model_state is not None:
-        model.load_state_dict(best_model_state.model_state_dict)
-        print(
-            f"Loaded best model from epoch {best_model_state.epoch} "
-            f"({best_model_state.metric_name}={best_model_state.metric_value:.4f})"
+        log_final_artifacts(
+            best_model=best_model_for_mlflow,
+            history_payload=history_payload,
         )
 
-    if best_model_state is not None:
-        print(f"Best validation {best_model_state.metric_name}: {best_model_state.metric_value:.4f}")
-    print(f"Artifacts saved to: {args.output_dir}")
+    print(f"Training run complete. Local checkpoints saved to: {checkpoint_dir}")
 
 
 if __name__ == "__main__":

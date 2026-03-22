@@ -94,6 +94,20 @@ Training artifacts are written under `outputs/`:
 - `checkpoints/epoch_*.pt`: resumable epoch checkpoints.
 - `history.json`: per-epoch training and validation metrics.
 
+## MLflow Tracking Server
+
+Start a local MLflow server (SQLite backend + local artifact store):
+
+`uv run mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root file:./mlartifacts --host 127.0.0.1 --port 5000`
+
+Open the UI at:
+
+`http://127.0.0.1:5000`
+
+The default training config points to this server via:
+
+`tracking.mlflow_tracking_uri: http://127.0.0.1:5000`
+
 ## Serving
 
 Serving now follows the main project layout instead of living as a nested standalone app. Importable API and UI code lives under `src/mse_mlops/serving`, while service Dockerfiles live under `docker/`.
