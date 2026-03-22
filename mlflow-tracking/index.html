@@ -12,25 +12,31 @@
         <meta name="author" content="mse-mlops contributors">
       
       
+        <link rel="canonical" href="https://7ben18.github.io/mse-mlops/mlflow-tracking/">
       
+      
+        <link rel="prev" href="../pipeline/">
+      
+      
+        <link rel="next" href="../serving/">
       
       
         
       
       
-      <link rel="icon" href="/mse-mlops/assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
     
     
       
-        <title>mse-mlops</title>
+        <title>MLflow Tracking - mse-mlops</title>
       
     
     
-      <link rel="stylesheet" href="/mse-mlops/assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="/mse-mlops/assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -49,9 +55,9 @@
       
     
     
-      <link rel="stylesheet" href="/mse-mlops/assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("/mse-mlops/",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -75,6 +81,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#mlflow-tracking" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -87,7 +98,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/mse-mlops/." title="mse-mlops" class="md-header__button md-logo" aria-label="mse-mlops" data-md-component="logo">
+    <a href=".." title="mse-mlops" class="md-header__button md-logo" aria-label="mse-mlops" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -107,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              MLflow Tracking
             
           </span>
         </div>
@@ -223,7 +234,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/mse-mlops/." title="mse-mlops" class="md-nav__button md-logo" aria-label="mse-mlops" data-md-component="logo">
+    <a href=".." title="mse-mlops" class="md-nav__button md-logo" aria-label="mse-mlops" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -253,7 +264,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mse-mlops/." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -280,7 +291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mse-mlops/pipeline/" class="md-nav__link">
+      <a href="../pipeline/" class="md-nav__link">
         
   
   
@@ -304,10 +315,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="/mse-mlops/mlflow-tracking/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MLflow Tracking
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -323,6 +361,142 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-is" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it is
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-logged" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is logged
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What is logged">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters-once-per-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters (once per run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metrics-per-epoch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metrics (per epoch)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summary-metrics-run-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary metrics (run-level)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint-and-resume" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checkpoint and resume
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-registry-note" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model Registry note
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -334,7 +508,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mse-mlops/serving/" class="md-nav__link">
+      <a href="../serving/" class="md-nav__link">
         
   
   
@@ -361,7 +535,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mse-mlops/serving-architecture/" class="md-nav__link">
+      <a href="../serving-architecture/" class="md-nav__link">
         
   
   
@@ -388,7 +562,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mse-mlops/modules/" class="md-nav__link">
+      <a href="../modules/" class="md-nav__link">
         
   
   
@@ -462,7 +636,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mse-mlops/notebooks/melanoma_dataset_eda/" class="md-nav__link">
+      <a href="../notebooks/melanoma_dataset_eda/" class="md-nav__link">
         
   
   
@@ -507,6 +681,132 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-is" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it is
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-logged" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is logged
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What is logged">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters-once-per-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters (once per run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metrics-per-epoch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metrics (per epoch)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summary-metrics-run-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary metrics (run-level)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint-and-resume" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checkpoint and resume
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-registry-note" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model Registry note
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -519,8 +819,140 @@
               
               <article class="md-content__inner md-typeset">
                 
-  <h1>404 - Not found</h1>
+                  
 
+
+  
+  
+
+
+<h1 id="mlflow-tracking">MLflow Tracking<a class="headerlink" href="#mlflow-tracking" title="Permanent link">&para;</a></h1>
+<p>Stage 3 of the MLOps pipeline. Captures training runs from <code>src/mse_mlops/train.py</code> in MLflow, including
+configuration, epoch metrics, summary metrics, and model/history artifacts.</p>
+<h2 id="what-it-is">What it is<a class="headerlink" href="#what-it-is" title="Permanent link">&para;</a></h2>
+<p>Training is MLflow-enabled by default and always runs inside an MLflow run context.</p>
+<p>Start MLflow server:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>run<span class="w"> </span>mlflow<span class="w"> </span>server<span class="w"> </span>--backend-store-uri<span class="w"> </span>sqlite:///mlflow.db<span class="w"> </span>--default-artifact-root<span class="w"> </span>file:./mlartifacts<span class="w"> </span>--host<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </span>--port<span class="w"> </span><span class="m">5000</span>
+</span></code></pre></div>
+<p>Start training:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>run<span class="w"> </span>train-dinov3<span class="w"> </span>--config<span class="w"> </span>config/train.yaml
+</span></code></pre></div>
+<p>Open UI:</p>
+<p><code>http://127.0.0.1:5000</code></p>
+<p>Tracking code lives in:</p>
+<ul>
+<li><code>mse_mlops.tracking.mlflow_tracker</code></li>
+<li><code>mse_mlops.train</code></li>
+</ul>
+<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>train.py
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  -&gt; init_mlflow(args)
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>      -&gt; set_tracking_uri
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>      -&gt; set_experiment
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>      -&gt; start_run
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  -&gt; log_run_params(...)
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  -&gt; epoch loop
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>      -&gt; log_epoch_metrics(..., step=epoch)
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>  -&gt; finalize
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>      -&gt; log_summary_metrics(...)
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>      -&gt; log_final_artifacts(...)
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>          - training/history.json
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>          - model/ (mlflow.pytorch.log_model)
+</span></code></pre></div>
+<p>The run closes automatically when the MLflow context exits.</p>
+<hr />
+<h2 id="what-is-logged">What is logged<a class="headerlink" href="#what-is-logged" title="Permanent link">&para;</a></h2>
+<h3 id="parameters-once-per-run">Parameters (once per run)<a class="headerlink" href="#parameters-once-per-run" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Dataset/split config (<code>data_dir</code>, <code>val_mode</code>, <code>val_split</code>, fractions/samples)</li>
+<li>Training config (<code>epochs</code>, <code>batch_size</code>, <code>lr</code>, scheduler settings, etc.)</li>
+<li>Execution controls (<code>device</code>, <code>resume_from_checkpoint</code>, <code>save_total_limit</code>)</li>
+<li>Derived metadata (<code>train_count</code>, <code>val_count</code>, <code>class_names</code>)</li>
+</ul>
+<h3 id="metrics-per-epoch">Metrics (per epoch)<a class="headerlink" href="#metrics-per-epoch" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>train_loss</code>, <code>train_acc</code></li>
+<li><code>val_loss</code>, <code>val_acc</code>, <code>val_precision</code>, <code>val_recall</code>, <code>val_f1</code>, <code>val_roc_auc</code></li>
+<li><code>optimizer_steps</code></li>
+</ul>
+<h3 id="summary-metrics-run-level">Summary metrics (run-level)<a class="headerlink" href="#summary-metrics-run-level" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>best_val_roc_auc</code></li>
+<li><code>best_epoch</code></li>
+</ul>
+<h3 id="artifacts">Artifacts<a class="headerlink" href="#artifacts" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>training/history.json</code></li>
+<li><code>model/</code> MLflow model artifact from:</li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">mlflow</span><span class="o">.</span><span class="n">pytorch</span><span class="o">.</span><span class="n">log_model</span><span class="p">(</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">pytorch_model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">artifact_path</span><span class="o">=</span><span class="s2">&quot;model&quot;</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<p><code>config/train.yaml</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Required</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tracking.mlflow_tracking_uri</code></td>
+<td>yes</td>
+<td><code>http://127.0.0.1:5000</code></td>
+</tr>
+<tr>
+<td><code>tracking.mlflow_experiment_name</code></td>
+<td>yes</td>
+<td><code>mse-mlops-training</code></td>
+</tr>
+<tr>
+<td><code>tracking.mlflow_run_name</code></td>
+<td>no</td>
+<td><code>baseline-2026-03-22</code></td>
+</tr>
+<tr>
+<td><code>tracking.mlflow_tags</code></td>
+<td>no</td>
+<td><code>{project: mse-mlops}</code></td>
+</tr>
+</tbody>
+</table>
+<p>CLI overrides:</p>
+<ul>
+<li><code>--mlflow-tracking-uri</code></li>
+<li><code>--mlflow-experiment-name</code></li>
+<li><code>--mlflow-run-name</code></li>
+<li><code>--mlflow-tags</code></li>
+</ul>
+<p>If tracking URI or experiment name is empty, training fails fast with <code>ValueError</code>.</p>
+<h2 id="checkpoint-and-resume">Checkpoint and resume<a class="headerlink" href="#checkpoint-and-resume" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Local checkpoints remain at <code>outputs/.../checkpoints/epoch_XXX.pt</code>.</li>
+<li>Checkpoints store <code>history</code> and optional <code>best_model_state</code>.</li>
+<li>Resume restores model/optimizer/scheduler and metric history.</li>
+</ul>
+<h2 id="model-registry-note">Model Registry note<a class="headerlink" href="#model-registry-note" title="Permanent link">&para;</a></h2>
+<p>This stage does not auto-register models.
+You can register later from a run artifact (for example <code>runs:/&lt;RUN_ID&gt;/model</code>) after manual validation.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
               </article>
             </div>
           
@@ -577,10 +1009,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "/mse-mlops/", "features": ["content.code.copy"], "search": "/mse-mlops/assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="/mse-mlops/assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
