@@ -160,6 +160,10 @@ __marimo__/
 
 # ignore data
 data/*
+# but include README documentation
+!data/raw/
+data/raw/*
+!data/raw/README.md
 
 # ignore outputs
 outputs/

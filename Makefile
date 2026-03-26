@@ -31,6 +31,11 @@ docs-test: ## Test if documentation can be built without warnings or errors
 docs: ## Build and serve the documentation
 	@uv run mkdocs serve
 
+.PHONY: data-download
+data-download: ## Download HAM10000 dataset from Harvard Dataverse
+	@echo "📥 Downloading HAM10000 dataset..."
+	@bash scripts/download_ham10000.sh
+
 .PHONY: help
 help:
 	@uv run python -c "import re; \
