@@ -71,3 +71,84 @@ data/raw/
 **Dataset:** HAM10000 (Human Against Machine with 10,000 training images)
 **From:** [Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DBW86T)
 **License:** CC0 (Public Domain)
+
+---
+
+### `download_melanoma.sh`
+
+Download and extract the **Melanoma Skin Cancer Dataset** from Kaggle.
+
+**Dataset:** ~10,600 dermoscopy images in train/test splits (~104 MB)
+
+#### Prerequisites
+
+A Kaggle API credentials file at `~/.kaggle/kaggle.json`:
+
+```json
+{"username": "YOUR_USERNAME", "key": "YOUR_API_KEY"}
+```
+
+Get your API key at [kaggle.com/settings/account](https://www.kaggle.com/settings/account), then:
+
+```bash
+chmod 600 ~/.kaggle/kaggle.json
+```
+
+#### Quick Start
+
+```bash
+# Check URL reachability
+bash scripts/download_melanoma.sh --check-url
+
+# Download and extract full dataset
+bash scripts/download_melanoma.sh
+```
+
+Or use the Makefile:
+
+```bash
+make data-download-kaggle
+```
+
+#### Output Structure
+
+```text
+data/raw/
+├── archive.zip                   ← Downloaded archive (kept)
+└── melanoma_cancer_dataset/
+    ├── train/
+    │   ├── benign/               ← 5,000 images
+    │   └── malignant/            ← 4,605 images
+    └── test/
+        ├── benign/               ← 500 images
+        └── malignant/            ← 500 images
+```
+
+#### Options
+
+| Option | Description |
+|--------|-------------|
+| `--check-url` | Check if URL is reachable and show file size |
+| `--help` | Show help message |
+| (no args) | Download and extract full dataset |
+
+#### Features
+
+- ✅ Reads credentials from `~/.kaggle/kaggle.json` automatically
+- ✅ Idempotent — skips download if data already exists
+- ✅ Progress bar during download
+- ✅ Validates all four split/class directories after extraction
+- ✅ Cleans up `__MACOSX` metadata artifacts
+
+#### Requirements
+
+- `curl` - for downloading
+- `unzip` - for extracting
+- `python3` - for parsing `kaggle.json`
+- `bash` - for running
+
+#### Source
+
+**Dataset:** Melanoma Skin Cancer Dataset of 10,000 Images
+**From:** [Kaggle](https://www.kaggle.com/datasets/hasnainjaved/melanoma-skin-cancer-dataset-of-10000-images)
+**License:** Data files © Original Authors

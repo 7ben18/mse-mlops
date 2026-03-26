@@ -36,6 +36,11 @@ data-download: ## Download HAM10000 dataset from Harvard Dataverse
 	@echo "📥 Downloading HAM10000 dataset..."
 	@bash scripts/download_ham10000.sh
 
+.PHONY: data-download-kaggle
+data-download-kaggle: ## Download Melanoma Kaggle dataset (requires ~/.kaggle/kaggle.json)
+	@echo "📥 Downloading Melanoma Kaggle dataset..."
+	@bash scripts/download_melanoma.sh
+
 .PHONY: help
 help:
 	@uv run python -c "import re; \
