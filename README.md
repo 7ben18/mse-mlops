@@ -100,6 +100,8 @@ Start a local MLflow server (SQLite backend + local artifact store):
 
 `uv run mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root file:./mlartifacts --host 127.0.0.1 --port 5000`
 
+The SQLite database file is a local runtime artifact and is intentionally git-ignored.
+
 Open the UI at:
 
 `http://127.0.0.1:5000`
@@ -135,9 +137,11 @@ The API expects a trained checkpoint at:
 ## Project Conventions
 
 - Importable and reusable Python code belongs under `src/mse_mlops`.
-- Exploratory notebooks belong under `notebooks/`.
+- Notebook-backed reusable analysis helpers belong under `src/mse_mlops/analysis`.
+- Exploratory notebooks belong under `notebooks/` and should be organized by dataset or topic, for example `notebooks/ham10000/`.
 - Reusable notebook helper code belongs under `src/mse_mlops`, not under `notebooks/`.
-- Raw data, derived tables, and dataset metadata belong under `data/` and should be managed outside git with DVC or another data-management layer.
+- Raw source data belongs under `data/raw/` and derived tables belong under `data/processed/`.
+- Dataset contents and local runtime artifacts stay out of git; only placeholders and provenance notes under `data/` should be tracked.
 - Explanatory project material belongs under `docs/`.
 - Reports and exported analysis outputs belong under `reports/`.
 - Service-specific Dockerfiles belong under `docker/`, not in nested app subtrees.
@@ -152,14 +156,15 @@ The API expects a trained checkpoint at:
     ├── docker            <- Service Dockerfiles for API and UI.
     ├── scripts           <- Utility scripts for local and overnight runs.
     ├── src/mse_mlops     <- Source code for this project.
+    │   ├── analysis      <- Reusable analysis helpers used by notebooks.
     │   └── serving       <- FastAPI API, Streamlit UI, and serving helpers.
     ├── data
-    │   ├── raw            <- DVC-managed source data and curated splits.
-    │   └── processed      <- Derived datasets and exported tables.
+    │   ├── raw            <- Local source data and provenance notes (kept out of git).
+    │   └── processed      <- Local derived datasets and exported tables (kept out of git).
     │
     ├── docs               <- MkDocs documentation for the project.
     ├── models             <- Model checkpoints, predictions, metrics, and summaries.
-    ├── notebooks          <- Exploratory notebooks only.
+    ├── notebooks          <- Exploratory notebooks only, grouped by dataset/topic.
     ├── outputs            <- Local training outputs and resumable checkpoints.
     ├── logs               <- Local training and smoke-test logs.
     ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.

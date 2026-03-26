@@ -2,16 +2,16 @@
 
 This folder is the **primary source directory for the project's MkDocs documentation site**.
 
-All Markdown pages, Jupyter notebooks, and other content served by the documentation site live here. The site is built and configured via [`mkdocs.yml`](../mkdocs.yml) at the root of the repository.
+Markdown pages live here directly. Notebook pages are sourced from the top-level [`notebooks/`](../notebooks/README.md) tree through the tracked `docs/notebooks -> ../notebooks` symlink and are referenced from [`mkdocs.yml`](../mkdocs.yml).
 
 ## Structure
 
 | File / Folder | Purpose                                           |
 | ------------- | ------------------------------------------------- |
-| `index.md`    | Site home page                                    |
-| `pipeline.md` | Pipeline overview                                 |
-| `modules.md`  | Auto-generated API reference (via `mkdocstrings`) |
-| `notebooks/`  | Jupyter notebooks rendered as documentation pages |
+| `index.md`    | Site home page                                          |
+| `pipeline.md` | Pipeline overview                                       |
+| `modules.md`  | Auto-generated API reference (via `mkdocstrings`)       |
+| `notebooks/`  | Symlink to top-level notebooks rendered as doc pages    |
 
 ## Local development
 

@@ -158,18 +158,29 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# ignore data
+# local data: keep placeholders and provenance docs tracked, keep dataset contents local
 data/*
-# but include README documentation
 !data/raw/
+!data/processed/
 data/raw/*
+!data/raw/.gitkeep
 !data/raw/README.md
+!data/raw/*/
+data/raw/*/*
+!data/raw/*/README.md
+!data/raw/*/DATE.txt
+data/processed/*
+!data/processed/.gitkeep
 
 # ignore outputs
 outputs/
 
 # ignore logs
 logs/
+
+# local runtime databases
+mlflow.db
+mlflow.db-*
 
 # LLMs
 AGENT.md

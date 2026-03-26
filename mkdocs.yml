@@ -6,7 +6,9 @@ site_author: mse-mlops contributors
 edit_uri: edit/main/docs/
 repo_name: 7ben18/mse-mlops
 copyright: Maintained by mse-mlops contributors.
-exclude_docs: README.md
+exclude_docs: |
+  README.md
+  notebooks/ham10000/eda.ipynb
 
 nav:
   - Home: index.md
@@ -16,7 +18,7 @@ nav:
   - Serving Architecture: serving-architecture.md
   - Modules: modules.md
   - Notebooks:
-      - EDA: notebooks/melanoma_dataset_eda.ipynb
+      - EDA: notebooks/melanoma_cancer_dataset/eda.ipynb
 plugins:
   - search
   - mkdocs-jupyter:
