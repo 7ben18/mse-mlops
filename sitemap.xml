@@ -2,38 +2,38 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://7ben18.github.io/mse-mlops/</loc>
-         <lastmod>2026-03-22</lastmod>
+         <lastmod>2026-03-26</lastmod>
     </url>
     <url>
          <loc>https://7ben18.github.io/mse-mlops/mlflow-tracking/</loc>
-         <lastmod>2026-03-22</lastmod>
+         <lastmod>2026-03-26</lastmod>
     </url>
     <url>
          <loc>https://7ben18.github.io/mse-mlops/modules/</loc>
-         <lastmod>2026-03-22</lastmod>
+         <lastmod>2026-03-26</lastmod>
     </url>
     <url>
          <loc>https://7ben18.github.io/mse-mlops/pipeline/</loc>
-         <lastmod>2026-03-22</lastmod>
+         <lastmod>2026-03-26</lastmod>
     </url>
     <url>
          <loc>https://7ben18.github.io/mse-mlops/serving-architecture/</loc>
-         <lastmod>2026-03-22</lastmod>
+         <lastmod>2026-03-26</lastmod>
     </url>
     <url>
          <loc>https://7ben18.github.io/mse-mlops/serving/</loc>
-         <lastmod>2026-03-22</lastmod>
+         <lastmod>2026-03-26</lastmod>
     </url>
     <url>
          <loc>https://7ben18.github.io/mse-mlops/notebooks/melanoma_dataset_eda/</loc>
-         <lastmod>2026-03-22</lastmod>
+         <lastmod>2026-03-26</lastmod>
     </url>
     <url>
          <loc>https://7ben18.github.io/mse-mlops/notebooks/EDA/EDA_HAM_ISIC/</loc>
-         <lastmod>2026-03-22</lastmod>
+         <lastmod>2026-03-26</lastmod>
     </url>
     <url>
          <loc>https://7ben18.github.io/mse-mlops/notebooks/EDA/EDA_src/</loc>
-         <lastmod>2026-03-22</lastmod>
+         <lastmod>2026-03-26</lastmod>
     </url>
 </urlset>
