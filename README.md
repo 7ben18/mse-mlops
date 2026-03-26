@@ -39,9 +39,9 @@ Current default training does not use `test` for validation. It uses `val_mode: 
 
 If a dedicated validation directory is introduced later, switch to `val_mode: test` and point `val_subdir` at that held-out validation folder.
 
-Dataset provenance and local acquisition notes live in:
+Dataset provenance, local acquisition notes, and expected raw-data layouts live in:
 
-`data/raw/melanoma_cancer_dataset/README.md`
+`data/README.md`
 
 ## Training
 

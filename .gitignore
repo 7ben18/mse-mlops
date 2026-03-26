@@ -160,15 +160,13 @@ __marimo__/
 
 # local data: keep placeholders and provenance docs tracked, keep dataset contents local
 data/*
+!data/README.md
 !data/raw/
 !data/processed/
 data/raw/*
 !data/raw/.gitkeep
-!data/raw/README.md
 !data/raw/*/
 data/raw/*/*
-!data/raw/*/README.md
-!data/raw/*/DATE.txt
 data/processed/*
 !data/processed/.gitkeep
 

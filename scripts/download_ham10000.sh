@@ -1,13 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##############################################################################
 # Download HAM10000 Dataset from Harvard Dataverse
 #
 # This script downloads the HAM10000 skin lesion dataset from Harvard Dataverse
-# and extracts it to data/raw folder.
+# and normalizes it into the canonical data/raw/ham10000 layout.
 #
 # Usage:
-#   bash scripts/data/download_ham10000.sh
+#   bash scripts/download_ham10000.sh
 #
 # Dataset:
 #   - Name: HAM10000 (Human Against Machine with 10,000 training images)
@@ -17,181 +17,257 @@
 
 set -euo pipefail
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DATA_RAW_DIR="${PROJECT_ROOT}/data/raw"
+HAM10000_DIR="${DATA_RAW_DIR}/ham10000"
+HAM10000_IMAGES_DIR="${HAM10000_DIR}/HAM10000_images"
+HAM10000_MASKS_DIR="${HAM10000_DIR}/HAM10000_segmentations_lesion_tschandl"
+HAM10000_METADATA_FILE="${HAM10000_DIR}/HAM10000_metadata.csv"
+HAM10000_ARCHIVE="${HAM10000_DIR}/dataverse_files.zip"
+LEGACY_DATAVERSE_DIR="${DATA_RAW_DIR}/dataverse_files"
+LEGACY_ARCHIVE="${DATA_RAW_DIR}/dataverse_files.zip"
 DATASET_PID="doi:10.7910/DVN/DBW86T"
 DOWNLOAD_URL="https://dataverse.harvard.edu/api/access/dataset/:persistentId/?persistentId=${DATASET_PID}"
 
-# Functions
+
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
 }
 
+
 log_warn() {
     echo -e "${YELLOW}[WARN]${NC} $1"
 }
+
 
 log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
 
-# Test extraction with dummy nested ZIPs
+cleanup_archives() {
+    local removed=0
+
+    for archive in "${HAM10000_ARCHIVE}" "${LEGACY_ARCHIVE}"; do
+        if [[ -f "${archive}" ]]; then
+            rm -f "${archive}"
+            log_info "Removed temporary archive ${archive}"
+            removed=1
+        fi
+    done
+
+    if [[ ${removed} -eq 0 ]]; then
+        log_info "No leftover HAM10000 ZIP archive to remove"
+    fi
+}
+
+
+is_canonical_dataset_complete() {
+    [[ -f "${HAM10000_METADATA_FILE}" ]] &&
+    [[ -d "${HAM10000_IMAGES_DIR}" ]] &&
+    [[ -d "${HAM10000_MASKS_DIR}" ]] &&
+    find "${HAM10000_IMAGES_DIR}" -maxdepth 1 -type f \( -name "ISIC_*.jpg" -o -name "ISIC_*.jpeg" \) | grep -q . &&
+    find "${HAM10000_MASKS_DIR}" -maxdepth 1 -type f -name "ISIC_*_segmentation.png" | grep -q .
+}
+
+
+has_legacy_dataset() {
+    [[ -d "${LEGACY_DATAVERSE_DIR}" ]] &&
+    [[ -f "${LEGACY_DATAVERSE_DIR}/HAM10000_metadata.csv" || -f "${LEGACY_DATAVERSE_DIR}/HAM10000_metadata" ]] &&
+    find "${LEGACY_DATAVERSE_DIR}" -maxdepth 2 -type f \( -name "ISIC_*.jpg" -o -name "ISIC_*.jpeg" \) | grep -q . &&
+    find "${LEGACY_DATAVERSE_DIR}" -maxdepth 3 -type f -name "ISIC_*_segmentation.png" | grep -q .
+}
+
+
+extract_nested_zips() {
+    local extract_dir="$1"
+    local nested_zips=(
+        "${extract_dir}/HAM10000_images_part_1.zip"
+        "${extract_dir}/HAM10000_images_part_2.zip"
+        "${extract_dir}/HAM10000_segmentations_lesion_tschandl.zip"
+    )
+
+    for nested_zip in "${nested_zips[@]}"; do
+        if [[ -f "${nested_zip}" ]]; then
+            local zip_name
+            zip_name=$(basename "${nested_zip}")
+            log_info "  Extracting ${zip_name}..."
+            unzip -q -o "${nested_zip}" -d "${extract_dir}"
+            rm -f "${nested_zip}"
+            log_info "  ✓ ${zip_name} extracted and removed"
+        fi
+    done
+}
+
+
+normalize_ham10000_layout() {
+    local source_dir="$1"
+    local target_dir="$2"
+    local images_dir="${target_dir}/HAM10000_images"
+    local masks_dir="${target_dir}/HAM10000_segmentations_lesion_tschandl"
+    local metadata_target="${target_dir}/HAM10000_metadata.csv"
+    local metadata_source=""
+
+    mkdir -p "${images_dir}" "${masks_dir}"
+
+    if [[ -f "${source_dir}/HAM10000_metadata.csv" ]]; then
+        metadata_source="${source_dir}/HAM10000_metadata.csv"
+    elif [[ -f "${source_dir}/HAM10000_metadata" ]]; then
+        metadata_source="${source_dir}/HAM10000_metadata"
+    else
+        metadata_source=$(find "${source_dir}" -maxdepth 2 -type f \( -name "HAM10000_metadata.csv" -o -name "HAM10000_metadata" \) | head -n 1)
+    fi
+
+    if [[ -z "${metadata_source}" || ! -f "${metadata_source}" ]]; then
+        log_error "Metadata file not found in ${source_dir}"
+        return 1
+    fi
+
+    cp -f "${metadata_source}" "${metadata_target}"
+    log_info "✓ Metadata normalized to ${metadata_target}"
+
+    local image_count=0
+    while IFS= read -r -d '' image_path; do
+        mv -f "${image_path}" "${images_dir}/"
+        image_count=$((image_count + 1))
+    done < <(find "${source_dir}" -type f \( -name "ISIC_*.jpg" -o -name "ISIC_*.jpeg" -o -name "ISIC_*.JPG" -o -name "ISIC_*.JPEG" \) -print0)
+
+    local mask_count=0
+    while IFS= read -r -d '' mask_path; do
+        mv -f "${mask_path}" "${masks_dir}/"
+        mask_count=$((mask_count + 1))
+    done < <(find "${source_dir}" -type f -name "ISIC_*_segmentation.png" -print0)
+
+    if [[ ${image_count} -eq 0 ]]; then
+        log_error "No HAM10000 images found while normalizing ${source_dir}"
+        return 1
+    fi
+
+    if [[ ${mask_count} -eq 0 ]]; then
+        log_error "No HAM10000 masks found while normalizing ${source_dir}"
+        return 1
+    fi
+
+    log_info "✓ Dermatoscopic images normalized (${image_count} images)"
+    log_info "✓ Segmentation masks normalized (${mask_count} masks)"
+}
+
+
 test_extraction() {
-    log_info "Starting extraction test with dummy nested ZIPs..."
+    log_info "Starting extraction and normalization test with dummy nested ZIPs..."
 
-    TEST_DIR=$(mktemp -d)
-    trap "rm -rf ${TEST_DIR}" RETURN
+    local test_dir
+    test_dir=$(mktemp -d)
+    trap "rm -rf ${test_dir}" RETURN
 
-    log_info "Test directory: ${TEST_DIR}"
-
-    # Create dummy nested ZIP files for testing
+    log_info "Test directory: ${test_dir}"
     log_info "Creating test ZIP files..."
 
-    # Create a simple test file
-    echo "test content" > "${TEST_DIR}/test.txt"
+    echo "test content" > "${test_dir}/test.txt"
+    cd "${test_dir}"
 
-    # Create nested test ZIPs
-    cd "${TEST_DIR}"
-
-    # Create HAM10000_images_part_1.zip
     mkdir -p part1_content
     echo "image1" > part1_content/ISIC_0000001.jpg
     zip -q HAM10000_images_part_1.zip part1_content/ISIC_0000001.jpg
 
-    # Create HAM10000_images_part_2.zip
     mkdir -p part2_content
     echo "image2" > part2_content/ISIC_0000002.jpg
     zip -q HAM10000_images_part_2.zip part2_content/ISIC_0000002.jpg
 
-    # Create HAM10000_segmentations_lesion_tschandl.zip
     mkdir -p masks_content
     echo "mask" > masks_content/ISIC_0000001_segmentation.png
     zip -q HAM10000_segmentations_lesion_tschandl.zip masks_content/ISIC_0000001_segmentation.png
 
-    # Create main ZIP with nested ZIPs
     echo "Test metadata" > HAM10000_metadata.csv
     zip -q test_dataverse_files.zip HAM10000_images_part_1.zip HAM10000_images_part_2.zip HAM10000_segmentations_lesion_tschandl.zip HAM10000_metadata.csv
 
-    # Now test extraction
-    EXTRACT_TEST_DIR="${TEST_DIR}/extract_test"
-    mkdir -p "${EXTRACT_TEST_DIR}"
+    local extract_test_dir="${test_dir}/extract_test"
+    local canonical_test_dir="${test_dir}/ham10000"
+    mkdir -p "${extract_test_dir}"
 
     log_info "Testing extraction logic..."
-
-    # Extract main ZIP
-    if ! unzip -q -o "${TEST_DIR}/test_dataverse_files.zip" -d "${EXTRACT_TEST_DIR}"; then
-        log_error "Test: Failed to extract main ZIP"
-        return 1
-    fi
+    unzip -q -o "${test_dir}/test_dataverse_files.zip" -d "${extract_test_dir}"
     log_info "✓ Main ZIP extraction works"
 
-    # Extract nested ZIPs
-    NESTED_ZIPS=(
-        "${EXTRACT_TEST_DIR}/HAM10000_images_part_1.zip"
-        "${EXTRACT_TEST_DIR}/HAM10000_images_part_2.zip"
-        "${EXTRACT_TEST_DIR}/HAM10000_segmentations_lesion_tschandl.zip"
-    )
+    extract_nested_zips "${extract_test_dir}"
+    log_info "✓ Nested ZIP extraction works"
 
-    for nested_zip in "${NESTED_ZIPS[@]}"; do
-        if [[ -f "${nested_zip}" ]]; then
-            zip_name=$(basename "${nested_zip}")
-            if ! unzip -q -o "${nested_zip}" -d "${EXTRACT_TEST_DIR}"; then
-                log_error "Test: Failed to extract ${zip_name}"
-                return 1
-            fi
-            rm -f "${nested_zip}"
-            log_info "✓ Nested ZIP extraction works: ${zip_name}"
-        fi
-    done
+    normalize_ham10000_layout "${extract_test_dir}" "${canonical_test_dir}"
 
-    # Verify test files
-    if [[ -f "${EXTRACT_TEST_DIR}/HAM10000_metadata.csv" ]]; then
-        log_info "✓ Metadata file extraction verified"
+    if [[ -f "${canonical_test_dir}/HAM10000_metadata.csv" ]]; then
+        log_info "✓ Metadata normalization verified"
     fi
 
-    if [[ -f "${EXTRACT_TEST_DIR}/part1_content/ISIC_0000001.jpg" ]]; then
-        log_info "✓ Images part 1 extraction verified"
+    if [[ -f "${canonical_test_dir}/HAM10000_images/ISIC_0000001.jpg" ]] && [[ -f "${canonical_test_dir}/HAM10000_images/ISIC_0000002.jpg" ]]; then
+        log_info "✓ Image normalization verified"
     fi
 
-    if [[ -f "${EXTRACT_TEST_DIR}/part2_content/ISIC_0000002.jpg" ]]; then
-        log_info "✓ Images part 2 extraction verified"
-    fi
-
-    if [[ -f "${EXTRACT_TEST_DIR}/masks_content/ISIC_0000001_segmentation.png" ]]; then
-        log_info "✓ Masks extraction verified"
+    if [[ -f "${canonical_test_dir}/HAM10000_segmentations_lesion_tschandl/ISIC_0000001_segmentation.png" ]]; then
+        log_info "✓ Mask normalization verified"
     fi
 
     log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    log_info "Extraction test passed! ✓ Script is ready to use."
+    log_info "Extraction test passed! ✓ Canonical layout is ready to use."
     log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    return 0
 }
 
-# Check URL and file size
+
 check_url() {
     log_info "Checking download URL and file size..."
     log_info "URL: ${DOWNLOAD_URL}"
 
-    # Get headers to check file size
-    HEADERS=$(curl -sI -L "${DOWNLOAD_URL}" 2>/dev/null)
+    local headers
+    headers=$(curl -sI -L "${DOWNLOAD_URL}" 2>/dev/null)
 
     if [[ $? -ne 0 ]]; then
         log_error "Failed to connect to download URL"
         return 1
     fi
 
-    FILE_SIZE=$(echo "${HEADERS}" | grep -i "content-length" | awk '{print $2}' | tr -d '\r')
+    local file_size
+    file_size=$(echo "${headers}" | grep -i "content-length" | awk '{print $2}' | tr -d '\r')
 
-    if [[ -z "${FILE_SIZE}" ]]; then
+    if [[ -z "${file_size}" ]]; then
         log_warn "Could not determine file size"
         log_info "URL appears to be reachable (no size info available)"
     else
-        SIZE_GB=$(echo "scale=2; ${FILE_SIZE} / 1024 / 1024 / 1024" | bc)
-        log_info "File size: ${SIZE_GB} GB (${FILE_SIZE} bytes)"
+        local size_gb
+        size_gb=$(echo "scale=2; ${file_size} / 1024 / 1024 / 1024" | bc)
+        log_info "File size: ${size_gb} GB (${file_size} bytes)"
     fi
 
     log_info "✓ URL is reachable"
-    return 0
 }
 
-# Show usage
+
 show_usage() {
     cat << EOF
 Usage: $(basename "$0") [OPTIONS]
 
 OPTIONS:
     --help              Show this help message
-    --test-extract      Test extraction logic with dummy ZIPs (no download)
+    --test-extract      Test extraction and normalization logic with dummy ZIPs
     --check-url         Check if download URL is reachable and show file size
-    (no args)           Download and extract the full dataset (3.4 GB)
+    (no args)           Download and normalize the full dataset (3.4 GB)
 
 EXAMPLES:
-    # Test extraction before downloading
     bash $(basename "$0") --test-extract
-
-    # Check URL and file size
     bash $(basename "$0") --check-url
-
-    # Download full dataset
     bash $(basename "$0")
-
-    # Using make
     make data-download
 EOF
 }
 
-# Main script
+
 main() {
-    # Handle arguments
+    local extract_dir
+
     if [[ $# -gt 0 ]]; then
         case "$1" in
             --help|-h)
@@ -200,7 +276,7 @@ main() {
                 ;;
             --test-extract)
                 test_extraction
-                return $?
+                return 0
                 ;;
             --check-url)
                 check_url
@@ -216,144 +292,78 @@ main() {
 
     log_info "Starting HAM10000 dataset download"
     log_info "Project root: ${PROJECT_ROOT}"
-    log_info "Data directory: ${DATA_RAW_DIR}"
-    log_info "(Tip: Run with --test-extract to test before downloading)"
+    log_info "Canonical dataset directory: ${HAM10000_DIR}"
+    log_info "(Tip: Run with --test-extract to test extraction and normalization before downloading)"
 
-    # Check if data already exists
-    DATAVERSE_DIR="${DATA_RAW_DIR}/dataverse_files"
-    if [[ -f "${DATAVERSE_DIR}/HAM10000_metadata.csv" ]] && [[ -d "${DATAVERSE_DIR}/HAM10000_segmentations_lesion_tschandl" ]]; then
-        # Check if at least one image exists (quick check, no counting)
-        if ls "${DATAVERSE_DIR}"/ISIC_*.jpg &>/dev/null; then
-            log_warn "HAM10000 data already exists in ${DATAVERSE_DIR}"
-            log_info "Skipping download. Data is complete."
-            return 0
-        fi
+    if is_canonical_dataset_complete; then
+        log_warn "HAM10000 data already exists in canonical layout at ${HAM10000_DIR}"
+        cleanup_archives
+        log_info "Skipping download. Data is complete."
+        return 0
     fi
 
-    # Create data directory if it doesn't exist
-    mkdir -p "${DATA_RAW_DIR}"
-    log_info "Data directory created/verified: ${DATA_RAW_DIR}"
+    mkdir -p "${HAM10000_DIR}"
+    log_info "Canonical dataset directory created/verified: ${HAM10000_DIR}"
 
-    # Set paths for ZIP and extraction
-    ZIP_FILE="${DATA_RAW_DIR}/dataverse_files.zip"
-    DATAVERSE_DIR="${DATA_RAW_DIR}/dataverse_files"
+    if has_legacy_dataset; then
+        log_warn "Found legacy HAM10000 extraction at ${LEGACY_DATAVERSE_DIR}"
+        log_info "Normalizing existing files into ${HAM10000_DIR}..."
+        normalize_ham10000_layout "${LEGACY_DATAVERSE_DIR}" "${HAM10000_DIR}"
+        log_info "Legacy extraction normalized successfully"
+        cleanup_archives
+        return 0
+    fi
 
-    # Download dataset
+    extract_dir=$(mktemp -d "${HAM10000_DIR}/extract.XXXXXX")
+    trap "rm -rf ${extract_dir}" EXIT
+
     log_info "Downloading HAM10000 dataset from Harvard Dataverse..."
     log_info "This may take several minutes (dataset is ~3.4 GB)"
-    log_info "Download location: ${ZIP_FILE}"
+    log_info "Download location: ${HAM10000_ARCHIVE}"
 
-    if ! curl -L --progress-bar -o "${ZIP_FILE}" "${DOWNLOAD_URL}"; then
+    if ! curl -L --progress-bar -o "${HAM10000_ARCHIVE}" "${DOWNLOAD_URL}"; then
         log_error "Failed to download dataset"
         return 1
     fi
 
-    log_info "Download completed successfully"
-
-    # Check if downloaded file is valid
-    if [[ ! -f "${ZIP_FILE}" ]]; then
+    if [[ ! -f "${HAM10000_ARCHIVE}" ]]; then
         log_error "Downloaded file not found"
         return 1
     fi
 
-    FILESIZE=$(du -h "${ZIP_FILE}" | cut -f1)
-    log_info "Downloaded file size: ${FILESIZE}"
+    local filesize
+    filesize=$(du -h "${HAM10000_ARCHIVE}" | cut -f1)
+    log_info "Downloaded file size: ${filesize}"
 
-    # Create dataverse_files directory
-    mkdir -p "${DATAVERSE_DIR}"
-    log_info "Created extraction directory: ${DATAVERSE_DIR}"
-
-    # Extract main ZIP
-    log_info "Extracting main ZIP to ${DATAVERSE_DIR}..."
-    if ! unzip -q -o "${ZIP_FILE}" -d "${DATAVERSE_DIR}"; then
-        log_error "Failed to extract main ZIP"
-        return 1
-    fi
-
+    log_info "Extracting main ZIP to temporary directory ${extract_dir}..."
+    unzip -q -o "${HAM10000_ARCHIVE}" -d "${extract_dir}"
     log_info "Main ZIP extraction completed"
 
-    # Extract nested ZIPs (HAM10000 data comes in nested ZIPs)
     log_info "Extracting nested ZIP files..."
-
-    NESTED_ZIPS=(
-        "${DATAVERSE_DIR}/HAM10000_images_part_1.zip"
-        "${DATAVERSE_DIR}/HAM10000_images_part_2.zip"
-        "${DATAVERSE_DIR}/HAM10000_segmentations_lesion_tschandl.zip"
-    )
-
-    for nested_zip in "${NESTED_ZIPS[@]}"; do
-        if [[ -f "${nested_zip}" ]]; then
-            zip_name=$(basename "${nested_zip}")
-            log_info "  Extracting ${zip_name}..."
-            if ! unzip -q -o "${nested_zip}" -d "${DATAVERSE_DIR}"; then
-                log_error "Failed to extract ${zip_name}"
-                return 1
-            fi
-            # Clean up nested ZIP after extraction
-            rm -f "${nested_zip}"
-            log_info "  ✓ ${zip_name} extracted and removed"
-        fi
-    done
-
+    extract_nested_zips "${extract_dir}"
     log_info "All nested ZIPs extracted"
 
-    # Clean up extra files (not part of HAM10000)
     log_info "Cleaning up extra files..."
-    rm -rf "${DATAVERSE_DIR}/__MACOSX" 2>/dev/null || true
-    rm -f "${DATAVERSE_DIR}/ISIC2018"* 2>/dev/null || true
+    rm -rf "${extract_dir}/__MACOSX" 2>/dev/null || true
+    rm -f "${extract_dir}/ISIC2018"* 2>/dev/null || true
     log_info "  Removed non-HAM10000 files"
 
-    # Verify extracted files
-    log_info "Verifying extracted files..."
+    log_info "Normalizing extracted files into canonical layout..."
+    normalize_ham10000_layout "${extract_dir}" "${HAM10000_DIR}"
+    cleanup_archives
 
-    # Check for metadata file (with or without .csv extension)
-    METADATA_FILE=""
-    if [[ -f "${DATAVERSE_DIR}/HAM10000_metadata.csv" ]]; then
-        METADATA_FILE="${DATAVERSE_DIR}/HAM10000_metadata.csv"
-    elif [[ -f "${DATAVERSE_DIR}/HAM10000_metadata" ]]; then
-        METADATA_FILE="${DATAVERSE_DIR}/HAM10000_metadata"
-        # Rename to add .csv extension for consistency
-        mv "${METADATA_FILE}" "${METADATA_FILE}.csv"
-        METADATA_FILE="${METADATA_FILE}.csv"
-        log_info "  Renamed metadata file to .csv"
-    fi
-
-    if [[ -n "${METADATA_FILE}" && -f "${METADATA_FILE}" ]]; then
-        METADATA_LINES=$(wc -l < "${METADATA_FILE}")
-        log_info "✓ Metadata file found (${METADATA_LINES} lines)"
-    else
-        log_error "Metadata file not found after extraction"
-        return 1
-    fi
-
-    # Check for extracted images (extracted directly into DATAVERSE_DIR)
-    IMG_COUNT=$(find "${DATAVERSE_DIR}" -maxdepth 1 -type f \( -name "ISIC_*.jpg" -o -name "ISIC_*.jpeg" \) | wc -l)
-    if [[ ${IMG_COUNT} -gt 0 ]]; then
-        log_info "✓ Dermatoscopic images found (${IMG_COUNT} images)"
-    fi
-
-    if [[ -d "${DATAVERSE_DIR}/HAM10000_segmentations_lesion_tschandl" ]]; then
-        MASK_COUNT=$(find "${DATAVERSE_DIR}/HAM10000_segmentations_lesion_tschandl" -type f | wc -l)
-        log_info "✓ Segmentation masks found (${MASK_COUNT} masks)"
-    fi
-
-    # Summary
     log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    log_info "Dataset download and extraction completed successfully! ✓"
+    log_info "Dataset download and normalization completed successfully! ✓"
     log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    log_info ""
     log_info "Directory structure:"
-    log_info "  data/raw/"
-    log_info "  ├── dataverse_files.zip (downloaded archive)"
-    log_info "  └── dataverse_files/"
-    log_info "      ├── HAM10000_metadata.csv"
-    log_info "      ├── HAM10000_images_part_1/"
-    log_info "      ├── HAM10000_images_part_2/"
-    log_info "      └── HAM10000_segmentations_lesion_tschandl/"
-    log_info ""
+    log_info "  data/raw/ham10000/"
+    log_info "  ├── HAM10000_metadata.csv"
+    log_info "  ├── HAM10000_images/"
+    log_info "  └── HAM10000_segmentations_lesion_tschandl/"
     log_info "Next steps:"
-    log_info "  1. Review: notebooks/EDA/EDA_HAM_ISIC.ipynb"
-    log_info "  2. Process: notebooks/EDA/EDA_src.py"
+    log_info "  1. Review: notebooks/ham10000/eda.ipynb"
+    log_info "  2. Process: src/mse_mlops/analysis/ham10000.py"
 }
+
 
 main "$@"

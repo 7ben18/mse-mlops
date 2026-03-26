@@ -6,7 +6,7 @@ Utility scripts for the MLOps project.
 
 ### `download_ham10000.sh`
 
-Download and extract the **HAM10000 skin lesion dataset** from Harvard Dataverse.
+Download and normalize the **HAM10000 skin lesion dataset** from Harvard Dataverse.
 
 **Dataset:** ~10,000 dermatoscopic images + segmentation masks (~3.4 GB)
 
@@ -19,7 +19,7 @@ bash scripts/download_ham10000.sh --test-extract
 # Check URL reachability
 bash scripts/download_ham10000.sh --check-url
 
-# Download and extract full dataset
+# Download and normalize full dataset
 bash scripts/download_ham10000.sh
 ```
 
@@ -32,13 +32,11 @@ make data-download
 #### Output Structure
 
 ```text
-data/raw/
-├── dataverse_files.zip                          ← Downloaded archive (kept)
-└── dataverse_files/
-    ├── HAM10000_metadata.csv                    ← Metadata (10,000+ rows)
-    ├── ISIC_*.jpg                               ← Images (10,015 files)
-    └── HAM10000_segmentations_lesion_tschandl/  ← Segmentation masks
-        └── ISIC_*_segmentation.png              ← Masks (10,015 files)
+data/raw/ham10000/
+├── HAM10000_metadata.csv                        ← Metadata (10,000+ rows)
+├── HAM10000_images/                             ← Images (10,015 files)
+└── HAM10000_segmentations_lesion_tschandl/      ← Segmentation masks
+    └── ISIC_*_segmentation.png                  ← Masks (10,015 files)
 ```
 
 #### Options
@@ -54,6 +52,8 @@ data/raw/
 
 - ✅ Handles nested ZIP files (ZIP inside ZIP)
 - ✅ Automatic extraction of all nested ZIPs
+- ✅ Normalizes extracted files into the canonical repo layout
+- ✅ Deletes the temporary top-level ZIP after a successful normalization
 - ✅ Cleans up extra files (ISIC2018, __MACOSX)
 - ✅ Validates extracted files (metadata, images, masks)
 - ✅ Progress bar during download
