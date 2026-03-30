@@ -8,8 +8,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PIL import Image
+import datetime
 
 from mse_mlops.paths import find_repo_root
+
+
 
 REPO_ROOT = find_repo_root(Path(__file__))
 RAW_DATA_DIR = REPO_ROOT / "data" / "raw" / "ham10000"
@@ -23,6 +26,8 @@ MASK_DIR = RAW_DATA_DIR / "HAM10000_segmentations_lesion_tschandl"
 METADATA = RAW_DATA_DIR / "HAM10000_metadata.csv"
 EXT_METADATA = PROCESSED_DATA_DIR / "extended_HAM10000_metadata.csv"
 
+REPORTS_DIR = REPO_ROOT / "reports"
+
 type Triplet = tuple[Path, Path, str]
 
 
@@ -33,6 +38,7 @@ def get_ds(
     sample_show: bool = False,
     img_dir: Path | str = IMG_DIR,
     mask_dir: Path | str = MASK_DIR,
+    to_report: bool = False,
 ) -> list[Triplet]:
     triplets, missing = _build_img_mask_triplets(img_dir, mask_dir)
 
@@ -53,7 +59,7 @@ def get_ds(
     if get_sample or sample_show:
         sampled = _sample_items(triplets, sample_size, sample_seed)
         if sample_show:
-            _plot_triplets_image_mask_grid(sampled)
+            _plot_triplets_image_mask_grid(sampled, to_report=to_report)
 
     return sampled if get_sample else triplets
 
@@ -114,6 +120,7 @@ def map_ds_metadata(
     img_dir: Path | str = IMG_DIR,
     mask_dir: Path | str = MASK_DIR,
     metadata_csv: Path | str = EXT_METADATA,
+    to_report: bool = False,
 ) -> tuple[list[Triplet], pd.DataFrame]:
     ds = get_ds(
         sample_size=sample_size,
@@ -122,6 +129,7 @@ def map_ds_metadata(
         get_sample=get_sample,
         img_dir=img_dir,
         mask_dir=mask_dir,
+        to_report=to_report,
     )
 
     ids = [img_id for _, _, img_id in ds]
@@ -245,6 +253,8 @@ def plot_images_grid(
     img_id_to_path: dict[str, Path | None],
     lesion_id: str | None = None,
     max_cols: int = 5,
+    to_report: bool = False,
+    title: str = "Lesion Images",
 ) -> None:
     img_ids = list(img_id_to_path.keys())
     n_images = len(img_ids)
@@ -273,9 +283,16 @@ def plot_images_grid(
 
     if lesion_id is not None:
         plt.suptitle(f"Lesion: {lesion_id}", y=1.02, fontsize=14)
-
+    if to_report:
+        REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        output_name = "_".join(title.lower().split()) or "_lesion_images"
+        output_name += ("_" + lesion_id)
+        output_path = REPORTS_DIR / f"{output_name}.png"
+        plt.suptitle(title, fontsize=20)
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
     plt.tight_layout()
     plt.show()
+
 
 
 def load_metadata_csv(metadata_csv_path: Path | str) -> pd.DataFrame:
@@ -300,12 +317,14 @@ def show_random_lesion_images_and_metadata(
     metadata_csv_path: Path | str,
     img_dir: Path | str,
     max_cols: int = 5,
+    to_report: bool = False,
 ) -> tuple[str, list[str], pd.DataFrame]:
     lesion_df = load_map_lesion_images(lesion_images_csv_path)
     lesion_id, img_ids = pick_random_lesion(lesion_df)
 
     img_id_to_path = find_image_paths_for_ids(img_ids, img_dir=img_dir)
-    plot_images_grid(img_id_to_path, lesion_id=lesion_id, max_cols=max_cols)
+    plot_images_grid(img_id_to_path, lesion_id=lesion_id, max_cols=max_cols, to_report=to_report)
+    meta_df = load_metadata_csv(metadata_csv_path)
 
     meta_df = load_metadata_csv(metadata_csv_path)
     meta_rows = get_metadata_for_lesion(meta_df, lesion_id)
@@ -330,6 +349,7 @@ def get_lesion_info(
     lesion_id: str | None = None,
     max_cols: int = 5,
     prefer_mapping_csv: bool = True,
+    to_report: bool = False,
 ) -> tuple[str, list[str], pd.DataFrame]:
     lesion_df = load_map_lesion_images(lesion_images_csv_path)
 
@@ -362,7 +382,7 @@ def get_lesion_info(
         )
 
     img_id_to_path = find_image_paths_for_ids(img_ids, img_dir=img_dir)
-    plot_images_grid(img_id_to_path, lesion_id=lesion_id, max_cols=max_cols)
+    plot_images_grid(img_id_to_path, lesion_id=lesion_id, max_cols=max_cols, to_report=to_report)
     _display_df(meta_rows)
     return lesion_id, img_ids, meta_rows
 
@@ -428,11 +448,11 @@ def _sample_items(
 
 
 def _plot_triplets_image_mask_grid(
-    triplets: list[Triplet], title: str = "image vs mask"
+    triplets: list[Triplet],
+    title: str = "Image vs Mask",
+    to_report: bool = False
 ) -> None:
     n_triplets = len(triplets)
-    if n_triplets <= 0:
-        return
 
     _fig, axes = plt.subplots(2, n_triplets, figsize=(4.5 * n_triplets, 9))
 
@@ -456,7 +476,17 @@ def _plot_triplets_image_mask_grid(
         else:
             axes[1, index].imshow(mask_arr, interpolation="nearest")
         axes[1, index].axis("off")
-
+    if to_report:
+        REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        ct = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
+        output_name = "_".join(title.lower().split()) or "_image_mask_grid_"
+        output_name += f"_{ct}"
+        output_path = REPORTS_DIR / f"{output_name}.png"
+        plt.tight_layout()
+        plt.suptitle(title, fontsize=20)
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
+        plt.show()
+        return
     plt.tight_layout()
     plt.suptitle(title, fontsize=20)
     plt.show()

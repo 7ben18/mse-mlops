@@ -14,9 +14,11 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
+    "datetime>=6.0",
     "mlflow>=2.22.1",
     "numpy>=2.4.2",
     "pandas>=2.3.2",
+    "pandas-stubs~=2.3.3",
     "pillow>=12.1.1",
     "pyyaml>=6.0.3",
     "scikit-learn>=1.8.0",
