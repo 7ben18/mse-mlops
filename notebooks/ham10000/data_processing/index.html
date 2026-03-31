@@ -25,7 +25,7 @@
     
     
       
-        <title>Data processing - mse-mlops</title>
+        <title>Data splitting - mse-mlops</title>
       
     
     
@@ -77,6 +77,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#data-splitting" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -109,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Data processing
+              Data splitting
             
           </span>
         </div>
@@ -509,6 +514,49 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#csv-splitting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSV splitting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#directory-splitting-based-on-csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Directory splitting (based on CSV)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-split-csv-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full split (CSV + directory)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -527,8 +575,6 @@
   
   
 
-
-  <h1>Data processing</h1>
 
 <script>
 (function (global, factory) {
@@ -1252,7 +1298,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=58dda21884d2da0e">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=24e7b9e097a69044">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1270,250 +1316,197 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="p">{</span>
- <span class="s2">"cells"</span><span class="p">:</span> <span class="p">[</span>
-  <span class="p">{</span>
-   <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{},</span>
-   <span class="s2">"cell_type"</span><span class="p">:</span> <span class="s2">"code"</span><span class="p">,</span>
-   <span class="s2">"source"</span><span class="p">:</span> <span class="p">[</span>
-    <span class="s2">"import importlib</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
-    <span class="s2">"import src.mse_mlops.data_processing as dp</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
-    <span class="s2">"import src.mse_mlops.paths as paths</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
-    <span class="s2">"importlib.reload(dp)</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
-    <span class="s2">"importlib.reload(paths)"</span>
-   <span class="p">],</span>
-   <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"24e7b9e097a69044"</span><span class="p">,</span>
-   <span class="s2">"outputs"</span><span class="p">:</span> <span class="p">[],</span>
-   <span class="s2">"execution_count"</span><span class="p">:</span> <span class="n">null</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-   <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{},</span>
-   <span class="s2">"cell_type"</span><span class="p">:</span> <span class="s2">"markdown"</span><span class="p">,</span>
-   <span class="s2">"source"</span><span class="p">:</span> <span class="p">[</span>
-    <span class="s2">"# Data splitting</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
-    <span class="s2">"## CSV splitting"</span>
-   <span class="p">],</span>
-   <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"cf6248f1fe88e337"</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-   <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{},</span>
-   <span class="s2">"cell_type"</span><span class="p">:</span> <span class="s2">"code"</span><span class="p">,</span>
-   <span class="s2">"source"</span><span class="p">:</span> <span class="p">[</span>
-    <span class="s2">"# CSV-only splitting</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
-    <span class="s2">"split_csv_path = dp.split_data_csv()"</span>
-   <span class="p">],</span>
-   <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"a31f25529ec7ee68"</span><span class="p">,</span>
-   <span class="s2">"outputs"</span><span class="p">:</span> <span class="p">[],</span>
-   <span class="s2">"execution_count"</span><span class="p">:</span> <span class="n">null</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-   <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{},</span>
-   <span class="s2">"cell_type"</span><span class="p">:</span> <span class="s2">"markdown"</span><span class="p">,</span>
-   <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"## Directory splitting (based on CSV)"</span><span class="p">,</span>
-   <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"44ec196706301f91"</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-   <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{},</span>
-   <span class="s2">"cell_type"</span><span class="p">:</span> <span class="s2">"code"</span><span class="p">,</span>
-   <span class="s2">"source"</span><span class="p">:</span> <span class="p">[</span>
-    <span class="s2">"# Directory splitting based on the CSV split</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
-    <span class="s2">"dp.split_data_dir(split_csv=split_csv_path)"</span>
-   <span class="p">],</span>
-   <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"ffc973f3fb37cb53"</span><span class="p">,</span>
-   <span class="s2">"outputs"</span><span class="p">:</span> <span class="p">[],</span>
-   <span class="s2">"execution_count"</span><span class="p">:</span> <span class="n">null</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-   <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{},</span>
-   <span class="s2">"cell_type"</span><span class="p">:</span> <span class="s2">"markdown"</span><span class="p">,</span>
-   <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"## Full split (CSV + directory)"</span><span class="p">,</span>
-   <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"8b63a7c2c356523"</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-   <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{},</span>
-   <span class="s2">"cell_type"</span><span class="p">:</span> <span class="s2">"code"</span><span class="p">,</span>
-   <span class="s2">"source"</span><span class="p">:</span> <span class="p">[</span>
-    <span class="s2">"# split_test.yaml contained different splitting and seed to test that methods work as needed</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
-    <span class="s2">"# for example, if train/val/test=0.5/0.3/0.2 was first used, </span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
-    <span class="s2">"# but then only train/test=0.5/0.5 (no val),</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
-    <span class="s2">"# then val folder is cleared up fully.</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
-    <span class="s2">"#_ = dp.split_data_full(config_file=paths.CONFIG_DIR/</span><span class="se">\"</span><span class="s2">split_test.yaml</span><span class="se">\"</span><span class="s2">)</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
-    <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
-    <span class="s2">"_ = dp.split_data_full(config_file=paths.CONFIG_DIR/</span><span class="se">\"</span><span class="s2">split.yaml</span><span class="se">\"</span><span class="s2">)"</span>
-   <span class="p">],</span>
-   <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"12aef7cb61db6a08"</span><span class="p">,</span>
-   <span class="s2">"outputs"</span><span class="p">:</span> <span class="p">[],</span>
-   <span class="s2">"execution_count"</span><span class="p">:</span> <span class="n">null</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-   <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{},</span>
-   <span class="s2">"cell_type"</span><span class="p">:</span> <span class="s2">"markdown"</span><span class="p">,</span>
-   <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"# Example: mask application"</span><span class="p">,</span>
-   <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"87e4d0b43e73649d"</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-   <span class="s2">"cell_type"</span><span class="p">:</span> <span class="s2">"code"</span><span class="p">,</span>
-   <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"initial_id"</span><span class="p">,</span>
-   <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{</span>
-    <span class="s2">"collapsed"</span><span class="p">:</span> <span class="n">true</span>
-   <span class="p">},</span>
-   <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"result_img = dp.apply_mask(image_id=</span><span class="se">\"</span><span class="s2">ISIC_0024315</span><span class="se">\"</span><span class="s2">, to_show=True)"</span><span class="p">,</span>
-   <span class="s2">"outputs"</span><span class="p">:</span> <span class="p">[],</span>
-   <span class="s2">"execution_count"</span><span class="p">:</span> <span class="n">null</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-   <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{},</span>
-   <span class="s2">"cell_type"</span><span class="p">:</span> <span class="s2">"markdown"</span><span class="p">,</span>
-   <span class="s2">"source"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
-   <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"b0ba0ac5cd2d85e3"</span>
-  <span class="p">}</span>
- <span class="p">],</span>
- <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{</span>
-  <span class="s2">"kernelspec"</span><span class="p">:</span> <span class="p">{</span>
-   <span class="s2">"display_name"</span><span class="p">:</span> <span class="s2">"Python 3"</span><span class="p">,</span>
-   <span class="s2">"language"</span><span class="p">:</span> <span class="s2">"python"</span><span class="p">,</span>
-   <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"python3"</span>
-  <span class="p">},</span>
-  <span class="s2">"language_info"</span><span class="p">:</span> <span class="p">{</span>
-   <span class="s2">"codemirror_mode"</span><span class="p">:</span> <span class="p">{</span>
-    <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"ipython"</span><span class="p">,</span>
-    <span class="s2">"version"</span><span class="p">:</span> <span class="mi">2</span>
-   <span class="p">},</span>
-   <span class="s2">"file_extension"</span><span class="p">:</span> <span class="s2">".py"</span><span class="p">,</span>
-   <span class="s2">"mimetype"</span><span class="p">:</span> <span class="s2">"text/x-python"</span><span class="p">,</span>
-   <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"python"</span><span class="p">,</span>
-   <span class="s2">"nbconvert_exporter"</span><span class="p">:</span> <span class="s2">"python"</span><span class="p">,</span>
-   <span class="s2">"pygments_lexer"</span><span class="p">:</span> <span class="s2">"ipython2"</span><span class="p">,</span>
-   <span class="s2">"version"</span><span class="p">:</span> <span class="s2">"2.7.6"</span>
-  <span class="p">}</span>
- <span class="p">},</span>
- <span class="s2">"nbformat"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
- <span class="s2">"nbformat_minor"</span><span class="p">:</span> <span class="mi">5</span>
-<span class="p">}</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">src.mse_mlops.data_processing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">src.mse_mlops.paths</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">paths</span>
+<span class="n">importlib</span><span class="o">.</span><span class="n">reload</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span>
+<span class="n">importlib</span><span class="o">.</span><span class="n">reload</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-1">{
- "cells": [
-  {
-   "metadata": {},
-   "cell_type": "code",
-   "source": [
-    "import importlib\n",
-    "import src.mse_mlops.data_processing as dp\n",
-    "import src.mse_mlops.paths as paths\n",
-    "importlib.reload(dp)\n",
-    "importlib.reload(paths)"
-   ],
-   "id": "24e7b9e097a69044",
-   "outputs": [],
-   "execution_count": null
-  },
-  {
-   "metadata": {},
-   "cell_type": "markdown",
-   "source": [
-    "# Data splitting\n",
-    "## CSV splitting"
-   ],
-   "id": "cf6248f1fe88e337"
-  },
-  {
-   "metadata": {},
-   "cell_type": "code",
-   "source": [
-    "# CSV-only splitting\n",
-    "split_csv_path = dp.split_data_csv()"
-   ],
-   "id": "a31f25529ec7ee68",
-   "outputs": [],
-   "execution_count": null
-  },
-  {
-   "metadata": {},
-   "cell_type": "markdown",
-   "source": "## Directory splitting (based on CSV)",
-   "id": "44ec196706301f91"
-  },
-  {
-   "metadata": {},
-   "cell_type": "code",
-   "source": [
-    "# Directory splitting based on the CSV split\n",
-    "dp.split_data_dir(split_csv=split_csv_path)"
-   ],
-   "id": "ffc973f3fb37cb53",
-   "outputs": [],
-   "execution_count": null
-  },
-  {
-   "metadata": {},
-   "cell_type": "markdown",
-   "source": "## Full split (CSV + directory)",
-   "id": "8b63a7c2c356523"
-  },
-  {
-   "metadata": {},
-   "cell_type": "code",
-   "source": [
-    "# split_test.yaml contained different splitting and seed to test that methods work as needed\n",
-    "# for example, if train/val/test=0.5/0.3/0.2 was first used, \n",
-    "# but then only train/test=0.5/0.5 (no val),\n",
-    "# then val folder is cleared up fully.\n",
-    "#_ = dp.split_data_full(config_file=paths.CONFIG_DIR/\"split_test.yaml\")\n",
-    "\n",
-    "_ = dp.split_data_full(config_file=paths.CONFIG_DIR/\"split.yaml\")"
-   ],
-   "id": "12aef7cb61db6a08",
-   "outputs": [],
-   "execution_count": null
-  },
-  {
-   "metadata": {},
-   "cell_type": "markdown",
-   "source": "# Example: mask application",
-   "id": "87e4d0b43e73649d"
-  },
-  {
-   "cell_type": "code",
-   "id": "initial_id",
-   "metadata": {
-    "collapsed": true
-   },
-   "source": "result_img = dp.apply_mask(image_id=\"ISIC_0024315\", to_show=True)",
-   "outputs": [],
-   "execution_count": null
-  },
-  {
-   "metadata": {},
-   "cell_type": "markdown",
-   "source": "",
-   "id": "b0ba0ac5cd2d85e3"
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python 3",
-   "language": "python",
-   "name": "python3"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 2
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython2",
-   "version": "2.7.6"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 5
-}
+<div class="clipboard-copy-txt" id="cell-1">import importlib
+import src.mse_mlops.data_processing as dp
+import src.mse_mlops.paths as paths
+importlib.reload(dp)
+importlib.reload(paths)</div>
 </div>
 </div>
 </div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cf6248f1fe88e337">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h1 id="data-splitting">Data splitting<a class="anchor-link" href="#data-splitting">¶</a></h1><h2 id="csv-splitting">CSV splitting<a class="anchor-link" href="#csv-splitting">¶</a></h2>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a31f25529ec7ee68">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-2">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># CSV-only splitting</span>
+<span class="n">split_csv_path</span> <span class="o">=</span> <span class="n">dp</span><span class="o">.</span><span class="n">split_data_csv</span><span class="p">()</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-2"># CSV-only splitting
+split_csv_path = dp.split_data_csv()</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=44ec196706301f91">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="directory-splitting-based-on-csv">Directory splitting (based on CSV)<a class="anchor-link" href="#directory-splitting-based-on-csv">¶</a></h2>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=ffc973f3fb37cb53">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Directory splitting based on the CSV split</span>
+<span class="n">dp</span><span class="o">.</span><span class="n">split_data_dir</span><span class="p">(</span><span class="n">split_csv</span><span class="o">=</span><span class="n">split_csv_path</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-3"># Directory splitting based on the CSV split
+dp.split_data_dir(split_csv=split_csv_path)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8b63a7c2c356523">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="full-split-csv-directory">Full split (CSV + directory)<a class="anchor-link" href="#full-split-csv-directory">¶</a></h2>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=12aef7cb61db6a08">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># split_test.yaml contained different splitting and seed to test that methods work as needed</span>
+<span class="c1"># for example, if train/val/test=0.5/0.3/0.2 was first used, </span>
+<span class="c1"># but then only train/test=0.5/0.5 (no val),</span>
+<span class="c1"># then val folder is cleared up fully.</span>
+<span class="c1">#_ = dp.split_data_full(config_file=paths.CONFIG_DIR/"split_test.yaml")</span>
+
+<span class="n">_</span> <span class="o">=</span> <span class="n">dp</span><span class="o">.</span><span class="n">split_data_full</span><span class="p">(</span><span class="n">config_file</span><span class="o">=</span><span class="n">paths</span><span class="o">.</span><span class="n">CONFIG_DIR</span><span class="o">/</span><span class="s2">"split.yaml"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-4"># split_test.yaml contained different splitting and seed to test that methods work as needed
+# for example, if train/val/test=0.5/0.3/0.2 was first used, 
+# but then only train/test=0.5/0.5 (no val),
+# then val folder is cleared up fully.
+#_ = dp.split_data_full(config_file=paths.CONFIG_DIR/"split_test.yaml")
+
+_ = dp.split_data_full(config_file=paths.CONFIG_DIR/"split.yaml")</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=87e4d0b43e73649d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h1 id="example-mask-application">Example: mask application<a class="anchor-link" href="#example-mask-application">¶</a></h1>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=initial_id">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result_img</span> <span class="o">=</span> <span class="n">dp</span><span class="o">.</span><span class="n">apply_mask</span><span class="p">(</span><span class="n">image_id</span><span class="o">=</span><span class="s2">"ISIC_0024315"</span><span class="p">,</span> <span class="n">to_show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-5">result_img = dp.apply_mask(image_id="ISIC_0024315", to_show=True)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b0ba0ac5cd2d85e3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 </div>
 </div>
 </div>
