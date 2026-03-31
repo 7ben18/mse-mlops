@@ -1,7 +1,7 @@
 # Data
 
 This file is the single tracked data overview for the repository.
-
+ 
 ## Policy
 
 - Keep dataset contents out of git.
@@ -130,6 +130,11 @@ not just images (see note on [Images](#images)).
 ❗50 samples (0.67%) `sex == unknown`
 - 3419 samples (45.77%) `sex == female`
 - 4001 samples (53.56%) `sex == male`
+
+### Splits
+- No official splits provided by the source.
+- Splits were generated via `src/mse_mlops/data_processing.py`
+- See also `notebooks/ham10000/data_processing.ipynb` to see how to use the processing methods.
 
 ## Melanoma Cancer Dataset (Kaggle)
 

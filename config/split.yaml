@@ -1,0 +1,18 @@
+# Static split values
+# Default recommended: train_ratio: 0.6, val_ratio: 0.15,
+# test_ratio: 0.15, future_ratio: 0.1
+train_ratio: 0.6
+val_ratio: 0.15
+test_ratio: 0.15
+future_ratio: 0.1
+seed: 13
+
+split_sets:
+  - name: "train"
+    ratio: ${train_ratio}
+  - name: "val"
+    ratio: ${val_ratio}
+  - name: "test"
+    ratio: ${test_ratio}
+  - name: "future"
+    ratio: ${future_ratio}
