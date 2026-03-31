@@ -3,31 +3,12 @@ from __future__ import annotations
 import math
 import random
 from pathlib import Path
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PIL import Image
 import datetime
-
-from mse_mlops.paths import find_repo_root
-
-
-
-REPO_ROOT = find_repo_root(Path(__file__))
-RAW_DATA_DIR = REPO_ROOT / "data" / "raw" / "ham10000"
-PROCESSED_DATA_DIR = REPO_ROOT / "data" / "processed" / "ham10000"
-
-MAP_LESION_IMAGES = (
-    PROCESSED_DATA_DIR / "all_lesion_images_mapping_HAM10000.csv"
-)
-IMG_DIR = RAW_DATA_DIR / "HAM10000_images"
-MASK_DIR = RAW_DATA_DIR / "HAM10000_segmentations_lesion_tschandl"
-METADATA = RAW_DATA_DIR / "HAM10000_metadata.csv"
-EXT_METADATA = PROCESSED_DATA_DIR / "extended_HAM10000_metadata.csv"
-
-REPORTS_DIR = REPO_ROOT / "reports"
-
+import mse_mlops.paths as paths
 type Triplet = tuple[Path, Path, str]
 
 
@@ -36,10 +17,13 @@ def get_ds(
     sample_size: int = 6,
     sample_seed: int = 13,
     sample_show: bool = False,
-    img_dir: Path | str = IMG_DIR,
-    mask_dir: Path | str = MASK_DIR,
+    img_dir: Path | str = paths.RAW_DATA_DIR / paths.HAM_DIR / paths.IMG_DIR,
+    mask_dir: Path | str = paths.RAW_DATA_DIR / paths.HAM_DIR / paths.MASK_DIR,
     to_report: bool = False,
 ) -> list[Triplet]:
+    """
+    Generating random (repeatable) sample of images and masks
+    """
     triplets, missing = _build_img_mask_triplets(img_dir, mask_dir)
 
     if missing:
@@ -65,10 +49,13 @@ def get_ds(
 
 
 def metadata_ext(
-    input_file: Path | str = METADATA,
-    output_file: Path | str = EXT_METADATA,
+    input_file: Path | str = Path(paths.RAW_DATA_DIR / paths.HAM_DIR / paths.METADATA),
+    output_file: Path | str = Path(paths.PROCESSED_DATA_DIR / paths.HAM_DIR / paths.EXT_METADATA),
     save: bool = True,
 ) -> pd.DataFrame:
+    """
+    Extending raw metadata with new labels (malignant and benign == mb)
+    """
     df = pd.read_csv(input_file)
 
     malignant_set = {"akiec", "bcc", "mel"}
@@ -94,9 +81,12 @@ def metadata_ext(
 
 def get_metadata(
     ids: str | list[str],
-    csv_path: Path | str = EXT_METADATA,
+    csv_path: Path | str = Path(paths.PROCESSED_DATA_DIR / paths.HAM_DIR / paths.EXT_METADATA),
     id_col: str = "image_id",
 ) -> pd.DataFrame:
+    """
+    Get metadata for given ids
+    """
     normalized_ids = list(ids) if not isinstance(ids, (str, bytes)) else [ids]
     df = load_metadata_csv(csv_path)
 
@@ -117,11 +107,15 @@ def map_ds_metadata(
     sample_seed: int = 13,
     sample_show: bool = False,
     get_sample: bool = False,
-    img_dir: Path | str = IMG_DIR,
-    mask_dir: Path | str = MASK_DIR,
-    metadata_csv: Path | str = EXT_METADATA,
+    img_dir: Path | str = Path(paths.RAW_DATA_DIR / paths.HAM_DIR / paths.IMG_DIR),
+    mask_dir: Path | str = Path(paths.RAW_DATA_DIR / paths.HAM_DIR / paths.MASK_DIR),
+    metadata_csv: Path | str = paths.EXT_METADATA,
     to_report: bool = False,
 ) -> tuple[list[Triplet], pd.DataFrame]:
+
+    """
+    Generating random (repeatable) sample of images and masks. Map them to metadata.
+    """
     ds = get_ds(
         sample_size=sample_size,
         sample_seed=sample_seed,
@@ -146,6 +140,9 @@ def map_lesion_images(
     min_img_num: int = 2,
     verbose: bool = True,
 ) -> tuple[pd.Series, dict[str, list[str]]]:
+    """
+    Map lesion to it's images.
+    """
     counts, lesion_map = _compute_lesion_image_stats(df)
 
     _print_lesion_global_stats(df, counts)
@@ -158,9 +155,9 @@ def map_lesion_images(
     )
 
     if verbose:
-        for lesion_id, count in filt.items():
-            images = lesion_map[lesion_id]
-            print(f"lesion {lesion_id} has {count} images: {', '.join(images)}")
+        for l_id, count in filt.items():
+            images = lesion_map[l_id]
+            print(f"lesion {l_id} has {count} images: {', '.join(images)}")
 
     return filt, {lesion_id: lesion_map[lesion_id] for lesion_id in filt.index}
 
@@ -178,7 +175,7 @@ def build_lesion_images_frame(
 
 def save_lesion_images_frame(
     lesion_images: dict[str, list[str]],
-    output_file: Path | str = MAP_LESION_IMAGES,
+    output_file: Path | str = Path(paths.MAP_LESION_IMAGES),
 ) -> pd.DataFrame:
     output_path = Path(output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -284,10 +281,10 @@ def plot_images_grid(
     if lesion_id is not None:
         plt.suptitle(f"Lesion: {lesion_id}", y=1.02, fontsize=14)
     if to_report:
-        REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        paths.REPORTS_DIR.mkdir(parents=True, exist_ok=True)
         output_name = "_".join(title.lower().split()) or "_lesion_images"
         output_name += ("_" + lesion_id)
-        output_path = REPORTS_DIR / f"{output_name}.png"
+        output_path = paths.REPORTS_DIR / f"{output_name}.png"
         plt.suptitle(title, fontsize=20)
         plt.savefig(output_path, dpi=300, bbox_inches="tight")
     plt.tight_layout()
@@ -343,9 +340,9 @@ def get_image_ids_for_lesion(
 
 
 def get_lesion_info(
-    lesion_images_csv_path: Path | str,
-    metadata_csv_path: Path | str,
-    img_dir: Path | str,
+    lesion_images_csv_path: Path | str = paths.MAP_LESION_IMAGES,
+    metadata_csv_path: Path | str = paths.EXT_METADATA,
+    img_dir: Path | str = Path(paths.RAW_DATA_DIR / paths.HAM_DIR / paths.IMG_DIR),
     lesion_id: str | None = None,
     max_cols: int = 5,
     prefer_mapping_csv: bool = True,
@@ -477,11 +474,11 @@ def _plot_triplets_image_mask_grid(
             axes[1, index].imshow(mask_arr, interpolation="nearest")
         axes[1, index].axis("off")
     if to_report:
-        REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        paths.REPORTS_DIR.mkdir(parents=True, exist_ok=True)
         ct = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
         output_name = "_".join(title.lower().split()) or "_image_mask_grid_"
         output_name += f"_{ct}"
-        output_path = REPORTS_DIR / f"{output_name}.png"
+        output_path = paths.REPORTS_DIR / f"{output_name}.png"
         plt.tight_layout()
         plt.suptitle(title, fontsize=20)
         plt.savefig(output_path, dpi=300, bbox_inches="tight")
@@ -544,11 +541,6 @@ def _display_df(df: pd.DataFrame) -> None:
 
 
 __all__ = [
-    "EXT_METADATA",
-    "IMG_DIR",
-    "MAP_LESION_IMAGES",
-    "MASK_DIR",
-    "METADATA",
     "Triplet",
     "build_lesion_images_frame",
     "find_image_paths_for_ids",

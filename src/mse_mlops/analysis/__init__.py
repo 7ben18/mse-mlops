@@ -1,17 +1,12 @@
-from mse_mlops.analysis.ham10000 import (
-    EXT_METADATA,
-    IMG_DIR,
-    MAP_LESION_IMAGES,
-    MASK_DIR,
-    METADATA,
-)
-from mse_mlops.analysis.melanoma_dataset import IMAGE_EXTENSIONS
+"""Public interface for the `analysis` package.
 
-__all__ = [
-    "EXT_METADATA",
-    "IMAGE_EXTENSIONS",
-    "IMG_DIR",
-    "MAP_LESION_IMAGES",
-    "MASK_DIR",
-    "METADATA",
-]
+`paths` is re-exported here as a convenience import so callers can use
+`mse_mlops.analysis.paths` from a single package namespace.
+"""
+
+from mse_mlops import paths
+
+__all__ = ["paths"]
+
+
+

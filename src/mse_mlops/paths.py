@@ -42,3 +42,45 @@ def load_train_config(
         )
 
     return config_path, config
+
+
+REPO_ROOT = find_repo_root(Path(__file__))
+
+RAW_DATA_DIR = Path(REPO_ROOT / "data" / "raw")
+
+PROCESSED_DATA_DIR = Path(REPO_ROOT / "data" / "processed")
+
+REPORTS_DIR = Path(REPO_ROOT / "reports")
+
+CONFIG_DIR = Path(REPO_ROOT / "config")
+
+HAM_DIR = Path("ham10000")
+
+MAP_LESION_IMAGES = Path(PROCESSED_DATA_DIR / HAM_DIR / "all_lesion_images_mapping_HAM10000.csv")
+EXT_METADATA = Path(PROCESSED_DATA_DIR / HAM_DIR / "extended_HAM10000_metadata.csv")
+
+IMG_DIR = Path("HAM10000_images")
+MASK_DIR = Path("HAM10000_segmentations_lesion_tschandl")
+METADATA = "HAM10000_metadata.csv"
+
+IMG_NAME_RE = r"^ISIC_\d{7}$"
+MASK_NAME_RE = r"^ISIC_\d{7}_segmentation$"
+LESION_NAME_RE = r"^HAM_\d{7}$"
+
+
+__all__ = [
+    "EXT_METADATA",
+    "IMG_DIR",
+    "MAP_LESION_IMAGES",
+    "MASK_DIR",
+    "METADATA",
+    "REPORTS_DIR",
+    "REPO_ROOT",
+    "RAW_DATA_DIR",
+    "PROCESSED_DATA_DIR",
+    "CONFIG_DIR",
+    "HAM_DIR",
+    "IMG_NAME_RE",
+    "MASK_NAME_RE",
+    "LESION_NAME_RE",
+]
