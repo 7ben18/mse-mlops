@@ -158,18 +158,6 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# local data: keep placeholders and provenance docs tracked, keep dataset contents local
-data/*
-!data/README.md
-!data/raw/
-!data/processed/
-data/raw/*
-!data/raw/.gitkeep
-!data/raw/*/
-data/raw/*/*
-data/processed/*
-!data/processed/.gitkeep
-
 # ignore outputs
 outputs/
 
@@ -185,3 +173,6 @@ AGENT.md
 STATUS.md
 CLAUDE.md
 .kaggle/kaggle.json
+
+# dvc managed data
+/data

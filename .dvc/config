@@ -1,0 +1,6 @@
+[core]
+    remote = infomaniak
+['remote "infomaniak"']
+    url = s3://default/mse-mlops
+    endpointurl = https://s3.swiss-backup04.infomaniak.com
+    region = us-east-1
