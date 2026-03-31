@@ -20,6 +20,13 @@ The project is organized around four dataset buckets:
 - `future`: newly collected production data. Keep it separate until it has been reviewed and selected samples are promoted into `train` for later fine-tuning.
 - `test`: final hold-out set. Do not use it during normal development; touch it only for the final pre-production evaluation.
 
+Data policy:
+
+- Keep dataset contents out of git.
+- Put raw source data under `data/raw/`.
+- Put derived tables and intermediate analysis outputs under `data/processed/`.
+- Keep acquisition dates in dataset-specific `DATE.txt` files where needed.
+
 Long-term target layout:
 
 ```text
@@ -39,9 +46,58 @@ Current default training does not use `test` for validation. It uses `val_mode: 
 
 If a dedicated validation directory is introduced later, switch to `val_mode: test` and point `val_subdir` at that held-out validation folder.
 
-Dataset provenance, local acquisition notes, and expected raw-data layouts live in:
+## Dataset Sources
 
-`data/README.md`
+### HAM10000
+
+- Harvard Dataverse: `doi:10.7910/DVN/DBW86T`
+- License: CC0 / Public Domain
+- Download script: `scripts/download_ham10000.sh`
+
+### Melanoma Cancer Dataset
+
+- Kaggle: `https://www.kaggle.com/datasets/hasnainjaved/melanoma-skin-cancer-dataset-of-10000-images`
+- Latest recorded local acquisition date: `20260226`
+
+Expected local layout:
+
+```text
+data/raw/melanoma_cancer_dataset/
+  train/
+    benign/
+    malignant/
+  val/                # optional dedicated validation split
+    benign/
+    malignant/
+  future/             # optional production-collected pool kept separate until curated
+  test/
+    benign/
+    malignant/
+```
+
+## DVC Data Setup
+
+Copy the local secrets template before pulling data:
+
+`cp .dvc/config.local-example .dvc/config.local`
+
+Then replace the placeholder values in `.dvc/config.local` with your real DVC remote credentials.
+
+Config split:
+
+- `.dvc/config` stores the shared remote name, URL, endpoint, and region.
+- `.dvc/config.local` is git-ignored and should contain local secrets only.
+- `.dvc/config.local-example` is only a template showing which secret keys must be provided. Do not put real secrets in tracked files.
+
+Fetch the tracked dataset:
+
+`dvc pull`
+
+Inspect local data changes:
+
+- `dvc status`
+- `dvc data status --granular data`
+- `dvc diff --targets data`
 
 ## Training
 
