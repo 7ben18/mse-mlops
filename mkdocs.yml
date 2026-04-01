@@ -19,7 +19,6 @@ nav:
   - API Reference: modules.md
   - Notebooks:
       - HAM10000 EDA: notebooks/ham10000/ham10000_eda.ipynb
-      - HAM10000 Data Processing: notebooks/ham10000/data_processing.ipynb
       - Melanoma EDA: notebooks/melanoma_cancer_dataset/kaggle_eda.ipynb
 plugins:
   - search

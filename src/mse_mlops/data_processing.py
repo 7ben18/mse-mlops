@@ -1,4 +1,3 @@
-import ast
 import pathlib
 import re
 import shutil
@@ -10,6 +9,9 @@ import pandas as pd
 import yaml
 
 from mse_mlops import paths
+
+MALIGNANT_DX = {"akiec", "bcc", "mel"}
+BENIGN_DX = {"bkl", "df", "nv", "vasc"}
 
 
 def apply_mask(
@@ -154,26 +156,79 @@ def _helper_allocate_split_counts(
     return {split_sets[i]["name"]: int(floor_counts[i]) for i in range(len(split_sets))}
 
 
-def _helper_build_split_filename(split_sets: list[dict], seed: int) -> str:
-    """
-    Example:
-    split_train-0.6_val-0.3_test-0.1_future-0_seed-65.csv
-    """
-    ratio_part = "_".join(f"{item['name']}-{item['ratio']:g}" for item in split_sets)
-    return f"split_{ratio_part}_seed-{seed}.csv"
+def _helper_add_mb_column(metadata_df: pd.DataFrame) -> pd.DataFrame:
+    if "dx" not in metadata_df.columns:
+        raise ValueError("Raw metadata CSV must contain column 'dx'")
+
+    labeled = metadata_df.copy()
+    labeled["mb"] = pd.NA
+    labeled.loc[labeled["dx"].isin(MALIGNANT_DX), "mb"] = "malignant"
+    labeled.loc[labeled["dx"].isin(BENIGN_DX), "mb"] = "benign"
+    return labeled
 
 
-def split_data_csv(
-    config_file: pathlib.Path = paths.CONFIG_DIR / "split.yaml",
-    map_lesion_images: pathlib.Path = paths.MAP_LESION_IMAGES,
-    csv_output: pathlib.Path = paths.PROCESSED_DATA_DIR / paths.HAM_DIR,
-    verbose: bool = True,
-) -> pathlib.Path:
-    """
-    Lesion-level CSV split (no image copying) based on given config file
-    This avoids leakage when one lesion has multiple images.
-    """
+def _helper_load_raw_metadata(raw_metadata_csv: pathlib.Path) -> pd.DataFrame:
+    raw_metadata_csv = pathlib.Path(raw_metadata_csv)
+    metadata_df = pd.read_csv(raw_metadata_csv)
 
+    required_columns = {"lesion_id", "image_id", "dx"}
+    missing_columns = required_columns - set(metadata_df.columns)
+    if missing_columns:
+        raise ValueError(
+            f"Raw metadata CSV must contain columns {sorted(required_columns)}, "
+            f"missing {sorted(missing_columns)} in {raw_metadata_csv}"
+        )
+
+    metadata_df = metadata_df.dropna(subset=["lesion_id", "image_id"])
+    metadata_df["lesion_id"] = metadata_df["lesion_id"].astype(str).str.strip()
+    metadata_df["image_id"] = metadata_df["image_id"].astype(str).str.strip()
+    metadata_df = metadata_df[(metadata_df["lesion_id"] != "") & (metadata_df["image_id"] != "")]
+    metadata_df = metadata_df.drop_duplicates(subset=["lesion_id", "image_id"])
+
+    if metadata_df.empty:
+        raise ValueError(f"No valid lesion/image rows found in raw metadata CSV: {raw_metadata_csv}")
+
+    return metadata_df
+
+
+def _helper_assign_split_by_lesion(
+    metadata_df: pd.DataFrame,
+    split_sets: list[dict],
+    seed: int,
+) -> pd.DataFrame:
+    lesion_ids = metadata_df["lesion_id"].drop_duplicates().tolist()
+    if not lesion_ids:
+        raise ValueError("No lesion_ids found in raw metadata CSV")
+
+    lesion_splits = pd.DataFrame({"lesion_id": lesion_ids})
+    lesion_splits = lesion_splits.sample(frac=1, random_state=seed).reset_index(drop=True)
+
+    split_names = [item["name"] for item in split_sets]
+    split_counts = _helper_allocate_split_counts(n_total=len(lesion_splits), split_sets=split_sets)
+
+    start = 0
+    lesion_splits["set"] = None
+
+    for split_name in split_names:
+        count = split_counts[split_name]
+        end = start + count
+        lesion_splits.loc[start : end - 1, "set"] = split_name
+        start = end
+
+    return metadata_df.merge(lesion_splits, on="lesion_id", how="left")
+
+
+def _helper_resolve_output_csv(csv_output: pathlib.Path, default_name: str) -> pathlib.Path:
+    csv_output = pathlib.Path(csv_output)
+    if csv_output.suffix.lower() == ".csv":
+        return csv_output
+    return csv_output / default_name
+
+
+def _helper_load_split_config(
+    config_file: pathlib.Path,
+    verbose: bool = False,
+) -> tuple[int, list[dict], list[str]]:
     with open(config_file) as f:
         config = yaml.safe_load(f)
 
@@ -191,48 +246,30 @@ def split_data_csv(
             print(f"  {item['name']}: {item['ratio']}")
         print(f"Seed: {seed}")
 
-    lesion_mapping = pd.read_csv(map_lesion_images, index_col=0)
+    return seed, split_sets, split_names
+
+
+def _helper_build_processed_metadata(
+    raw_metadata_csv: pathlib.Path,
+    split_sets: list[dict],
+    split_names: list[str],
+    seed: int,
+    verbose: bool = False,
+) -> pd.DataFrame:
+    metadata_df = _helper_load_raw_metadata(raw_metadata_csv)
+    metadata_df = _helper_add_mb_column(metadata_df)
+    metadata_df = _helper_assign_split_by_lesion(metadata_df=metadata_df, split_sets=split_sets, seed=seed)
 
     if verbose:
-        print(f"Using lesion mapping from {map_lesion_images}, total entries: {len(lesion_mapping)}")
-        print("Lesion mapping head:")
-        print(lesion_mapping.head())
+        print(
+            f"Using raw metadata from {raw_metadata_csv}, total rows: {len(metadata_df)}, "
+            f"total lesions: {metadata_df['lesion_id'].nunique()}"
+        )
+        print("Metadata head:")
+        print(metadata_df.head())
 
-    if "images" not in lesion_mapping.columns:
-        raise ValueError("Expected column 'images' in lesion mapping CSV")
-
-    lesion_ids = lesion_mapping.index.to_list()
-    if not lesion_ids:
-        raise ValueError("No lesion_ids found in lesion mapping CSV")
-
-    lesions_df = pd.DataFrame({"lesion_id": lesion_ids})
-    lesions_df = lesions_df.sample(frac=1, random_state=seed).reset_index(drop=True)
-
-    n_total = len(lesions_df)
-    split_counts = _helper_allocate_split_counts(n_total=n_total, split_sets=split_sets)
-
-    start = 0
-    lesions_df["set"] = None
-
-    for split_name in split_names:
-        count = split_counts[split_name]
-        end = start + count
-        lesions_df.loc[start : end - 1, "set"] = split_name
-        start = end
-
-    lesion_mapping = lesion_mapping.copy()
-    lesion_mapping["n_images"] = lesion_mapping["images"].apply(_count_images)
-
-    lesions_df = lesions_df.merge(
-        lesion_mapping[["images", "n_images"]],
-        left_on="lesion_id",
-        right_index=True,
-        how="left",
-    )
-
-    if verbose:
-        lesion_stats = lesions_df.groupby("set")["lesion_id"].count().reindex(split_names, fill_value=0)
-        image_stats = lesions_df.groupby("set")["n_images"].sum().reindex(split_names, fill_value=0)
+        lesion_stats = metadata_df.groupby("set")["lesion_id"].nunique().reindex(split_names, fill_value=0)
+        image_stats = metadata_df.groupby("set")["image_id"].count().reindex(split_names, fill_value=0)
 
         total_lesions = lesion_stats.sum()
         total_images = image_stats.sum()
@@ -251,65 +288,95 @@ def split_data_csv(
                 f"{n_images:4d} images ({image_pct:6.2f}%)"
             )
 
-    csv_output.mkdir(parents=True, exist_ok=True)
+    return metadata_df
 
-    filename = _helper_build_split_filename(split_sets=split_sets, seed=seed)
-    output_path = csv_output / filename
 
-    lesions_df[["lesion_id", "images", "set"]].to_csv(output_path, index=False)
+def _helper_write_processed_metadata(
+    metadata_df: pd.DataFrame,
+    csv_output: pathlib.Path,
+    verbose: bool = False,
+) -> pathlib.Path:
+    output_path = _helper_resolve_output_csv(csv_output=csv_output, default_name=pathlib.Path(paths.EXT_METADATA).name)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    metadata_df.to_csv(output_path, index=False)
 
     if verbose:
-        print(f"\nSaved split CSV to: {output_path}")
+        unmapped_dx = sorted(set(metadata_df["dx"].dropna()) - (MALIGNANT_DX | BENIGN_DX))
+        print(f"\nSaved processed metadata to: {output_path}")
+        print("Unmapped dx:", unmapped_dx)
 
     return output_path
 
 
-def _count_images(images_value: str) -> int:
-    if pd.isna(images_value):
-        return 0
+def _helper_validate_lesion_split_consistency(
+    split_df: pd.DataFrame,
+    verbose: bool = False,
+) -> pd.Series:
+    required_columns = {"lesion_id", "set"}
+    missing_columns = required_columns - set(split_df.columns)
+    if missing_columns:
+        raise ValueError(
+            f"Metadata must contain columns {sorted(required_columns)}, "
+            f"missing {sorted(missing_columns)}"
+        )
 
-    s = str(images_value).strip()
-    if s == "{}" or s == "":
-        return 0
+    missing_set_lesions = split_df.loc[split_df["set"].isna(), "lesion_id"].dropna().drop_duplicates().tolist()
+    if missing_set_lesions:
+        raise ValueError(
+            "Each lesion_id must belong to exactly one set. "
+            f"Missing set values for lesions: {missing_set_lesions[:10]}"
+        )
 
-    # expected format: "{a, b, c}"
-    if s.startswith("{") and s.endswith("}"):
-        inner = s[1:-1].strip()
-        if inner == "":
-            return 0
-        return len([x.strip() for x in inner.split(",") if x.strip()])
+    lesion_set_counts = split_df.groupby("lesion_id")["set"].nunique()
+    inconsistent = lesion_set_counts[lesion_set_counts != 1]
+    if not inconsistent.empty:
+        examples = ", ".join(f"{lesion_id}: {count}" for lesion_id, count in inconsistent.head(10).items())
+        raise ValueError(
+            "Each lesion_id must belong to exactly one set. "
+            f"Found lesions assigned to multiple sets: {examples}"
+        )
 
-    # fallback in case format changes
-    try:
-        parsed = ast.literal_eval(s)
-        if isinstance(parsed, (list, tuple, set)):
-            return len(parsed)
-    except Exception:
-        pass
-    return 1
+    if verbose:
+        print(
+            "Verified lesion split consistency: "
+            f"{len(lesion_set_counts)} lesions assigned to exactly one set."
+        )
+
+    return lesion_set_counts
 
 
-def _helper_parse_images(images_value: str) -> list[str]:
+def split_data_csv(
+    config_file: pathlib.Path = paths.CONFIG_DIR / "split.yaml",
+    raw_metadata_csv: pathlib.Path = paths.RAW_DATA_DIR / paths.HAM_DIR / paths.METADATA,
+    csv_output: pathlib.Path = paths.EXT_METADATA,
+    verbose: bool = True,
+) -> pathlib.Path:
     """
-    Parse strings like:
-    "{ISIC_0024579, ISIC_0025577, ISIC_0029638}"
-    into:
-    ["ISIC_0024579", "ISIC_0025577", "ISIC_0029638"]
+    Build processed metadata with one image per row and a lesion-consistent split label.
     """
-    if pd.isna(images_value):
-        return []
+    seed, split_sets, split_names = _helper_load_split_config(config_file=config_file, verbose=verbose)
+    metadata_df = _helper_build_processed_metadata(
+        raw_metadata_csv=raw_metadata_csv,
+        split_sets=split_sets,
+        split_names=split_names,
+        seed=seed,
+        verbose=verbose,
+    )
+    _helper_validate_lesion_split_consistency(metadata_df, verbose=verbose)
+    return _helper_write_processed_metadata(metadata_df=metadata_df, csv_output=csv_output, verbose=verbose)
 
-    s = str(images_value).strip()
-    if not s or s == "{}":
-        return []
 
-    if s.startswith("{") and s.endswith("}"):
-        s = s[1:-1].strip()
+def _helper_reset_output_root(data_output: pathlib.Path, verbose: bool = False) -> None:
+    data_output = pathlib.Path(data_output)
 
-    if not s:
-        return []
+    if data_output.exists():
+        shutil.rmtree(data_output)
+        if verbose:
+            print(f"Deleted processed output root: {data_output}")
 
-    return [img_id.strip() for img_id in s.split(",") if img_id.strip()]
+    data_output.mkdir(parents=True, exist_ok=True)
+    if verbose:
+        print(f"Created processed output root: {data_output}")
 
 
 def _helper_resolve_split_csv(split_csv: pathlib.Path, verbose: bool = False) -> pathlib.Path:
@@ -320,7 +387,7 @@ def _helper_resolve_split_csv(split_csv: pathlib.Path, verbose: bool = False) ->
     - split_csv is already a full filepath to a CSV file.
 
     Fallback:
-    - if split_csv is a directory, pick the newest split_*.csv from it.
+    - if split_csv is a directory, use metadata.csv in that directory.
     """
     split_csv = pathlib.Path(split_csv)
 
@@ -328,19 +395,13 @@ def _helper_resolve_split_csv(split_csv: pathlib.Path, verbose: bool = False) ->
         return split_csv
 
     if split_csv.is_dir():
-        candidates = sorted(
-            split_csv.glob("split_*.csv"),
-            key=lambda p: p.stat().st_mtime,
-            reverse=True,
-        )
-        if not candidates:
-            raise FileNotFoundError(f"No split_*.csv files found in directory: {split_csv}")
-
-        resolved = candidates[0]
+        resolved = split_csv / pathlib.Path(paths.EXT_METADATA).name
+        if not resolved.exists():
+            raise FileNotFoundError(f"No metadata CSV found in directory: {resolved}")
         if verbose:
             print(
-                f"No explicit split CSV filepath was provided. "
-                f"Using the newest split file found in directory:\n  {resolved}"
+                f"No explicit metadata CSV filepath was provided. "
+                f"Using the metadata file found in directory:\n  {resolved}"
             )
         return resolved
 
@@ -401,41 +462,31 @@ def _helper_print_split_summary(
 ) -> None:
     if not verbose:
         return
-    set_names = split_df["set"].unique()
-    split_counts = (
-        split_df
-        .assign(n_images=split_df["images"].apply(_helper_parse_images).apply(len))
-        .groupby("set")["n_images"]
-        .sum()
-        .reindex(set_names, fill_value=0)
-    )
-
-    lesion_counts = split_df.groupby("set")["lesion_id"].count().reindex(set_names, fill_value=0)
+    set_names = split_df["set"].dropna().drop_duplicates().tolist()
+    lesion_counts = split_df.groupby("set")["lesion_id"].nunique().reindex(set_names, fill_value=0)
+    split_counts = split_df.groupby("set")["image_id"].count().reindex(set_names, fill_value=0)
 
     print("\nSplit summary:")
-    split_names = set_names
-    for split_name in split_names:
+    for split_name in set_names:
         print(f"  {split_name}: {lesion_counts[split_name]} lesions, {split_counts[split_name]} images")
 
 
-def split_data_dir(
-    split_csv: pathlib.Path = paths.PROCESSED_DATA_DIR / paths.HAM_DIR,
-    data_input: pathlib.Path = paths.RAW_DATA_DIR / paths.HAM_DIR,
-    data_output: pathlib.Path = paths.PROCESSED_DATA_DIR / paths.HAM_DIR,
-    verbose: bool = True,
+def _helper_copy_split_data(
+    split_df: pd.DataFrame,
+    data_input: pathlib.Path,
+    data_output: pathlib.Path,
+    clear_existing: bool = True,
+    verbose: bool = False,
 ) -> None:
-    """
-    This is a lesion-level directory split (image copying), based on given CSV split.
-    """
-    data_input = pathlib.Path(data_input)
-    data_output = pathlib.Path(data_output)
+    required_columns = {"lesion_id", "image_id", "set"}
+    missing_columns = required_columns - set(split_df.columns)
+    if missing_columns:
+        raise ValueError(
+            f"Metadata CSV must contain columns {sorted(required_columns)}, "
+            f"missing {sorted(missing_columns)}"
+        )
 
-    split_csv = _helper_resolve_split_csv(split_csv, verbose=verbose)
-
-    if verbose:
-        print(f"Reading split CSV: {split_csv}")
-
-    split_df = pd.read_csv(split_csv)
+    _helper_validate_lesion_split_consistency(split_df, verbose=verbose)
 
     input_img_dir = data_input / paths.IMG_DIR
     input_mask_dir = data_input / paths.MASK_DIR
@@ -451,12 +502,14 @@ def split_data_dir(
         mask_dir_name=paths.MASK_DIR,
         set_names=split_df["set"].unique().tolist(),
     )
-    _helper_clear_split_dirs(
-        data_output=data_output,
-        img_dir_name=paths.IMG_DIR,
-        mask_dir_name=paths.MASK_DIR,
-        verbose=verbose,
-    )
+    if clear_existing:
+        _helper_clear_split_dirs(
+            data_output=data_output,
+            img_dir_name=paths.IMG_DIR,
+            mask_dir_name=paths.MASK_DIR,
+            verbose=verbose,
+        )
+
     copied_images = 0
     copied_masks = 0
     missing_images = []
@@ -464,27 +517,24 @@ def split_data_dir(
 
     for _, row in split_df.iterrows():
         split_name = row["set"]
-        lesion_id = row["lesion_id"]
-        image_ids = _helper_parse_images(row["images"])
+        image_id = row["image_id"]
+        src_img = input_img_dir / f"{image_id}.jpg"
+        dst_img = data_output / paths.IMG_DIR / split_name / f"{image_id}.jpg"
 
-        for image_id in image_ids:
-            src_img = input_img_dir / f"{image_id}.jpg"
-            dst_img = data_output / paths.IMG_DIR / split_name / f"{image_id}.jpg"
+        src_mask = input_mask_dir / f"{image_id}_segmentation.png"
+        dst_mask = data_output / paths.MASK_DIR / split_name / f"{image_id}_segmentation.png"
 
-            src_mask = input_mask_dir / f"{image_id}_segmentation.png"
-            dst_mask = data_output / paths.MASK_DIR / split_name / f"{image_id}_segmentation.png"
+        if src_img.exists():
+            shutil.copy2(src_img, dst_img)
+            copied_images += 1
+        else:
+            missing_images.append(src_img)
 
-            if src_img.exists():
-                shutil.copy2(src_img, dst_img)
-                copied_images += 1
-            else:
-                missing_images.append(src_img)
-
-            if src_mask.exists():
-                shutil.copy2(src_mask, dst_mask)
-                copied_masks += 1
-            else:
-                missing_masks.append(src_mask)
+        if src_mask.exists():
+            shutil.copy2(src_mask, dst_mask)
+            copied_masks += 1
+        else:
+            missing_masks.append(src_mask)
 
     if verbose:
         print("\nDone.")
@@ -508,20 +558,68 @@ def split_data_dir(
                 print("  ...")
 
 
+def split_data_dir(
+    split_csv: pathlib.Path = paths.EXT_METADATA,
+    data_input: pathlib.Path = paths.RAW_DATA_DIR / paths.HAM_DIR,
+    data_output: pathlib.Path = paths.PROCESSED_DATA_DIR / paths.HAM_DIR,
+    clear_existing: bool = True,
+    verbose: bool = True,
+) -> None:
+    """
+    Copy images and masks into split directories based on processed metadata.
+    By default, existing managed split folders are cleared first.
+    """
+    data_input = pathlib.Path(data_input)
+    data_output = pathlib.Path(data_output)
+
+    split_csv = _helper_resolve_split_csv(split_csv, verbose=verbose)
+
+    if verbose:
+        print(f"Reading metadata CSV: {split_csv}")
+
+    split_df = pd.read_csv(split_csv)
+    _helper_copy_split_data(
+        split_df=split_df,
+        data_input=data_input,
+        data_output=data_output,
+        clear_existing=clear_existing,
+        verbose=verbose,
+    )
+
+
 def split_data_full(
     config_file: pathlib.Path = paths.CONFIG_DIR / "split.yaml",
     data_input: pathlib.Path = paths.RAW_DATA_DIR / paths.HAM_DIR,
     data_output: pathlib.Path = paths.PROCESSED_DATA_DIR / paths.HAM_DIR,
-    map_lesion_images: pathlib.Path = paths.MAP_LESION_IMAGES,
+    raw_metadata_csv: pathlib.Path = paths.RAW_DATA_DIR / paths.HAM_DIR / paths.METADATA,
     verbose: bool = True,
 ) -> pathlib.Path:
     """
-    This is a lesion-level CSV and directory split (image copying), based on given config file.
+    Rebuild the processed HAM10000 outputs from raw data only.
     """
-    csv_split = split_data_csv(map_lesion_images=map_lesion_images, config_file=config_file, verbose=verbose)
-
-    split_data_dir(data_input=data_input, data_output=data_output, split_csv=csv_split, verbose=verbose)
-    return csv_split
+    data_output = pathlib.Path(data_output)
+    _helper_reset_output_root(data_output=data_output, verbose=verbose)
+    seed, split_sets, split_names = _helper_load_split_config(config_file=config_file, verbose=verbose)
+    metadata_df = _helper_build_processed_metadata(
+        raw_metadata_csv=raw_metadata_csv,
+        split_sets=split_sets,
+        split_names=split_names,
+        seed=seed,
+        verbose=verbose,
+    )
+    metadata_csv = _helper_write_processed_metadata(
+        metadata_df=metadata_df,
+        csv_output=data_output / pathlib.Path(paths.EXT_METADATA).name,
+        verbose=verbose,
+    )
+    _helper_copy_split_data(
+        split_df=metadata_df,
+        data_input=data_input,
+        data_output=data_output,
+        clear_existing=False,
+        verbose=verbose,
+    )
+    return metadata_csv
 
 
 def main() -> None:

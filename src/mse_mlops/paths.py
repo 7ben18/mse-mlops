@@ -53,7 +53,7 @@ CONFIG_DIR = Path(REPO_ROOT / "config")
 HAM_DIR = Path("ham10000")
 
 MAP_LESION_IMAGES = Path(PROCESSED_DATA_DIR / HAM_DIR / "all_lesion_images_mapping_HAM10000.csv")
-EXT_METADATA = Path(PROCESSED_DATA_DIR / HAM_DIR / "extended_HAM10000_metadata.csv")
+EXT_METADATA = Path(PROCESSED_DATA_DIR / HAM_DIR / "metadata.csv")
 
 IMG_DIR = Path("HAM10000_images")
 MASK_DIR = Path("HAM10000_segmentations_lesion_tschandl")

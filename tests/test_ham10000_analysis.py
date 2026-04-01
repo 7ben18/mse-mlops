@@ -11,7 +11,6 @@ from mse_mlops.analysis.ham10000 import (
     map_lesion_images,
     metadata_ext,
     parse_images_field,
-    save_lesion_images_frame,
 )
 
 
@@ -42,22 +41,20 @@ def test_get_ds_matches_images_and_masks(tmp_path: Path):
     ]
 
 
-def test_metadata_ext_creates_mb_column_and_saves_output(tmp_path: Path):
+def test_metadata_ext_creates_mb_column_without_writing_output(tmp_path: Path):
     input_csv = tmp_path / "HAM10000_metadata.csv"
-    output_csv = tmp_path / "processed" / "extended_HAM10000_metadata.csv"
     pd.DataFrame([
         {"image_id": "ISIC_0001", "dx": "mel"},
         {"image_id": "ISIC_0002", "dx": "nv"},
     ]).to_csv(input_csv, index=False)
 
-    extended = metadata_ext(input_file=input_csv, output_file=output_csv, save=True)
+    extended = metadata_ext(input_file=input_csv)
 
-    assert output_csv.exists()
     assert extended["mb"].tolist() == ["malignant", "benign"]
 
 
 def test_get_metadata_preserves_requested_order(tmp_path: Path):
-    metadata_csv = tmp_path / "extended_HAM10000_metadata.csv"
+    metadata_csv = tmp_path / "metadata.csv"
     pd.DataFrame([
         {"image_id": "ISIC_0001", "dx": "mel"},
         {"image_id": "ISIC_0002", "dx": "nv"},
@@ -69,7 +66,7 @@ def test_get_metadata_preserves_requested_order(tmp_path: Path):
     assert selected["image_id"].tolist() == ["ISIC_0003", "ISIC_0001"]
 
 
-def test_map_lesion_images_and_save_frame(tmp_path: Path):
+def test_map_lesion_images_and_build_frame(tmp_path: Path):
     metadata = pd.DataFrame([
         {"lesion_id": "HAM_1", "image_id": "ISIC_0001"},
         {"lesion_id": "HAM_1", "image_id": "ISIC_0002"},
@@ -77,13 +74,11 @@ def test_map_lesion_images_and_save_frame(tmp_path: Path):
     ])
 
     counts, lesion_images = map_lesion_images(metadata, min_img_num=2, verbose=False)
-    out_csv = tmp_path / "processed" / "all_lesion_images_mapping_HAM10000.csv"
-    out_df = save_lesion_images_frame(lesion_images, out_csv)
+    out_df = build_lesion_images_frame(lesion_images)
 
     assert counts.index.tolist() == ["HAM_1"]
     assert lesion_images == {"HAM_1": ["ISIC_0001", "ISIC_0002"]}
-    assert build_lesion_images_frame(lesion_images).equals(out_df)
-    assert out_csv.exists()
+    assert out_df.to_dict("records") == [{"lesion_id": "HAM_1", "images": "{ISIC_0001, ISIC_0002}"}]
 
 
 def test_parse_images_field_and_find_image_paths(tmp_path: Path):
