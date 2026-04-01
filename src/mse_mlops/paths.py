@@ -21,9 +21,7 @@ def find_repo_root(start: Path | str | None = None) -> Path:
 
 
 def resolve_train_config_path(repo_root: Path | str | None = None) -> Path:
-    root = (
-        find_repo_root(repo_root) if repo_root is not None else find_repo_root()
-    )
+    root = find_repo_root(repo_root) if repo_root is not None else find_repo_root()
     return root / DEFAULT_CONFIG_PATH
 
 
@@ -37,9 +35,7 @@ def load_train_config(
         config = yaml.safe_load(handle) or {}
 
     if not isinstance(config, dict):
-        raise ValueError(
-            f"Config file must contain a YAML mapping: {config_path}"
-        )
+        raise ValueError(f"Config file must contain a YAML mapping: {config_path}")
 
     return config_path, config
 
@@ -69,18 +65,18 @@ LESION_NAME_RE = r"^HAM_\d{7}$"
 
 
 __all__ = [
+    "CONFIG_DIR",
     "EXT_METADATA",
+    "HAM_DIR",
     "IMG_DIR",
+    "IMG_NAME_RE",
+    "LESION_NAME_RE",
     "MAP_LESION_IMAGES",
     "MASK_DIR",
+    "MASK_NAME_RE",
     "METADATA",
+    "PROCESSED_DATA_DIR",
+    "RAW_DATA_DIR",
     "REPORTS_DIR",
     "REPO_ROOT",
-    "RAW_DATA_DIR",
-    "PROCESSED_DATA_DIR",
-    "CONFIG_DIR",
-    "HAM_DIR",
-    "IMG_NAME_RE",
-    "MASK_NAME_RE",
-    "LESION_NAME_RE",
 ]

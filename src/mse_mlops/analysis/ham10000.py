@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import datetime
 import math
 import random
 from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PIL import Image
-import datetime
+
 import mse_mlops.paths as paths
+
 type Triplet = tuple[Path, Path, str]
 
 
@@ -33,11 +36,7 @@ def get_ds(
         img_paths = _collect_image_paths(img_dir)
         img_stems = [p.stem for p in img_paths[:5]]
         mask_stems = [p.stem for p in list(Path(mask_dir).glob("*.png"))[:5]]
-        raise RuntimeError(
-            "No (image, mask) matches found.\n"
-            f"Sample image: {img_stems}\n"
-            f"Sample mask:  {mask_stems}\n"
-        )
+        raise RuntimeError(f"No (image, mask) matches found.\nSample image: {img_stems}\nSample mask:  {mask_stems}\n")
 
     sampled: list[Triplet] | None = None
     if get_sample or sample_show:
@@ -91,9 +90,7 @@ def get_metadata(
     df = load_metadata_csv(csv_path)
 
     if id_col not in df.columns:
-        raise KeyError(
-            f"'{id_col}' not found in CSV columns: {list(df.columns)}"
-        )
+        raise KeyError(f"'{id_col}' not found in CSV columns: {list(df.columns)}")
 
     out = df[df[id_col].isin(normalized_ids)].copy()
     order = {key: index for index, key in enumerate(normalized_ids)}
@@ -112,7 +109,6 @@ def map_ds_metadata(
     metadata_csv: Path | str = paths.EXT_METADATA,
     to_report: bool = False,
 ) -> tuple[list[Triplet], pd.DataFrame]:
-
     """
     Generating random (repeatable) sample of images and masks. Map them to metadata.
     """
@@ -150,9 +146,7 @@ def map_lesion_images(
 
     filt = counts[counts >= min_img_num]
     print(f"\nThreshold: >= {min_img_num} images/lesion")
-    print(
-        f"Matching lesions: {len(filt)} / {len(counts)} ({len(filt) / len(counts) * 100:.2f}%)"
-    )
+    print(f"Matching lesions: {len(filt)} / {len(counts)} ({len(filt) / len(counts) * 100:.2f}%)")
 
     if verbose:
         for l_id, count in filt.items():
@@ -167,9 +161,7 @@ def build_lesion_images_frame(
 ) -> pd.DataFrame:
     return pd.DataFrame({
         "lesion_id": list(lesion_images.keys()),
-        "images": [
-            "{" + ", ".join(images) + "}" for images in lesion_images.values()
-        ],
+        "images": ["{" + ", ".join(images) + "}" for images in lesion_images.values()],
     }).sort_values("lesion_id")
 
 
@@ -203,9 +195,7 @@ def load_map_lesion_images(file_path: Path | str) -> pd.DataFrame:
     required = {"lesion_id", "images"}
     missing = required - set(lesion_df.columns)
     if missing:
-        raise KeyError(
-            f"lesion->images CSV missing columns: {missing}. Found: {list(lesion_df.columns)}"
-        )
+        raise KeyError(f"lesion->images CSV missing columns: {missing}. Found: {list(lesion_df.columns)}")
 
     if lesion_df.empty:
         raise RuntimeError("lesion->images CSV is empty.")
@@ -221,9 +211,7 @@ def pick_random_lesion(lesion_df: pd.DataFrame) -> tuple[str, list[str]]:
     image_ids = parse_images_field(row["images"])
 
     if not image_ids:
-        raise RuntimeError(
-            f"Selected lesion {lesion_id} has no images listed in CSV."
-        )
+        raise RuntimeError(f"Selected lesion {lesion_id} has no images listed in CSV.")
 
     return lesion_id, image_ids
 
@@ -283,13 +271,12 @@ def plot_images_grid(
     if to_report:
         paths.REPORTS_DIR.mkdir(parents=True, exist_ok=True)
         output_name = "_".join(title.lower().split()) or "_lesion_images"
-        output_name += ("_" + lesion_id)
+        output_name += "_" + lesion_id
         output_path = paths.REPORTS_DIR / f"{output_name}.png"
         plt.suptitle(title, fontsize=20)
         plt.savefig(output_path, dpi=300, bbox_inches="tight")
     plt.tight_layout()
     plt.show()
-
 
 
 def load_metadata_csv(metadata_csv_path: Path | str) -> pd.DataFrame:
@@ -299,13 +286,9 @@ def load_metadata_csv(metadata_csv_path: Path | str) -> pd.DataFrame:
     return meta_df
 
 
-def get_metadata_for_lesion(
-    meta_df: pd.DataFrame, lesion_id: str, lesion_col: str = "lesion_id"
-) -> pd.DataFrame:
+def get_metadata_for_lesion(meta_df: pd.DataFrame, lesion_id: str, lesion_col: str = "lesion_id") -> pd.DataFrame:
     if lesion_col not in meta_df.columns:
-        raise KeyError(
-            f"Metadata missing column '{lesion_col}'. Found: {list(meta_df.columns)}"
-        )
+        raise KeyError(f"Metadata missing column '{lesion_col}'. Found: {list(meta_df.columns)}")
     return meta_df[meta_df[lesion_col] == lesion_id].copy()
 
 
@@ -330,9 +313,7 @@ def show_random_lesion_images_and_metadata(
     return lesion_id, img_ids, meta_rows
 
 
-def get_image_ids_for_lesion(
-    lesion_df: pd.DataFrame, lesion_id: str
-) -> list[str]:
+def get_image_ids_for_lesion(lesion_df: pd.DataFrame, lesion_id: str) -> list[str]:
     hit = lesion_df[lesion_df["lesion_id"] == lesion_id]
     if hit.empty:
         return []
@@ -354,11 +335,7 @@ def get_lesion_info(
         lesion_id, img_ids = pick_random_lesion(lesion_df)
     else:
         lesion_id = str(lesion_id).strip()
-        img_ids = (
-            get_image_ids_for_lesion(lesion_df, lesion_id)
-            if prefer_mapping_csv
-            else []
-        )
+        img_ids = get_image_ids_for_lesion(lesion_df, lesion_id) if prefer_mapping_csv else []
 
     meta_df = load_metadata_csv(metadata_csv_path)
     meta_rows = get_metadata_for_lesion(meta_df, lesion_id)
@@ -368,15 +345,11 @@ def get_lesion_info(
 
     if not img_ids:
         if "image_id" not in meta_rows.columns:
-            raise KeyError(
-                "Metadata does not have 'image_id' column, can't derive images."
-            )
+            raise KeyError("Metadata does not have 'image_id' column, can't derive images.")
         img_ids = sorted(meta_rows["image_id"].dropna().unique().tolist())
 
     if not img_ids:
-        raise RuntimeError(
-            f"Lesion {lesion_id} has no image_ids (mapping CSV + metadata both empty)."
-        )
+        raise RuntimeError(f"Lesion {lesion_id} has no image_ids (mapping CSV + metadata both empty).")
 
     img_id_to_path = find_image_paths_for_ids(img_ids, img_dir=img_dir)
     plot_images_grid(img_id_to_path, lesion_id=lesion_id, max_cols=max_cols, to_report=to_report)
@@ -412,9 +385,7 @@ def _build_mask_map(mask_dir: Path | str) -> dict[str, Path]:
     return mask_map
 
 
-def _build_img_mask_triplets(
-    img_dir: Path | str, mask_dir: Path | str
-) -> tuple[list[Triplet], list[str]]:
+def _build_img_mask_triplets(img_dir: Path | str, mask_dir: Path | str) -> tuple[list[Triplet], list[str]]:
     img_paths = _collect_image_paths(img_dir)
     mask_map = _build_mask_map(mask_dir)
 
@@ -423,9 +394,7 @@ def _build_img_mask_triplets(
 
     for img_path in img_paths:
         img_id = img_path.stem
-        mask_path = mask_map.get(img_id.lower()) or mask_map.get(
-            (img_id + "_segmentation").lower()
-        )
+        mask_path = mask_map.get(img_id.lower()) or mask_map.get((img_id + "_segmentation").lower())
 
         if mask_path is None:
             missing.append(img_path.name)
@@ -436,18 +405,14 @@ def _build_img_mask_triplets(
     return triplets, missing
 
 
-def _sample_items(
-    items: list[Triplet], sample_size: int, sample_seed: int
-) -> list[Triplet]:
+def _sample_items(items: list[Triplet], sample_size: int, sample_seed: int) -> list[Triplet]:
     rng = random.Random(sample_seed)
     k = min(int(sample_size), len(items))
     return rng.sample(items, k)
 
 
 def _plot_triplets_image_mask_grid(
-    triplets: list[Triplet],
-    title: str = "Image vs Mask",
-    to_report: bool = False
+    triplets: list[Triplet], title: str = "Image vs Mask", to_report: bool = False
 ) -> None:
     n_triplets = len(triplets)
 
@@ -467,9 +432,7 @@ def _plot_triplets_image_mask_grid(
         axes[0, index].axis("off")
 
         if mask_arr.ndim == 2:
-            axes[1, index].imshow(
-                mask_arr, cmap="gray", interpolation="nearest"
-            )
+            axes[1, index].imshow(mask_arr, cmap="gray", interpolation="nearest")
         else:
             axes[1, index].imshow(mask_arr, interpolation="nearest")
         axes[1, index].axis("off")
@@ -507,9 +470,7 @@ def _compute_lesion_image_stats(
     df: pd.DataFrame,
 ) -> tuple[pd.Series, dict[str, list[str]]]:
     grouped = df.groupby("lesion_id")["image_id"]
-    lesion_map = grouped.apply(
-        lambda values: sorted(values.dropna().unique())
-    ).to_dict()
+    lesion_map = grouped.apply(lambda values: sorted(values.dropna().unique())).to_dict()
     counts = grouped.nunique(dropna=True).sort_values(ascending=False)
     return counts, lesion_map
 
@@ -517,9 +478,7 @@ def _compute_lesion_image_stats(
 def _print_lesion_global_stats(df: pd.DataFrame, counts: pd.Series) -> None:
     print(f"lesions: {counts.size}")
     print(f"total images (unique image_id): {df['image_id'].nunique()}")
-    print(
-        f"mean images/lesion: {counts.mean():.2f} | median: {counts.median():.0f} | max: {counts.max()}"
-    )
+    print(f"mean images/lesion: {counts.mean():.2f} | median: {counts.median():.0f} | max: {counts.max()}")
 
 
 def _print_lesion_distribution(counts: pd.Series) -> None:

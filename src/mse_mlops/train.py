@@ -887,12 +887,10 @@ def main() -> None:
                 model.load_state_dict(best_model_state.model_state_dict)
             best_model_for_mlflow = model
             print(f"Best validation {best_model_state.metric_name}: {best_model_state.metric_value:.4f}")
-            log_summary_metrics(
-                {
-                    "best_val_roc_auc": best_model_state.metric_value,
-                    "best_epoch": float(best_model_state.epoch),
-                }
-            )
+            log_summary_metrics({
+                "best_val_roc_auc": best_model_state.metric_value,
+                "best_epoch": float(best_model_state.epoch),
+            })
 
         log_final_artifacts(
             best_model=best_model_for_mlflow,

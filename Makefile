@@ -41,6 +41,11 @@ data-download-kaggle: ## Download Melanoma Kaggle dataset (requires ~/.kaggle/ka
 	@echo "📥 Downloading Melanoma Kaggle dataset..."
 	@bash scripts/download_melanoma.sh
 
+.PHONY: data-split
+data-split: ## Split HAM10000 dataset into train/val/test/future sets
+	@echo "✂️ Splitting HAM10000 dataset..."
+	@uv run python src/mse_mlops/data_processing.py
+
 .PHONY: help
 help:
 	@uv run python -c "import re; \

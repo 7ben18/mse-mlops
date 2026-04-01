@@ -7,6 +7,3 @@
 from mse_mlops import paths
 
 __all__ = ["paths"]
-
-
-

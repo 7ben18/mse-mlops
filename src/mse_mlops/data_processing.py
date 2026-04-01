@@ -1,14 +1,15 @@
 import ast
 import pathlib
-import shutil
 import re
-import numpy as np
+import shutil
+
 import imageio.v3 as iio
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import yaml
-from mse_mlops import paths
 
+from mse_mlops import paths
 
 
 def apply_mask(
@@ -90,15 +91,12 @@ def _helper_parse_split_sets(config: dict) -> list[dict]:
                 ref_key = match.group(1)
 
                 if ref_key not in config:
-                    raise ValueError(
-                        f"Split set '{name}' refers to missing config key '{ref_key}'"
-                    )
+                    raise ValueError(f"Split set '{name}' refers to missing config key '{ref_key}'")
 
                 ref_value = config[ref_key]
                 if not isinstance(ref_value, (int, float)):
                     raise ValueError(
-                        f"Referenced config key '{ref_key}' must be numeric, "
-                        f"got {type(ref_value).__name__}"
+                        f"Referenced config key '{ref_key}' must be numeric, got {type(ref_value).__name__}"
                     )
 
                 ratio = float(ref_value)
@@ -108,14 +106,10 @@ def _helper_parse_split_sets(config: dict) -> list[dict]:
                 try:
                     ratio = float(raw_ratio)
                 except ValueError as e:
-                    raise ValueError(
-                        f"Cannot parse ratio for split '{name}': {raw_ratio}"
-                    ) from e
+                    raise ValueError(f"Cannot parse ratio for split '{name}': {raw_ratio}") from e
 
         else:
-            raise ValueError(
-                f"Unsupported ratio type for split '{name}': {type(raw_ratio).__name__}"
-            )
+            raise ValueError(f"Unsupported ratio type for split '{name}': {type(raw_ratio).__name__}")
 
         if ratio < 0:
             raise ValueError(f"Ratio for split '{name}' must be >= 0, got {ratio}")
@@ -127,6 +121,7 @@ def _helper_parse_split_sets(config: dict) -> list[dict]:
         raise ValueError(f"Split ratios must sum to 1, but got {total_ratio}")
 
     return split_sets
+
 
 def _helper_allocate_split_counts(
     n_total: int,
@@ -156,10 +151,7 @@ def _helper_allocate_split_counts(
     for idx in order[:remaining]:
         floor_counts[idx] += 1
 
-    return {
-        split_sets[i]["name"]: int(floor_counts[i])
-        for i in range(len(split_sets))
-    }
+    return {split_sets[i]["name"]: int(floor_counts[i]) for i in range(len(split_sets))}
 
 
 def _helper_build_split_filename(split_sets: list[dict], seed: int) -> str:
@@ -182,7 +174,7 @@ def split_data_csv(
     This avoids leakage when one lesion has multiple images.
     """
 
-    with open(config_file, "r") as f:
+    with open(config_file) as f:
         config = yaml.safe_load(f)
 
     seed = config.get("seed")
@@ -202,10 +194,7 @@ def split_data_csv(
     lesion_mapping = pd.read_csv(map_lesion_images, index_col=0)
 
     if verbose:
-        print(
-            f"Using lesion mapping from {map_lesion_images}, "
-            f"total entries: {len(lesion_mapping)}"
-        )
+        print(f"Using lesion mapping from {map_lesion_images}, total entries: {len(lesion_mapping)}")
         print("Lesion mapping head:")
         print(lesion_mapping.head())
 
@@ -228,7 +217,7 @@ def split_data_csv(
     for split_name in split_names:
         count = split_counts[split_name]
         end = start + count
-        lesions_df.loc[start:end - 1, "set"] = split_name
+        lesions_df.loc[start : end - 1, "set"] = split_name
         start = end
 
     lesion_mapping = lesion_mapping.copy()
@@ -242,16 +231,8 @@ def split_data_csv(
     )
 
     if verbose:
-        lesion_stats = (
-            lesions_df.groupby("set")["lesion_id"]
-            .count()
-            .reindex(split_names, fill_value=0)
-        )
-        image_stats = (
-            lesions_df.groupby("set")["n_images"]
-            .sum()
-            .reindex(split_names, fill_value=0)
-        )
+        lesion_stats = lesions_df.groupby("set")["lesion_id"].count().reindex(split_names, fill_value=0)
+        image_stats = lesions_df.groupby("set")["n_images"].sum().reindex(split_names, fill_value=0)
 
         total_lesions = lesion_stats.sum()
         total_images = image_stats.sum()
@@ -353,9 +334,7 @@ def _helper_resolve_split_csv(split_csv: pathlib.Path, verbose: bool = False) ->
             reverse=True,
         )
         if not candidates:
-            raise FileNotFoundError(
-                f"No split_*.csv files found in directory: {split_csv}"
-            )
+            raise FileNotFoundError(f"No split_*.csv files found in directory: {split_csv}")
 
         resolved = candidates[0]
         if verbose:
@@ -369,10 +348,7 @@ def _helper_resolve_split_csv(split_csv: pathlib.Path, verbose: bool = False) ->
 
 
 def _helper_create_output_dirs(
-    data_output: pathlib.Path,
-    img_dir_name: str,
-    mask_dir_name: str,
-    set_names: list[str]
+    data_output: pathlib.Path, img_dir_name: str, mask_dir_name: str, set_names: list[str]
 ) -> None:
     valid_sets = set_names
     for split_name in valid_sets:
@@ -416,10 +392,8 @@ def _helper_clear_split_dirs(
                     deleted_dirs += 1
 
     if verbose:
-        print(
-            f"Deleted {deleted_files} files and {deleted_dirs} directories "
-            f"from processed split folders."
-        )
+        print(f"Deleted {deleted_files} files and {deleted_dirs} directories from processed split folders.")
+
 
 def _helper_print_split_summary(
     split_df: pd.DataFrame,
@@ -429,26 +403,19 @@ def _helper_print_split_summary(
         return
     set_names = split_df["set"].unique()
     split_counts = (
-        split_df.assign(n_images=split_df["images"].apply(_helper_parse_images).apply(len))
+        split_df
+        .assign(n_images=split_df["images"].apply(_helper_parse_images).apply(len))
         .groupby("set")["n_images"]
         .sum()
         .reindex(set_names, fill_value=0)
     )
 
-    lesion_counts = (
-        split_df.groupby("set")["lesion_id"]
-        .count()
-        .reindex(set_names, fill_value=0)
-    )
+    lesion_counts = split_df.groupby("set")["lesion_id"].count().reindex(set_names, fill_value=0)
 
     print("\nSplit summary:")
     split_names = set_names
     for split_name in split_names:
-        print(
-            f"  {split_name}: "
-            f"{lesion_counts[split_name]} lesions, "
-            f"{split_counts[split_name]} images"
-        )
+        print(f"  {split_name}: {lesion_counts[split_name]} lesions, {split_counts[split_name]} images")
 
 
 def split_data_dir(
@@ -477,7 +444,6 @@ def split_data_dir(
         raise FileNotFoundError(f"Input image directory not found: {input_img_dir}")
     if not input_mask_dir.exists():
         raise FileNotFoundError(f"Input mask directory not found: {input_mask_dir}")
-
 
     _helper_create_output_dirs(
         data_output=data_output,
@@ -541,6 +507,7 @@ def split_data_dir(
             if len(missing_masks) > 10:
                 print("  ...")
 
+
 def split_data_full(
     config_file: pathlib.Path = paths.CONFIG_DIR / "split.yaml",
     data_input: pathlib.Path = paths.RAW_DATA_DIR / paths.HAM_DIR,
@@ -551,19 +518,15 @@ def split_data_full(
     """
     This is a lesion-level CSV and directory split (image copying), based on given config file.
     """
-    csv_split = split_data_csv(map_lesion_images=map_lesion_images,
-                    config_file=config_file,
-                    verbose=verbose)
+    csv_split = split_data_csv(map_lesion_images=map_lesion_images, config_file=config_file, verbose=verbose)
 
-    split_data_dir(data_input=data_input,
-                   data_output=data_output,
-                   split_csv=csv_split,
-                   verbose=verbose)
+    split_data_dir(data_input=data_input, data_output=data_output, split_csv=csv_split, verbose=verbose)
     return csv_split
 
 
+def main() -> None:
+    split_data_full()
 
 
-
-
-
+if __name__ == "__main__":
+    main()

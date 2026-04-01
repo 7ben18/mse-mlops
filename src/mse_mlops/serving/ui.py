@@ -240,9 +240,7 @@ with tab3:
                 st.write(f"ZIP contains **{len(image_names)} image(s)**")
 
                 matched = [
-                    (name, label_map[name.split("/")[-1]])
-                    for name in image_names
-                    if name.split("/")[-1] in label_map
+                    (name, label_map[name.split("/")[-1]]) for name in image_names if name.split("/")[-1] in label_map
                 ]
                 unmatched = [name.split("/")[-1] for name in image_names if name.split("/")[-1] not in label_map]
 
