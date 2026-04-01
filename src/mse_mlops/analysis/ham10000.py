@@ -145,55 +145,6 @@ def map_lesion_images(
     return filt, {lesion_id: lesion_map[lesion_id] for lesion_id in filt.index}
 
 
-def build_lesion_images_frame(
-    lesion_images: dict[str, list[str]],
-) -> pd.DataFrame:
-    return pd.DataFrame({
-        "lesion_id": list(lesion_images.keys()),
-        "images": ["{" + ", ".join(images) + "}" for images in lesion_images.values()],
-    }).sort_values("lesion_id")
-
-
-def parse_images_field(images_field: str) -> list[str]:
-    parsed = str(images_field).strip()
-    if not parsed:
-        return []
-
-    parsed = parsed.strip("{}")
-    parsed = parsed.strip("[]")
-    parsed = parsed.replace("'", "").replace('"', "")
-
-    parts = [part.strip() for part in parsed.split(",")]
-    return [part for part in parts if part]
-
-
-def load_map_lesion_images(file_path: Path | str) -> pd.DataFrame:
-    lesion_df = pd.read_csv(file_path)
-
-    required = {"lesion_id", "images"}
-    missing = required - set(lesion_df.columns)
-    if missing:
-        raise KeyError(f"lesion->images CSV missing columns: {missing}. Found: {list(lesion_df.columns)}")
-
-    if lesion_df.empty:
-        raise RuntimeError("lesion->images CSV is empty.")
-
-    return lesion_df
-
-
-def pick_random_lesion(lesion_df: pd.DataFrame) -> tuple[str, list[str]]:
-    rng = random.Random()
-    row = lesion_df.iloc[rng.randrange(len(lesion_df))]
-
-    lesion_id = row["lesion_id"]
-    image_ids = parse_images_field(row["images"])
-
-    if not image_ids:
-        raise RuntimeError(f"Selected lesion {lesion_id} has no images listed in CSV.")
-
-    return lesion_id, image_ids
-
-
 def find_image_paths_for_ids(
     img_ids: list[str],
     img_dir: Path | str,
@@ -263,61 +214,57 @@ def get_metadata_for_lesion(meta_df: pd.DataFrame, lesion_id: str, lesion_col: s
 
 
 def show_random_lesion_images_and_metadata(
-    lesion_images_csv_path: Path | str,
-    metadata_csv_path: Path | str,
-    img_dir: Path | str,
+    metadata_csv_path: Path | str = paths.EXT_METADATA,
+    img_dir: Path | str = Path(paths.RAW_DATA_DIR / paths.HAM_DIR / paths.IMG_DIR),
     max_cols: int = 5,
 ) -> tuple[str, list[str], pd.DataFrame]:
-    lesion_df = load_map_lesion_images(lesion_images_csv_path)
-    lesion_id, img_ids = pick_random_lesion(lesion_df)
-
-    img_id_to_path = find_image_paths_for_ids(img_ids, img_dir=img_dir)
-    plot_images_grid(img_id_to_path, lesion_id=lesion_id, max_cols=max_cols)
-    meta_df = load_metadata_csv(metadata_csv_path)
-
-    meta_df = load_metadata_csv(metadata_csv_path)
-    meta_rows = get_metadata_for_lesion(meta_df, lesion_id)
-    _display_df(meta_rows)
-
-    return lesion_id, img_ids, meta_rows
+    return get_lesion_info(
+        metadata_csv_path=metadata_csv_path,
+        img_dir=img_dir,
+        lesion_id=None,
+        max_cols=max_cols,
+    )
 
 
-def get_image_ids_for_lesion(lesion_df: pd.DataFrame, lesion_id: str) -> list[str]:
-    hit = lesion_df[lesion_df["lesion_id"] == lesion_id]
+def get_image_ids_for_lesion(
+    meta_df: pd.DataFrame,
+    lesion_id: str,
+    lesion_col: str = "lesion_id",
+    image_col: str = "image_id",
+) -> list[str]:
+    if lesion_col not in meta_df.columns:
+        raise KeyError(f"Metadata missing column '{lesion_col}'. Found: {list(meta_df.columns)}")
+    if image_col not in meta_df.columns:
+        raise KeyError(f"Metadata missing column '{image_col}'. Found: {list(meta_df.columns)}")
+
+    hit = meta_df[meta_df[lesion_col] == lesion_id]
     if hit.empty:
         return []
-    return parse_images_field(hit.iloc[0]["images"])
+
+    return sorted(hit[image_col].dropna().astype(str).unique().tolist())
 
 
 def get_lesion_info(
-    lesion_images_csv_path: Path | str = paths.MAP_LESION_IMAGES,
     metadata_csv_path: Path | str = paths.EXT_METADATA,
     img_dir: Path | str = Path(paths.RAW_DATA_DIR / paths.HAM_DIR / paths.IMG_DIR),
     lesion_id: str | None = None,
     max_cols: int = 5,
-    prefer_mapping_csv: bool = True,
 ) -> tuple[str, list[str], pd.DataFrame]:
-    lesion_df = load_map_lesion_images(lesion_images_csv_path)
+    meta_df = load_metadata_csv(metadata_csv_path)
 
     if lesion_id is None:
-        lesion_id, img_ids = pick_random_lesion(lesion_df)
+        lesion_id = _pick_random_lesion_id(meta_df)
     else:
         lesion_id = str(lesion_id).strip()
-        img_ids = get_image_ids_for_lesion(lesion_df, lesion_id) if prefer_mapping_csv else []
 
-    meta_df = load_metadata_csv(metadata_csv_path)
     meta_rows = get_metadata_for_lesion(meta_df, lesion_id)
 
     if meta_rows.empty:
         raise RuntimeError(f"No metadata rows found for lesion_id={lesion_id}")
 
+    img_ids = get_image_ids_for_lesion(meta_rows, lesion_id)
     if not img_ids:
-        if "image_id" not in meta_rows.columns:
-            raise KeyError("Metadata does not have 'image_id' column, can't derive images.")
-        img_ids = sorted(meta_rows["image_id"].dropna().unique().tolist())
-
-    if not img_ids:
-        raise RuntimeError(f"Lesion {lesion_id} has no image_ids (mapping CSV + metadata both empty).")
+        raise RuntimeError(f"Lesion {lesion_id} has no image_ids in metadata.")
 
     img_id_to_path = find_image_paths_for_ids(img_ids, img_dir=img_dir)
     plot_images_grid(img_id_to_path, lesion_id=lesion_id, max_cols=max_cols)
@@ -377,6 +324,19 @@ def _sample_items(items: list[Triplet], sample_size: int, sample_seed: int) -> l
     rng = random.Random(sample_seed)
     k = min(int(sample_size), len(items))
     return rng.sample(items, k)
+
+
+def _pick_random_lesion_id(meta_df: pd.DataFrame, lesion_col: str = "lesion_id") -> str:
+    if lesion_col not in meta_df.columns:
+        raise KeyError(f"Metadata missing column '{lesion_col}'. Found: {list(meta_df.columns)}")
+
+    lesion_ids = meta_df[lesion_col].dropna().astype(str).str.strip()
+    lesion_ids = lesion_ids[lesion_ids != ""].drop_duplicates().tolist()
+    if not lesion_ids:
+        raise RuntimeError("Metadata does not contain any lesion_id values.")
+
+    rng = random.Random()
+    return lesion_ids[rng.randrange(len(lesion_ids))]
 
 
 def _plot_triplets_image_mask_grid(
@@ -458,20 +418,16 @@ def _display_df(df: pd.DataFrame) -> None:
 
 __all__ = [
     "Triplet",
-    "build_lesion_images_frame",
     "find_image_paths_for_ids",
     "get_ds",
     "get_image_ids_for_lesion",
     "get_lesion_info",
     "get_metadata",
     "get_metadata_for_lesion",
-    "load_map_lesion_images",
     "load_metadata_csv",
     "map_ds_metadata",
     "map_lesion_images",
     "metadata_ext",
-    "parse_images_field",
-    "pick_random_lesion",
     "plot_images_grid",
     "show_random_lesion_images_and_metadata",
 ]
