@@ -1487,18 +1487,18 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">src.mse_mlops.data_processing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dp</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">src.mse_mlops.paths</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">paths</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mse_mlops.data_processing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">data_processing</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mse_mlops.paths</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">paths</span>
 
-<span class="n">importlib</span><span class="o">.</span><span class="n">reload</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span>
+<span class="n">importlib</span><span class="o">.</span><span class="n">reload</span><span class="p">(</span><span class="n">data_processing</span><span class="p">)</span>
 <span class="n">importlib</span><span class="o">.</span><span class="n">reload</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">import importlib
 
-import src.mse_mlops.data_processing as dp
-import src.mse_mlops.paths as paths
+import mse_mlops.data_processing as data_processing
+import mse_mlops.paths as paths
 
-importlib.reload(dp)
+importlib.reload(data_processing)
 importlib.reload(paths)</div>
 </div>
 </div>
@@ -1536,10 +1536,10 @@ importlib.reload(paths)</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># CSV-only splitting</span>
-<span class="n">split_csv_path</span> <span class="o">=</span> <span class="n">dp</span><span class="o">.</span><span class="n">split_data_csv</span><span class="p">()</span>
+<span class="n">split_csv_path</span> <span class="o">=</span> <span class="n">data_processing</span><span class="o">.</span><span class="n">split_data_csv</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2"># CSV-only splitting
-split_csv_path = dp.split_data_csv()</div>
+split_csv_path = data_processing.split_data_csv()</div>
 </div>
 </div>
 </div>
@@ -1576,10 +1576,10 @@ split_csv_path = dp.split_data_csv()</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Directory splitting based on the CSV split</span>
-<span class="n">dp</span><span class="o">.</span><span class="n">split_data_dir</span><span class="p">(</span><span class="n">split_csv</span><span class="o">=</span><span class="n">split_csv_path</span><span class="p">)</span>
+<span class="n">data_processing</span><span class="o">.</span><span class="n">split_data_dir</span><span class="p">(</span><span class="n">split_csv</span><span class="o">=</span><span class="n">split_csv_path</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-3"># Directory splitting based on the CSV split
-dp.split_data_dir(split_csv=split_csv_path)</div>
+data_processing.split_data_dir(split_csv=split_csv_path)</div>
 </div>
 </div>
 </div>
@@ -1621,7 +1621,7 @@ dp.split_data_dir(split_csv=split_csv_path)</div>
 <span class="c1"># then val folder is cleared up fully.</span>
 <span class="c1"># _ = dp.split_data_full(config_file=paths.CONFIG_DIR/"split_test.yaml")</span>
 
-<span class="n">_</span> <span class="o">=</span> <span class="n">dp</span><span class="o">.</span><span class="n">split_data_full</span><span class="p">(</span><span class="n">config_file</span><span class="o">=</span><span class="n">paths</span><span class="o">.</span><span class="n">CONFIG_DIR</span> <span class="o">/</span> <span class="s2">"split.yaml"</span><span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">data_processing</span><span class="o">.</span><span class="n">split_data_full</span><span class="p">(</span><span class="n">config_file</span><span class="o">=</span><span class="n">paths</span><span class="o">.</span><span class="n">CONFIG_DIR</span> <span class="o">/</span> <span class="s2">"split.yaml"</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-4"># split_test.yaml contained different splitting and seed to test that methods work as needed
 # for example, if train/val/test=0.5/0.3/0.2 was first used,
@@ -1629,7 +1629,7 @@ dp.split_data_dir(split_csv=split_csv_path)</div>
 # then val folder is cleared up fully.
 # _ = dp.split_data_full(config_file=paths.CONFIG_DIR/"split_test.yaml")
 
-_ = dp.split_data_full(config_file=paths.CONFIG_DIR / "split.yaml")</div>
+_ = data_processing.split_data_full(config_file=paths.CONFIG_DIR / "split.yaml")</div>
 </div>
 </div>
 </div>
@@ -1665,9 +1665,9 @@ _ = dp.split_data_full(config_file=paths.CONFIG_DIR / "split.yaml")</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result_img</span> <span class="o">=</span> <span class="n">dp</span><span class="o">.</span><span class="n">apply_mask</span><span class="p">(</span><span class="n">image_id</span><span class="o">=</span><span class="s2">"ISIC_0024315"</span><span class="p">,</span> <span class="n">to_show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result_img</span> <span class="o">=</span> <span class="n">data_processing</span><span class="o">.</span><span class="n">apply_mask</span><span class="p">(</span><span class="n">image_id</span><span class="o">=</span><span class="s2">"ISIC_0024315"</span><span class="p">,</span> <span class="n">to_show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">result_img = dp.apply_mask(image_id="ISIC_0024315", to_show=True)</div>
+<div class="clipboard-copy-txt" id="cell-5">result_img = data_processing.apply_mask(image_id="ISIC_0024315", to_show=True)</div>
 </div>
 </div>
 </div>
