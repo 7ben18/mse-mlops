@@ -18,7 +18,7 @@
         <link rel="prev" href="../../../modules/">
       
       
-        <link rel="next" href="../data_processing/">
+        <link rel="next" href="../../melanoma_cancer_dataset/kaggle_eda/">
       
       
         
@@ -609,34 +609,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../data_processing/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Data splitting
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -1868,13 +1840,13 @@ sample_ds_meta.head()</div>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">lesion_counts</span><span class="p">,</span> <span class="n">lesion_images</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">map_lesion_images</span><span class="p">(</span><span class="n">full_ds_meta_df</span><span class="p">,</span> <span class="n">min_img_num</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-<span class="c1"># out_df = ham.save_lesion_images_frame(lesion_images, paths.MAP_LESION_IMAGES)</span>
-<span class="c1"># print(f"Result: {len(out_df)} lesions saved into {paths.MAP_LESION_IMAGES}")</span>
+<span class="n">out_df</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">build_lesion_images_frame</span><span class="p">(</span><span class="n">lesion_images</span><span class="p">)</span>
+<span class="n">out_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-7">lesion_counts, lesion_images = ham.map_lesion_images(full_ds_meta_df, min_img_num=1, verbose=False)
 
-# out_df = ham.save_lesion_images_frame(lesion_images, paths.MAP_LESION_IMAGES)
-# print(f"Result: {len(out_df)} lesions saved into {paths.MAP_LESION_IMAGES}")</div>
+out_df = ham.build_lesion_images_frame(lesion_images)
+out_df.head()</div>
 </div>
 </div>
 </div>
