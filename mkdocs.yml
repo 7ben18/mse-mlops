@@ -8,17 +8,19 @@ repo_name: 7ben18/mse-mlops
 copyright: Maintained by mse-mlops contributors.
 exclude_docs: |
   README.md
-  notebooks/ham10000/ham10000_eda.ipynb
 
 nav:
   - Home: index.md
   - Pipeline: pipeline.md
+  - Data Acquisition: data.md
   - MLflow Tracking: mlflow-tracking.md
   - Serving: serving.md
   - Serving Architecture: serving-architecture.md
-  - Modules: modules.md
+  - API Reference: modules.md
   - Notebooks:
-      - EDA: notebooks/melanoma_cancer_dataset/kaggle_eda.ipynb
+      - HAM10000 EDA: notebooks/ham10000/ham10000_eda.ipynb
+      - HAM10000 Data Processing: notebooks/ham10000/data_processing.ipynb
+      - Melanoma EDA: notebooks/melanoma_cancer_dataset/kaggle_eda.ipynb
 plugins:
   - search
   - mkdocs-jupyter:
