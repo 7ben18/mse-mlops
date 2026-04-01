@@ -25,7 +25,7 @@ HAM10000 lesion-level dataset splitting and image/mask copying utilities.
 
 ### `mse_mlops.train`
 
-DINOv3 fine-tuning training loop, metrics dataclasses, and CLI entry point.
+DINOv3 fine-tuning training loop, config dataclass, and training helpers.
 
 ::: mse_mlops.train
 
@@ -80,14 +80,6 @@ JSONL-backed feedback persistence: append, load, and write helpers.
 Streamlit frontend for skin lesion image upload and doctor feedback review.
 
 ::: mse_mlops.serving.ui
-
----
-
-### `mse_mlops.serving.launchers`
-
-`run_api` and `run_ui` entry points that start uvicorn and Streamlit respectively.
-
-::: mse_mlops.serving.launchers
 
 ---
 

@@ -45,6 +45,9 @@ REPO_ROOT = find_repo_root(Path(__file__))
 RAW_DATA_DIR = Path(REPO_ROOT / "data" / "raw")
 
 PROCESSED_DATA_DIR = Path(REPO_ROOT / "data" / "processed")
+MODELS_DIR = Path(REPO_ROOT / "models")
+PRETRAINED_MODELS_DIR = Path(MODELS_DIR / "pretrained")
+FINETUNED_MODELS_DIR = Path(MODELS_DIR / "finetuned")
 
 REPORTS_DIR = Path(REPO_ROOT / "reports")
 
@@ -52,7 +55,11 @@ CONFIG_DIR = Path(REPO_ROOT / "config")
 
 HAM_DIR = Path("ham10000")
 
-EXT_METADATA = Path(PROCESSED_DATA_DIR / HAM_DIR / "metadata.csv")
+HAM_METADATA = Path(PROCESSED_DATA_DIR / HAM_DIR / "metadata.csv")
+HAM_IMAGES_DIR = Path(PROCESSED_DATA_DIR / HAM_DIR / "HAM10000_images")
+DEFAULT_PRETRAINED_MODEL_DIR = Path(PRETRAINED_MODELS_DIR / "dinov3-vits16-pretrain-lvd1689m")
+DEFAULT_FINETUNED_MODEL_DIR = Path(FINETUNED_MODELS_DIR / "dinov3_ham10000")
+EXT_METADATA = HAM_METADATA
 
 IMG_DIR = Path("HAM10000_images")
 MASK_DIR = Path("HAM10000_segmentations_lesion_tschandl")
@@ -65,14 +72,21 @@ LESION_NAME_RE = r"^HAM_\d{7}$"
 
 __all__ = [
     "CONFIG_DIR",
+    "DEFAULT_FINETUNED_MODEL_DIR",
+    "DEFAULT_PRETRAINED_MODEL_DIR",
     "EXT_METADATA",
+    "FINETUNED_MODELS_DIR",
     "HAM_DIR",
+    "HAM_IMAGES_DIR",
+    "HAM_METADATA",
     "IMG_DIR",
     "IMG_NAME_RE",
     "LESION_NAME_RE",
     "MASK_DIR",
     "MASK_NAME_RE",
     "METADATA",
+    "MODELS_DIR",
+    "PRETRAINED_MODELS_DIR",
     "PROCESSED_DATA_DIR",
     "RAW_DATA_DIR",
     "REPORTS_DIR",

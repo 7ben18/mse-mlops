@@ -10,7 +10,7 @@ from torch import nn
 from torchvision import transforms
 from transformers import AutoImageProcessor, AutoModel
 
-MODEL_PATH = os.environ.get("MODEL_PATH", "/app/outputs/dinov3_melanoma/best_model.pt")
+MODEL_PATH = os.environ.get("MODEL_PATH", "models/finetuned/dinov3_ham10000/best_model.pt")
 HIDDEN_SIZE_ERROR = "Could not infer hidden size from model config."
 OUTPUT_FORMAT_ERROR = "Backbone output format is not supported."
 MODEL_NOT_LOADED_ERROR = "Model not loaded. Call load_model() first."

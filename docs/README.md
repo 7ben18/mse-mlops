@@ -4,6 +4,8 @@ This folder is the **primary source directory for the project's MkDocs documenta
 
 Markdown pages live here directly. Notebook pages are sourced from the top-level [`notebooks/`](../notebooks/README.md) tree through the tracked `docs/notebooks -> ../notebooks` symlink and are referenced from [`mkdocs.yml`](../mkdocs.yml).
 
+The root [`README.md`](../README.md) is the canonical project overview. Pages under `docs/` should add detail, not repeat the same setup text.
+
 ## Structure
 
 | File / Folder | Purpose                                           |

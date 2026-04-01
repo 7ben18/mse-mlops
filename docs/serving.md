@@ -1,6 +1,6 @@
 # Serving Layer
 
-Stage 4 of the MLOps pipeline. Exposes the trained DINOv3 melanoma classifier to patients and
+Stage 4 of the MLOps pipeline. Exposes the trained DINOv3 HAM10000 classifier to patients and
 medical staff through a REST API and a web UI, and collects verified labels back into the
 feedback store.
 
@@ -36,7 +36,7 @@ The serving code is now part of the main Python package:
 │  │  ui (Streamlit)  │ ────────► │     api (FastAPI)        │ │
 │  │  port 7777       │           │     port 8000            │ │
 │  └──────────────────┘           │                          │ │
-│  outputs/ (read-only) ─────────►│  DinoV3Classifier        │ │
+│  models/ (read-only) ──────────►│  DinoV3Classifier        │ │
 │                                 │  + eval preprocessing    │ │
 │                                 │                          │ │
 │  feedback_data (volume) ───────►│  /feedback/              │ │
@@ -116,7 +116,7 @@ The store is designed to be swapped out: replace `_save_feedback()` and `_load_f
 
 | Variable | Default | Service | Description |
 |----------|---------|---------|-------------|
-| `MODEL_PATH` | `/app/outputs/dinov3_melanoma/best_model.pt` | API | Path to trained `.pt` checkpoint |
+| `MODEL_PATH` | `/app/models/finetuned/dinov3_ham10000/best_model.pt` | API | Path to trained `.pt` checkpoint |
 | `FEEDBACK_DIR` | `/feedback` | API | Root of the feedback volume |
 | `API_URL` | `http://api:8000` | UI | API base URL |
 | `DOCTOR_PASSWORD` | `doctor123` | UI | Password for doctor tabs — change in production |
@@ -129,7 +129,7 @@ DOCTOR_PASSWORD=your_secure_password
 
 ## Model checkpoint
 
-The API expects a `.pt` file written by `src/mse_mlops/train.py` (`best_model.pt`):
+The API expects a `.pt` file written by the training pipeline (`scripts/train.py`, backed by `mse_mlops.train`) (`best_model.pt`):
 
 ```python
 {

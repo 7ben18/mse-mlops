@@ -1,11 +1,14 @@
 # MLflow Tracking
 
-Stage 3 of the MLOps pipeline. Captures training runs from `src/mse_mlops/train.py` in MLflow, including
+Stage 3 of the MLOps pipeline. Captures training runs from `scripts/train.py` and `mse_mlops.train`
+in MLflow, including
 configuration, epoch metrics, summary metrics, and model/history artifacts.
 
 ## What it is
 
 Training is MLflow-enabled by default and always runs inside an MLflow run context.
+That means `uv run python scripts/train.py` requires a reachable tracking backend before the
+first epoch starts.
 
 Start MLflow server:
 
@@ -16,7 +19,14 @@ uv run mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-
 Start training:
 
 ```bash
-uv run train-dinov3 --config config/train.yaml
+uv run python scripts/train.py
+```
+
+If the default server at `http://127.0.0.1:5000` is not running, training fails immediately during
+MLflow setup. For a quick local smoke test without a running server, you can override the tracking URI:
+
+```bash
+uv run python scripts/train.py --mlflow-tracking-uri file:./mlruns
 ```
 
 Open UI:
@@ -25,25 +35,27 @@ Open UI:
 
 Tracking code lives in:
 
+- `scripts/train.py`
 - `mse_mlops.tracking.mlflow_tracker`
 - `mse_mlops.train`
 
 ## Architecture
 
 ```text
-train.py
-  -> init_mlflow(args)
+scripts/train.py
+  -> mse_mlops.train.run_training(config)
+      -> init_mlflow(config)
       -> set_tracking_uri
       -> set_experiment
       -> start_run
-  -> log_run_params(...)
-  -> epoch loop
-      -> log_epoch_metrics(..., step=epoch)
-  -> finalize
-      -> log_summary_metrics(...)
-      -> log_final_artifacts(...)
-          - training/history.json
-          - model/ (mlflow.pytorch.log_model)
+      -> log_run_params(...)
+      -> epoch loop
+          -> log_epoch_metrics(..., step=epoch)
+      -> finalize
+          -> log_summary_metrics(...)
+          -> log_final_artifacts(...)
+              - training/history.json
+              - model/ (mlflow.pytorch.log_model)
 ```
 
 The run closes automatically when the MLflow context exits.
@@ -54,7 +66,7 @@ The run closes automatically when the MLflow context exits.
 
 ### Parameters (once per run)
 
-- Dataset/split config (`data_dir`, `val_mode`, `val_split`, fractions/samples)
+- Dataset/split config (`metadata_csv`, `images_dir`, `label_column`, split names, fractions/samples)
 - Training config (`epochs`, `batch_size`, `lr`, scheduler settings, etc.)
 - Execution controls (`device`, `resume_from_checkpoint`, `save_total_limit`)
 - Derived metadata (`train_count`, `val_count`, `class_names`)
@@ -104,7 +116,7 @@ If tracking URI or experiment name is empty, training fails fast with `ValueErro
 
 ## Checkpoint and resume
 
-- Local checkpoints remain at `outputs/.../checkpoints/epoch_XXX.pt`.
+- Local checkpoints remain at `models/finetuned/.../checkpoints/epoch_XXX.pt`.
 - Checkpoints store `history` and optional `best_model_state`.
 - Resume restores model/optimizer/scheduler and metric history.
 

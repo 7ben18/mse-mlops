@@ -1,7 +1,7 @@
 site_name: mse-mlops
 repo_url: https://github.com/7ben18/mse-mlops
 site_url: https://7ben18.github.io/mse-mlops
-site_description: DINOv3 fine-tuning setup for melanoma skin cancer classification.
+site_description: DINOv3 fine-tuning setup for binary skin lesion classification on processed HAM10000.
 site_author: mse-mlops contributors
 edit_uri: edit/main/docs/
 repo_name: 7ben18/mse-mlops

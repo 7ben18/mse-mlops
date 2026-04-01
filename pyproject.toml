@@ -1,7 +1,7 @@
 [project]
 name = "mse-mlops"
 version = "0.1.0"
-description = "DINOv3 fine-tuning setup for melanoma classification."
+description = "DINOv3 fine-tuning setup for HAM10000 skin lesion classification."
 authors = [{ name = "mse-mlops contributors" }]
 readme = "README.md"
 keywords = ["python"]
@@ -34,11 +34,6 @@ dependencies = [
 Homepage = "https://7ben18.github.io/mse-mlops/"
 Repository = "https://github.com/7ben18/mse-mlops"
 Documentation = "https://7ben18.github.io/mse-mlops/"
-
-[project.scripts]
-train-dinov3 = "mse_mlops.train:main"
-serve-api = "mse_mlops.serving.launchers:run_api"
-serve-ui = "mse_mlops.serving.launchers:run_ui"
 
 [dependency-groups]
 api = [

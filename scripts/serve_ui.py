@@ -5,18 +5,10 @@ import sys
 from pathlib import Path
 
 
-def run_api() -> None:
-    import uvicorn
-
-    host = os.environ.get("API_HOST", "0.0.0.0")  # noqa: S104
-    port = int(os.environ.get("API_PORT", "8000"))
-    uvicorn.run("mse_mlops.serving.api:app", host=host, port=port)
-
-
-def run_ui() -> None:
-    ui_path = Path(__file__).with_name("ui.py")
+def main() -> None:
+    ui_path = Path(__file__).resolve().parents[1] / "src" / "mse_mlops" / "serving" / "ui.py"
     port = os.environ.get("STREAMLIT_PORT", "7777")
-    os.execv(  # noqa: S606
+    os.execv(
         sys.executable,
         [
             sys.executable,
@@ -27,6 +19,10 @@ def run_ui() -> None:
             "--server.port",
             port,
             "--server.address",
-            "0.0.0.0",  # noqa: S104
+            "0.0.0.0",
         ],
     )
+
+
+if __name__ == "__main__":
+    main()

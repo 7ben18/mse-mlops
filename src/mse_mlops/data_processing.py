@@ -620,11 +620,3 @@ def split_data_full(
         verbose=verbose,
     )
     return metadata_csv
-
-
-def main() -> None:
-    split_data_full()
-
-
-if __name__ == "__main__":
-    main()

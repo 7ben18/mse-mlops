@@ -1,9 +1,9 @@
 from pathlib import Path
 
-import mse_mlops.analysis.ham10000 as ham
 import pandas as pd
 from PIL import Image
 
+import mse_mlops.analysis.ham10000 as ham
 from mse_mlops.analysis.ham10000 import (
     find_image_paths_for_ids,
     get_ds,

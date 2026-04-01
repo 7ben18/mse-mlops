@@ -7,6 +7,7 @@ COPY uv.lock pyproject.toml README.md /app/
 RUN uv sync --locked --no-install-project --no-dev --group api
 
 COPY src /app/src
+COPY scripts /app/scripts
 RUN uv sync --locked --no-dev --group api
 
-CMD ["uv", "run", "--no-sync", "--frozen", "--no-dev", "--group", "api", "serve-api"]
+CMD ["uv", "run", "--no-sync", "--frozen", "--no-dev", "--group", "api", "python", "scripts/serve_api.py"]

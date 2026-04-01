@@ -16,8 +16,10 @@ src/
       api.py
       feedback_store.py
       inference.py
-      launchers.py
       ui.py
+scripts/
+  serve_api.py
+  serve_ui.py
 ```
 
 ## Runtime Topology
@@ -33,13 +35,13 @@ The training service remains opt-in under the `train` profile:
 
 ## Mounted State
 
-- `api` mounts `./outputs` read-only at `/app/outputs`
-- `api` uses the checkpoint at `/app/outputs/dinov3_melanoma/best_model.pt`
+- `api` mounts `./models` read-only at `/app/models`
+- `api` uses the checkpoint at `/app/models/finetuned/dinov3_ham10000/best_model.pt`
 - `api` persists feedback data in the named Docker volume `feedback_data`
 
 This keeps trained artifacts and serving state separate:
 
-- model artifacts stay in `outputs/`
+- model artifacts stay in `models/`
 - feedback JSONL and uploaded images stay in the volume mounted at `/feedback`
 
 ## Package Boundaries
@@ -48,20 +50,21 @@ This keeps trained artifacts and serving state separate:
 - `mse_mlops.serving.inference`: checkpoint loading, preprocessing, inference, integration stubs
 - `mse_mlops.serving.feedback_store`: JSONL-backed feedback persistence
 - `mse_mlops.serving.ui`: Streamlit interface
-- `mse_mlops.serving.launchers`: script entrypoints for local runs
+- `scripts/serve_api.py`: CLI wrapper for local API runs
+- `scripts/serve_ui.py`: CLI wrapper for local UI runs
 
 ## Local Development
 
 Run the API:
 
 ```bash
-uv run --group api serve-api
+uv run --group api python scripts/serve_api.py
 ```
 
 Run the UI in a second terminal:
 
 ```bash
-uv run --group ui serve-ui
+uv run --group ui python scripts/serve_ui.py
 ```
 
 Set overrides via environment variables as needed:

@@ -158,8 +158,9 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# ignore outputs
-outputs/
+# model artifacts
+models/pretrained/dinov3-vits16-pretrain-lvd1689m/
+models/finetuned/dinov3_ham10000/checkpoints/
 
 # ignore logs
 logs/
@@ -176,3 +177,7 @@ CLAUDE.md
 
 # dvc managed data
 /data
+
+# ignore mlflow artifacts
+mlruns/
+mlartifacts/

@@ -1,37 +1,38 @@
 from __future__ import annotations
 
-import argparse
-import json
 import math
 import random
-from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import pandas as pd
 import torch
 import yaml
-from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
+from PIL import Image
+from sklearn.metrics import (
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
 from torch import nn
-from torch.utils.data import DataLoader, Subset
-from torchvision import datasets, transforms
+from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
 from tqdm import tqdm
 from transformers import AutoImageProcessor, AutoModel, get_scheduler
 
-from mse_mlops.tracking import (
-    init_mlflow,
-    log_epoch_metrics,
-    log_final_artifacts,
-    log_run_params,
-    log_summary_metrics,
-)
+from mse_mlops import paths, tracking
 
-DEFAULT_MODEL = "facebook/dinov3-vits16-pretrain-lvd1689m"
-DEFAULT_DATA_DIR = "data/raw/melanoma_cancer_dataset"
-DEFAULT_OUTPUT_DIR = "outputs/dinov3_melanoma"
-DEFAULT_CONFIG_PATH = "config/train.yaml"
+DEFAULT_CONFIG_PATH = paths.DEFAULT_CONFIG_PATH
+CONFIG_SECTIONS = ("model", "data", "training", "tracking")
+MB_LABEL_COLUMN = "mb"
+IMAGE_EXTENSION = ".jpg"
+REQUIRED_METADATA_COLUMNS = frozenset({"lesion_id", "image_id", "set"})
+ALLOWED_METADATA_SETS = frozenset({"train", "val", "test", "future"})
+ALLOWED_MB_LABELS = frozenset({"benign", "malignant"})
 
 SCHEDULER_CHOICES = (
     "linear",
@@ -67,114 +68,203 @@ class BestModelState:
     freeze_backbone: bool
 
 
-def _optional_int(value: object) -> int | None:
+@dataclass
+class TrainConfig:
+    metadata_csv: Path
+    images_dir: Path
+    label_column: str
+    train_set: str
+    val_set: str
+    train_fraction: float
+    val_fraction: float
+    train_samples: int | None
+    val_samples: int | None
+    model_name: str
+    output_dir: Path
+    epochs: int
+    batch_size: int
+    image_size: int
+    lr: float
+    weight_decay: float
+    num_workers: int
+    seed: int
+    device: str
+    gradient_accumulation_steps: int
+    warmup_ratio: float
+    lr_scheduler_type: str
+    max_grad_norm: float
+    max_train_batches: int | None
+    max_val_batches: int | None
+    resume_from_checkpoint: str | None
+    save_total_limit: int | None
+    freeze_backbone: bool
+    load_best_model_at_end: bool
+    mlflow_tracking_uri: str
+    mlflow_experiment_name: str
+    mlflow_run_name: str | None
+    mlflow_tags: str | dict[str, str]
+    config: Path
+
+
+@dataclass(frozen=True)
+class ImageRecord:
+    label_index: int
+    image_path: Path
+
+
+class MetadataImageDataset(Dataset[tuple[torch.Tensor, int]]):
+    def __init__(
+        self, records: list[ImageRecord], transform: transforms.Compose
+    ) -> None:
+        self.records = records
+        self.transform = transform
+
+    def __len__(self) -> int:
+        return len(self.records)
+
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, int]:
+        record = self.records[index]
+        with Image.open(record.image_path) as image:
+            rgb_image = image.convert("RGB")
+        return self.transform(rgb_image), record.label_index
+
+
+def _read_train_config_mapping(config_path: Path) -> dict[str, object]:
+    if not config_path.is_file():
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+
+    with config_path.open("r", encoding="utf-8") as file:
+        data = yaml.safe_load(file) or {}
+
+    if not isinstance(data, dict):
+        raise ValueError(
+            f"Config file must contain a YAML mapping: {config_path}"
+        )
+
+    return data
+
+
+def _flatten_train_config_sections(
+    config_data: dict[str, object],
+) -> dict[str, object]:
+    flattened: dict[str, object] = {}
+
+    for section_name in CONFIG_SECTIONS:
+        section_payload = config_data.get(section_name)
+        if section_payload is None:
+            continue
+        if not isinstance(section_payload, dict):
+            raise ValueError(
+                f"Config section '{section_name}' must be a YAML mapping."
+            )
+        flattened.update(section_payload)
+
+    for key, value in config_data.items():
+        if key not in CONFIG_SECTIONS:
+            flattened[key] = value
+
+    return flattened
+
+
+def _as_path(value: object) -> Path:
+    if isinstance(value, Path):
+        return value
+    return Path(str(value))
+
+
+def _as_bool(value: object, field_name: str) -> bool:
+    if isinstance(value, bool):
+        return value
+    raise ValueError(f"Config setting '{field_name}' must be a boolean.")
+
+
+def _as_optional_int(value: object) -> int | None:
     if value is None:
         return None
     return int(value)
 
 
-def load_config_defaults(config_path: Path) -> dict[str, object]:
-    if not config_path.exists():
-        return {}
-
-    with config_path.open("r", encoding="utf-8") as f:
-        data = yaml.safe_load(f) or {}
-
-    if not isinstance(data, dict):
-        raise ValueError(f"Config file must contain a YAML mapping: {config_path}")
-
-    defaults: dict[str, object] = {}
-    for section in ("model", "data", "training", "tracking"):
-        section_payload = data.get(section)
-        if isinstance(section_payload, dict):
-            defaults.update(section_payload)
-
-    for key, value in data.items():
-        if key not in {"model", "data", "training", "tracking"}:
-            defaults[key] = value
-
-    return defaults
+def _as_optional_str(value: object) -> str | None:
+    if value is None:
+        return None
+    return str(value)
 
 
-def parse_args() -> argparse.Namespace:
-    pre_parser = argparse.ArgumentParser(add_help=False)
-    pre_parser.add_argument("--config", type=Path, default=Path(DEFAULT_CONFIG_PATH))
-    pre_args, _ = pre_parser.parse_known_args()
-    defaults = load_config_defaults(pre_args.config)
-
-    freeze_default = bool(defaults.get("freeze_backbone", True))
-    load_best_default = bool(defaults.get("load_best_model_at_end", True))
-
-    parser = argparse.ArgumentParser(description="Fine-tune DINOv3 on a local ImageFolder dataset.")
-    parser.add_argument(
-        "--config",
-        type=Path,
-        default=pre_args.config,
-        help=f"YAML config file path (default: {DEFAULT_CONFIG_PATH})",
+def load_train_config(
+    config_path: Path | str | None = None,
+    overrides: dict[str, object] | None = None,
+) -> TrainConfig:
+    resolved_config_path = (
+        paths.resolve_train_config_path()
+        if config_path is None
+        else Path(config_path)
     )
-    parser.add_argument("--data-dir", type=Path, default=Path(str(defaults.get("data_dir", DEFAULT_DATA_DIR))))
-    parser.add_argument("--train-subdir", type=str, default=str(defaults.get("train_subdir", "train")))
-    parser.add_argument("--val-subdir", type=str, default=str(defaults.get("val_subdir", "val")))
-    parser.add_argument("--val-mode", choices=("test", "split"), default=str(defaults.get("val_mode", "split")))
-    parser.add_argument("--val-split", type=float, default=float(defaults.get("val_split", 0.2)))
-    parser.add_argument("--train-fraction", type=float, default=float(defaults.get("train_fraction", 1.0)))
-    parser.add_argument("--val-fraction", type=float, default=float(defaults.get("val_fraction", 1.0)))
-    parser.add_argument("--train-samples", type=int, default=_optional_int(defaults.get("train_samples")))
-    parser.add_argument("--val-samples", type=int, default=_optional_int(defaults.get("val_samples")))
-
-    parser.add_argument("--model-name", type=str, default=str(defaults.get("model_name", DEFAULT_MODEL)))
-    parser.add_argument("--output-dir", type=Path, default=Path(str(defaults.get("output_dir", DEFAULT_OUTPUT_DIR))))
-    parser.add_argument("--epochs", type=int, default=int(defaults.get("epochs", 3)))
-    parser.add_argument("--batch-size", type=int, default=int(defaults.get("batch_size", 16)))
-    parser.add_argument("--image-size", type=int, default=int(defaults.get("image_size", 224)))
-    parser.add_argument("--lr", type=float, default=float(defaults.get("lr", 5e-5)))
-    parser.add_argument("--weight-decay", type=float, default=float(defaults.get("weight_decay", 0.01)))
-    parser.add_argument("--num-workers", type=int, default=int(defaults.get("num_workers", 0)))
-    parser.add_argument("--seed", type=int, default=int(defaults.get("seed", 42)))
-    parser.add_argument("--device", choices=("auto", "cuda", "mps", "cpu"), default=str(defaults.get("device", "auto")))
-
-    parser.add_argument(
-        "--gradient-accumulation-steps",
-        type=int,
-        default=int(defaults.get("gradient_accumulation_steps", 1)),
+    config_values = _flatten_train_config_sections(
+        _read_train_config_mapping(resolved_config_path)
     )
-    parser.add_argument("--warmup-ratio", type=float, default=float(defaults.get("warmup_ratio", 0.1)))
-    parser.add_argument(
-        "--lr-scheduler-type",
-        choices=SCHEDULER_CHOICES,
-        default=str(defaults.get("lr_scheduler_type", "linear")),
-    )
-    parser.add_argument("--max-grad-norm", type=float, default=float(defaults.get("max_grad_norm", 1.0)))
 
-    parser.add_argument("--max-train-batches", type=int, default=_optional_int(defaults.get("max_train_batches")))
-    parser.add_argument("--max-val-batches", type=int, default=_optional_int(defaults.get("max_val_batches")))
+    if overrides:
+        if "config" in overrides:
+            raise ValueError("Overrides must not contain 'config'.")
+        for key, value in overrides.items():
+            if value is not None:
+                config_values[key] = value
 
-    parser.add_argument(
-        "--resume-from-checkpoint",
-        type=str,
-        default=defaults.get("resume_from_checkpoint"),
-        help="Checkpoint path or 'latest' to resume from the newest epoch checkpoint.",
-    )
-    parser.add_argument("--save-total-limit", type=int, default=_optional_int(defaults.get("save_total_limit")))
-
-    parser.add_argument("--freeze-backbone", action="store_true", dest="freeze_backbone")
-    parser.add_argument("--unfreeze-backbone", action="store_false", dest="freeze_backbone")
-    parser.set_defaults(freeze_backbone=freeze_default)
-
-    parser.add_argument("--load-best-model-at-end", action="store_true", dest="load_best_model_at_end")
-    parser.add_argument("--no-load-best-model-at-end", action="store_false", dest="load_best_model_at_end")
-    parser.set_defaults(load_best_model_at_end=load_best_default)
-
-    parser.add_argument("--mlflow-tracking-uri", type=str, default=str(defaults.get("mlflow_tracking_uri", "")))
-    parser.add_argument(
-        "--mlflow-experiment-name",
-        type=str,
-        default=str(defaults.get("mlflow_experiment_name", "mse-mlops-training")),
-    )
-    parser.add_argument("--mlflow-run-name", type=str, default=defaults.get("mlflow_run_name"))
-    parser.add_argument("--mlflow-tags", type=str, default=json.dumps(defaults.get("mlflow_tags", {})))
-
-    return parser.parse_args()
+    try:
+        return TrainConfig(
+            metadata_csv=_as_path(config_values["metadata_csv"]),
+            images_dir=_as_path(config_values["images_dir"]),
+            label_column=str(config_values["label_column"]),
+            train_set=str(config_values["train_set"]),
+            val_set=str(config_values["val_set"]),
+            train_fraction=float(config_values["train_fraction"]),
+            val_fraction=float(config_values["val_fraction"]),
+            train_samples=_as_optional_int(config_values["train_samples"]),
+            val_samples=_as_optional_int(config_values["val_samples"]),
+            model_name=str(config_values["model_name"]),
+            output_dir=_as_path(config_values["output_dir"]),
+            epochs=int(config_values["epochs"]),
+            batch_size=int(config_values["batch_size"]),
+            image_size=int(config_values["image_size"]),
+            lr=float(config_values["lr"]),
+            weight_decay=float(config_values["weight_decay"]),
+            num_workers=int(config_values["num_workers"]),
+            seed=int(config_values["seed"]),
+            device=str(config_values["device"]),
+            gradient_accumulation_steps=int(
+                config_values["gradient_accumulation_steps"]
+            ),
+            warmup_ratio=float(config_values["warmup_ratio"]),
+            lr_scheduler_type=str(config_values["lr_scheduler_type"]),
+            max_grad_norm=float(config_values["max_grad_norm"]),
+            max_train_batches=_as_optional_int(
+                config_values["max_train_batches"]
+            ),
+            max_val_batches=_as_optional_int(config_values["max_val_batches"]),
+            resume_from_checkpoint=_as_optional_str(
+                config_values["resume_from_checkpoint"]
+            ),
+            save_total_limit=_as_optional_int(
+                config_values["save_total_limit"]
+            ),
+            freeze_backbone=_as_bool(
+                config_values["freeze_backbone"], "freeze_backbone"
+            ),
+            load_best_model_at_end=_as_bool(
+                config_values["load_best_model_at_end"],
+                "load_best_model_at_end",
+            ),
+            mlflow_tracking_uri=str(config_values["mlflow_tracking_uri"]),
+            mlflow_experiment_name=str(config_values["mlflow_experiment_name"]),
+            mlflow_run_name=_as_optional_str(config_values["mlflow_run_name"]),
+            mlflow_tags=config_values["mlflow_tags"],
+            config=resolved_config_path,
+        )
+    except KeyError as error:
+        missing_field = str(error.args[0])
+        raise ValueError(
+            f"Config file is missing required training setting: {missing_field}"
+        ) from error
 
 
 def set_seed(seed: int) -> None:
@@ -215,7 +305,9 @@ def resolve_device(requested: str) -> torch.device:
     return torch.device("cpu")
 
 
-def resolve_mean_std(processor: AutoImageProcessor) -> tuple[Sequence[float], Sequence[float]]:
+def resolve_mean_std(
+    processor: AutoImageProcessor,
+) -> tuple[Sequence[float], Sequence[float]]:
     mean = getattr(processor, "image_mean", None) or [0.5, 0.5, 0.5]
     std = getattr(processor, "image_std", None) or [0.5, 0.5, 0.5]
     return mean, std
@@ -264,35 +356,126 @@ def seed_worker(worker_id: int) -> None:
     random.seed(worker_seed)
 
 
-def stratified_split_indices(
-    targets: Sequence[int],
-    val_split: float,
-    seed: int,
-) -> tuple[list[int], list[int]]:
-    by_class: dict[int, list[int]] = defaultdict(list)
-    for idx, label in enumerate(targets):
-        by_class[int(label)].append(idx)
+def read_metadata_frame(metadata_csv: Path, label_column: str) -> pd.DataFrame:
+    if not metadata_csv.is_file():
+        raise FileNotFoundError(f"Metadata CSV not found: {metadata_csv}")
 
-    train_indices: list[int] = []
-    val_indices: list[int] = []
-    rng = random.Random(seed)
+    metadata_df = pd.read_csv(metadata_csv)
+    required_columns = REQUIRED_METADATA_COLUMNS | {label_column}
+    missing_columns = sorted(required_columns - set(metadata_df.columns))
+    if missing_columns:
+        missing_str = ", ".join(missing_columns)
+        raise ValueError(
+            f"Metadata CSV is missing required columns: {missing_str}"
+        )
+    if metadata_df.empty:
+        raise ValueError(f"Metadata CSV is empty: {metadata_csv}")
 
-    for label, indices in by_class.items():
-        if len(indices) < 2:
+    normalized_df = metadata_df.copy()
+    for column in sorted(required_columns):
+        if normalized_df[column].isna().any():
+            raise ValueError(f"Metadata column contains null values: {column}")
+        normalized_df[column] = normalized_df[column].astype(str).str.strip()
+        if (normalized_df[column] == "").any():
+            raise ValueError(f"Metadata column contains blank values: {column}")
+
+    invalid_sets = sorted(set(normalized_df["set"]) - ALLOWED_METADATA_SETS)
+    if invalid_sets:
+        invalid_str = ", ".join(invalid_sets)
+        raise ValueError(
+            f"Metadata contains unsupported split values: {invalid_str}"
+        )
+
+    validate_lesion_split_consistency(normalized_df)
+    return normalized_df
+
+
+def validate_lesion_split_consistency(metadata_df: pd.DataFrame) -> None:
+    lesion_split_counts = metadata_df.groupby("lesion_id")["set"].nunique()
+    invalid = lesion_split_counts[lesion_split_counts != 1]
+    if invalid.empty:
+        return
+
+    examples = ", ".join(
+        f"{lesion_id}: {count}" for lesion_id, count in invalid.head(5).items()
+    )
+    raise ValueError(
+        f"Each lesion_id must belong to exactly one set. Violations: {examples}"
+    )
+
+
+def build_class_names(
+    metadata_df: pd.DataFrame, label_column: str
+) -> list[str]:
+    if label_column == MB_LABEL_COLUMN:
+        invalid_labels = sorted(
+            set(metadata_df[label_column]) - ALLOWED_MB_LABELS
+        )
+        if invalid_labels:
+            invalid_str = ", ".join(invalid_labels)
             raise ValueError(
-                f"Class index {label} has fewer than 2 samples; stratified split requires at least 2 samples per class."
+                f"Metadata contains unsupported '{label_column}' labels: {invalid_str}"
             )
-        shuffled = list(indices)
-        rng.shuffle(shuffled)
-        class_val_count = max(1, int(len(shuffled) * val_split))
-        if class_val_count >= len(shuffled):
-            class_val_count = len(shuffled) - 1
-        val_indices.extend(shuffled[:class_val_count])
-        train_indices.extend(shuffled[class_val_count:])
 
-    rng.shuffle(train_indices)
-    rng.shuffle(val_indices)
-    return train_indices, val_indices
+    class_names = sorted(metadata_df[label_column].drop_duplicates().tolist())
+    if len(class_names) < 2:
+        raise ValueError(
+            f"Need at least two unique labels in '{label_column}' for classification."
+        )
+    return class_names
+
+
+def build_split_samples(
+    metadata_df: pd.DataFrame,
+    images_dir: Path,
+    label_column: str,
+    split_name: str,
+    class_names: list[str],
+    fraction: float,
+    max_samples: int | None,
+    seed: int,
+) -> list[ImageRecord]:
+    class_to_idx = {
+        class_name: index for index, class_name in enumerate(class_names)
+    }
+    split_df = metadata_df[metadata_df["set"] == split_name].reset_index(
+        drop=True
+    )
+    if split_df.empty:
+        raise ValueError(f"No metadata rows found for split '{split_name}'.")
+
+    selected_indices = choose_indices(
+        list(range(len(split_df))), fraction, max_samples, seed
+    )
+    if not selected_indices:
+        raise ValueError(
+            f"Split '{split_name}' is empty after sampling settings."
+        )
+
+    records: list[ImageRecord] = []
+    for row in split_df.iloc[selected_indices].itertuples(index=False):
+        label_name = getattr(row, label_column)
+        if label_name not in class_to_idx:
+            raise ValueError(
+                f"Unsupported label '{label_name}' in column '{label_column}'."
+            )
+
+        image_path = (
+            images_dir / split_name / f"{row.image_id}{IMAGE_EXTENSION}"
+        )
+        if not image_path.is_file():
+            raise FileNotFoundError(
+                f"Image not found for split '{split_name}': {image_path}"
+            )
+
+        records.append(
+            ImageRecord(
+                label_index=class_to_idx[label_name],
+                image_path=image_path,
+            )
+        )
+
+    return records
 
 
 def compute_classification_metrics(
@@ -300,7 +483,9 @@ def compute_classification_metrics(
     preds: list[int],
     probs: list[list[float]],
 ) -> tuple[float, float, float, float]:
-    precision = precision_score(labels, preds, average="weighted", zero_division=0)
+    precision = precision_score(
+        labels, preds, average="weighted", zero_division=0
+    )
     recall = recall_score(labels, preds, average="weighted", zero_division=0)
     f1 = f1_score(labels, preds, average="weighted", zero_division=0)
 
@@ -328,13 +513,17 @@ def compute_classification_metrics(
 class DinoV3Classifier(nn.Module):
     """Primary classifier wrapper for DINOv3 backbone checkpoints."""
 
-    def __init__(self, model_name: str, num_labels: int, freeze_backbone: bool) -> None:
+    def __init__(
+        self, model_name: str, num_labels: int, freeze_backbone: bool
+    ) -> None:
         super().__init__()
         self.freeze_backbone = freeze_backbone
         self.backbone = AutoModel.from_pretrained(model_name)
 
         hidden_size = getattr(self.backbone.config, "hidden_size", None)
-        if hidden_size is None and hasattr(self.backbone.config, "hidden_sizes"):
+        if hidden_size is None and hasattr(
+            self.backbone.config, "hidden_sizes"
+        ):
             hidden_size = self.backbone.config.hidden_sizes[-1]
         if hidden_size is None:
             raise ValueError("Could not infer hidden size from model config.")
@@ -355,7 +544,10 @@ class DinoV3Classifier(nn.Module):
 
     def forward(self, pixel_values: torch.Tensor) -> SimpleNamespace:
         outputs = self.backbone(pixel_values=pixel_values)
-        if hasattr(outputs, "pooler_output") and outputs.pooler_output is not None:
+        if (
+            hasattr(outputs, "pooler_output")
+            and outputs.pooler_output is not None
+        ):
             pooled = outputs.pooler_output
         elif hasattr(outputs, "last_hidden_state"):
             pooled = outputs.last_hidden_state[:, 0]
@@ -369,68 +561,70 @@ class DinoV3Classifier(nn.Module):
 
 
 def build_dataloaders(
-    data_dir: Path,
+    metadata_csv: Path,
+    images_dir: Path,
     batch_size: int,
     num_workers: int,
     image_size: int,
     model_name: str,
     device: torch.device,
     seed: int,
-    train_subdir: str,
-    val_subdir: str,
-    val_mode: str,
-    val_split: float,
+    label_column: str,
+    train_set: str,
+    val_set: str,
     train_fraction: float,
     val_fraction: float,
     train_samples: int | None,
     val_samples: int | None,
 ) -> tuple[DataLoader, DataLoader, list[str], int, int]:
-    train_dir = data_dir / train_subdir
-    val_dir = data_dir / val_subdir
-    if not train_dir.is_dir():
-        raise FileNotFoundError(f"Train directory not found: {train_dir}")
+    if train_set == val_set:
+        raise ValueError("--train-set and --val-set must be different.")
+    if not images_dir.is_dir():
+        raise FileNotFoundError(f"Images directory not found: {images_dir}")
 
+    metadata_df = read_metadata_frame(metadata_csv, label_column)
+    class_names = build_class_names(metadata_df, label_column)
     processor = AutoImageProcessor.from_pretrained(model_name)
     mean, std = resolve_mean_std(processor)
     train_tf, eval_tf = build_transforms(mean, std, image_size=image_size)
-
-    train_full = datasets.ImageFolder(train_dir, transform=train_tf)
-    train_full_eval = datasets.ImageFolder(train_dir, transform=eval_tf)
-    class_names = list(train_full.classes)
-    all_train_indices = list(range(len(train_full)))
 
     train_generator = torch.Generator()
     train_generator.manual_seed(seed)
     val_generator = torch.Generator()
     val_generator.manual_seed(seed + 1)
 
-    if val_mode == "test":
-        if not val_dir.is_dir():
-            raise FileNotFoundError(f"Validation directory not found: {val_dir}")
-        val_full = datasets.ImageFolder(val_dir, transform=eval_tf)
-        if class_names != list(val_full.classes):
-            raise ValueError("Class folders under train and validation directories do not match.")
+    train_records = build_split_samples(
+        metadata_df=metadata_df,
+        images_dir=images_dir,
+        label_column=label_column,
+        split_name=train_set,
+        class_names=class_names,
+        fraction=train_fraction,
+        max_samples=train_samples,
+        seed=seed,
+    )
+    val_records = build_split_samples(
+        metadata_df=metadata_df,
+        images_dir=images_dir,
+        label_column=label_column,
+        split_name=val_set,
+        class_names=class_names,
+        fraction=val_fraction,
+        max_samples=val_samples,
+        seed=seed + 1,
+    )
 
-        train_indices = choose_indices(all_train_indices, train_fraction, train_samples, seed)
-        val_indices = choose_indices(list(range(len(val_full))), val_fraction, val_samples, seed + 1)
-        train_ds = Subset(train_full, train_indices)
-        val_ds = Subset(val_full, val_indices)
-
-    else:
-        if not (0.0 < val_split < 1.0):
-            raise ValueError("--val-split must be between 0 and 1 when --val-mode split is used.")
-        base_train_indices, base_val_indices = stratified_split_indices(
-            train_full.targets, val_split=val_split, seed=seed
-        )
-        train_indices = choose_indices(base_train_indices, train_fraction, train_samples, seed + 2)
-        val_indices = choose_indices(base_val_indices, val_fraction, val_samples, seed + 3)
-        train_ds = Subset(train_full, train_indices)
-        val_ds = Subset(train_full_eval, val_indices)
+    train_ds = MetadataImageDataset(train_records, transform=train_tf)
+    val_ds = MetadataImageDataset(val_records, transform=eval_tf)
 
     if len(train_ds) == 0:
-        raise ValueError("Train dataset is empty after applying split/fraction/sample settings.")
+        raise ValueError(
+            "Train dataset is empty after applying split/fraction/sample settings."
+        )
     if len(val_ds) == 0:
-        raise ValueError("Validation dataset is empty after applying split/fraction/sample settings.")
+        raise ValueError(
+            "Validation dataset is empty after applying split/fraction/sample settings."
+        )
 
     pin_memory = device.type == "cuda"
     train_loader = DataLoader(
@@ -451,10 +645,18 @@ def build_dataloaders(
         worker_init_fn=seed_worker,
         generator=val_generator,
     )
-    return train_loader, val_loader, class_names, len(train_ds), len(val_ds)
+    return (
+        train_loader,
+        val_loader,
+        class_names,
+        len(train_records),
+        len(val_records),
+    )
 
 
-def build_model(model_name: str, class_names: list[str], freeze_backbone: bool) -> nn.Module:
+def build_model(
+    model_name: str, class_names: list[str], freeze_backbone: bool
+) -> nn.Module:
     model = DinoV3Classifier(
         model_name=model_name,
         num_labels=len(class_names),
@@ -464,8 +666,16 @@ def build_model(model_name: str, class_names: list[str], freeze_backbone: bool) 
     return model
 
 
-def build_optimizer(model: nn.Module, lr: float, weight_decay: float) -> torch.optim.Optimizer:
-    no_decay_terms = ("bias", "LayerNorm.weight", "layernorm.weight", "norm.weight", "norm.bias")
+def build_optimizer(
+    model: nn.Module, lr: float, weight_decay: float
+) -> torch.optim.Optimizer:
+    no_decay_terms = (
+        "bias",
+        "LayerNorm.weight",
+        "layernorm.weight",
+        "norm.weight",
+        "norm.bias",
+    )
     decay_params = []
     no_decay_params = []
 
@@ -479,7 +689,10 @@ def build_optimizer(model: nn.Module, lr: float, weight_decay: float) -> torch.o
 
     param_groups = []
     if decay_params:
-        param_groups.append({"params": decay_params, "weight_decay": weight_decay})
+        param_groups.append({
+            "params": decay_params,
+            "weight_decay": weight_decay,
+        })
     if no_decay_params:
         param_groups.append({"params": no_decay_params, "weight_decay": 0.0})
     if not param_groups:
@@ -525,7 +738,9 @@ def evaluate(
 
     avg_loss = running_loss / max(total, 1)
     acc = correct / max(total, 1)
-    precision, recall, f1, roc_auc = compute_classification_metrics(all_labels, all_preds, all_probs)
+    precision, recall, f1, roc_auc = compute_classification_metrics(
+        all_labels, all_preds, all_probs
+    )
     return avg_loss, acc, precision, recall, f1, roc_auc
 
 
@@ -552,7 +767,9 @@ def train_one_epoch(
 
     optimizer.zero_grad(set_to_none=True)
 
-    for batch_idx, (images, labels) in enumerate(tqdm(loader, desc="train", leave=False), start=1):
+    for batch_idx, (images, labels) in enumerate(
+        tqdm(loader, desc="train", leave=False), start=1
+    ):
         images = images.to(device)
         labels = labels.to(device)
 
@@ -566,10 +783,14 @@ def train_one_epoch(
 
         (loss / gradient_accumulation_steps).backward()
 
-        should_step = (batch_idx % gradient_accumulation_steps == 0) or (batch_idx == planned_batches)
+        should_step = (batch_idx % gradient_accumulation_steps == 0) or (
+            batch_idx == planned_batches
+        )
         if should_step:
             if max_grad_norm > 0:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
+                torch.nn.utils.clip_grad_norm_(
+                    model.parameters(), max_grad_norm
+                )
             optimizer.step()
             scheduler.step()
             optimizer.zero_grad(set_to_none=True)
@@ -592,7 +813,9 @@ def find_latest_checkpoint(checkpoint_dir: Path) -> Path | None:
     return candidates[-1]
 
 
-def cleanup_old_checkpoints(checkpoint_dir: Path, keep_last: int | None) -> None:
+def cleanup_old_checkpoints(
+    checkpoint_dir: Path, keep_last: int | None
+) -> None:
     if keep_last is None:
         return
     checkpoints = sorted(checkpoint_dir.glob("epoch_*.pt"))
@@ -600,6 +823,34 @@ def cleanup_old_checkpoints(checkpoint_dir: Path, keep_last: int | None) -> None
         return
     for old_path in checkpoints[: len(checkpoints) - keep_last]:
         old_path.unlink(missing_ok=True)
+
+
+def serialize_best_model_state(
+    best_model_state: BestModelState,
+) -> dict[str, object]:
+    return {
+        "metric_name": best_model_state.metric_name,
+        "metric_value": best_model_state.metric_value,
+        "epoch": best_model_state.epoch,
+        "model_state_dict": best_model_state.model_state_dict,
+        "class_names": best_model_state.class_names,
+        "model_name": best_model_state.model_name,
+        "image_size": best_model_state.image_size,
+        "freeze_backbone": best_model_state.freeze_backbone,
+    }
+
+
+def deserialize_best_model_state(payload: dict[str, object]) -> BestModelState:
+    return BestModelState(
+        metric_name=str(payload["metric_name"]),
+        metric_value=float(payload["metric_value"]),
+        epoch=int(payload["epoch"]),
+        model_state_dict=payload["model_state_dict"],
+        class_names=list(payload["class_names"]),
+        model_name=str(payload["model_name"]),
+        image_size=int(payload["image_size"]),
+        freeze_backbone=bool(payload["freeze_backbone"]),
+    )
 
 
 def save_epoch_checkpoint(
@@ -619,16 +870,9 @@ def save_epoch_checkpoint(
         "history": [asdict(item) for item in history],
     }
     if best_model_state is not None:
-        payload["best_model_state"] = {
-            "metric_name": best_model_state.metric_name,
-            "metric_value": best_model_state.metric_value,
-            "epoch": best_model_state.epoch,
-            "model_state_dict": best_model_state.model_state_dict,
-            "class_names": best_model_state.class_names,
-            "model_name": best_model_state.model_name,
-            "image_size": best_model_state.image_size,
-            "freeze_backbone": best_model_state.freeze_backbone,
-        }
+        payload["best_model_state"] = serialize_best_model_state(
+            best_model_state
+        )
     torch.save(payload, checkpoint_path)
 
 
@@ -651,143 +895,306 @@ def load_epoch_checkpoint(
     best_payload = payload.get("best_model_state")
     best_model_state = None
     if isinstance(best_payload, dict):
-        best_model_state = BestModelState(
-            metric_name=str(best_payload["metric_name"]),
-            metric_value=float(best_payload["metric_value"]),
-            epoch=int(best_payload["epoch"]),
-            model_state_dict=best_payload["model_state_dict"],
-            class_names=list(best_payload["class_names"]),
-            model_name=str(best_payload["model_name"]),
-            image_size=int(best_payload["image_size"]),
-            freeze_backbone=bool(best_payload["freeze_backbone"]),
-        )
+        best_model_state = deserialize_best_model_state(best_payload)
     return loaded_epoch, best_model_state, history
 
 
-def main() -> None:
-    args = parse_args()
-
-    if args.epochs <= 0:
+def validate_config(config: TrainConfig) -> None:
+    if config.epochs <= 0:
         raise ValueError("--epochs must be > 0.")
-    if args.batch_size <= 0:
+    if config.batch_size <= 0:
         raise ValueError("--batch-size must be > 0.")
-    if args.image_size <= 0:
+    if config.image_size <= 0:
         raise ValueError("--image-size must be > 0.")
-    if args.gradient_accumulation_steps <= 0:
+    if config.gradient_accumulation_steps <= 0:
         raise ValueError("--gradient-accumulation-steps must be > 0.")
-    if args.max_grad_norm < 0:
+    if config.max_grad_norm < 0:
         raise ValueError("--max-grad-norm must be >= 0.")
-    if not (0.0 <= args.warmup_ratio < 1.0):
+    if not (0.0 <= config.warmup_ratio < 1.0):
         raise ValueError("--warmup-ratio must be in [0, 1).")
 
-    if not (0.0 < args.train_fraction <= 1.0):
+    if not (0.0 < config.train_fraction <= 1.0):
         raise ValueError("--train-fraction must be in (0, 1].")
-    if not (0.0 < args.val_fraction <= 1.0):
+    if not (0.0 < config.val_fraction <= 1.0):
         raise ValueError("--val-fraction must be in (0, 1].")
-    if args.train_samples is not None and args.train_samples <= 0:
+    if config.train_set == config.val_set:
+        raise ValueError("--train-set and --val-set must be different.")
+    if config.train_samples is not None and config.train_samples <= 0:
         raise ValueError("--train-samples must be > 0 when provided.")
-    if args.val_samples is not None and args.val_samples <= 0:
+    if config.val_samples is not None and config.val_samples <= 0:
         raise ValueError("--val-samples must be > 0 when provided.")
-    if args.max_train_batches is not None and args.max_train_batches <= 0:
+    if config.max_train_batches is not None and config.max_train_batches <= 0:
         raise ValueError("--max-train-batches must be > 0 when provided.")
-    if args.max_val_batches is not None and args.max_val_batches <= 0:
+    if config.max_val_batches is not None and config.max_val_batches <= 0:
         raise ValueError("--max-val-batches must be > 0 when provided.")
-    if args.save_total_limit is not None and args.save_total_limit <= 0:
+    if config.save_total_limit is not None and config.save_total_limit <= 0:
         raise ValueError("--save-total-limit must be > 0 when provided.")
 
-    set_seed(args.seed)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    checkpoint_dir = args.output_dir / "checkpoints"
+
+def prepare_checkpoint_dir(output_dir: Path) -> Path:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    checkpoint_dir = output_dir / "checkpoints"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
-    with init_mlflow(args):
-        device = resolve_device(args.device)
-        print(f"Config: {args.config}")
-        print(f"Using device: {device.type}")
-        print(f"Model: {args.model_name}")
-        print(f"Data: {args.data_dir}")
-        print(
-            f"Validation mode: {args.val_mode} "
-            f"(val_split={args.val_split}, train_fraction={args.train_fraction}, val_fraction={args.val_fraction})"
+    return checkpoint_dir
+
+
+def print_run_configuration(config: TrainConfig, device: torch.device) -> None:
+    print(f"Config: {config.config}")
+    print(f"Using device: {device.type}")
+    print(f"Model: {config.model_name}")
+    print(f"Metadata CSV: {config.metadata_csv}")
+    print(f"Images dir: {config.images_dir}")
+    print(
+        f"Train split: {config.train_set} | "
+        f"Validation split: {config.val_set} | "
+        f"label_column={config.label_column} | "
+        f"train_fraction={config.train_fraction} | "
+        f"val_fraction={config.val_fraction}"
+    )
+
+
+def build_scheduler_for_training(
+    optimizer: torch.optim.Optimizer,
+    train_loader: DataLoader,
+    epochs: int,
+    gradient_accumulation_steps: int,
+    warmup_ratio: float,
+    lr_scheduler_type: str,
+    max_train_batches: int | None,
+) -> tuple[object, int, int, int]:
+    train_batches_per_epoch = len(train_loader)
+    if max_train_batches is not None:
+        train_batches_per_epoch = min(
+            train_batches_per_epoch, max_train_batches
         )
 
-        train_loader, val_loader, class_names, train_count, val_count = build_dataloaders(
-            data_dir=args.data_dir,
-            batch_size=args.batch_size,
-            num_workers=args.num_workers,
-            image_size=args.image_size,
-            model_name=args.model_name,
-            device=device,
-            seed=args.seed,
-            train_subdir=args.train_subdir,
-            val_subdir=args.val_subdir,
-            val_mode=args.val_mode,
-            val_split=args.val_split,
-            train_fraction=args.train_fraction,
-            val_fraction=args.val_fraction,
-            train_samples=args.train_samples,
-            val_samples=args.val_samples,
+    updates_per_epoch = max(
+        1, math.ceil(train_batches_per_epoch / gradient_accumulation_steps)
+    )
+    total_training_steps = updates_per_epoch * epochs
+    warmup_steps = int(total_training_steps * warmup_ratio)
+    scheduler = get_scheduler(
+        name=lr_scheduler_type,
+        optimizer=optimizer,
+        num_warmup_steps=warmup_steps,
+        num_training_steps=total_training_steps,
+    )
+    return scheduler, updates_per_epoch, total_training_steps, warmup_steps
+
+
+def resolve_resume_checkpoint(
+    checkpoint_dir: Path, resume_from_checkpoint: str | None
+) -> Path | None:
+    if not resume_from_checkpoint:
+        return None
+    if resume_from_checkpoint == "latest":
+        checkpoint_path = find_latest_checkpoint(checkpoint_dir)
+        if checkpoint_path is None:
+            raise FileNotFoundError(
+                f"--resume-from-checkpoint=latest but no checkpoint found in {checkpoint_dir}"
+            )
+        return checkpoint_path
+
+    checkpoint_path = Path(resume_from_checkpoint)
+    if not checkpoint_path.exists():
+        raise FileNotFoundError(
+            f"Resume checkpoint not found: {checkpoint_path}"
+        )
+    return checkpoint_path
+
+
+def maybe_resume_training(
+    resume_from_checkpoint: str | None,
+    checkpoint_dir: Path,
+    model: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    scheduler: object,
+    device: torch.device,
+) -> tuple[int, BestModelState | None, list[Metrics]]:
+    checkpoint_path = resolve_resume_checkpoint(
+        checkpoint_dir, resume_from_checkpoint
+    )
+    if checkpoint_path is None:
+        return 1, None, []
+
+    loaded_epoch, best_model_state, history = load_epoch_checkpoint(
+        checkpoint_path=checkpoint_path,
+        model=model,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        device=device,
+    )
+    next_epoch = loaded_epoch + 1
+    print(f"Resumed from: {checkpoint_path} (next epoch: {next_epoch})")
+    return next_epoch, best_model_state, history
+
+
+def log_epoch_summary(
+    metrics: Metrics, epoch: int, total_epochs: int, optimizer_steps: int
+) -> None:
+    print(
+        f"Epoch {epoch}/{total_epochs} | "
+        f"train_loss={metrics.train_loss:.4f} train_acc={metrics.train_acc:.4f} | "
+        f"val_loss={metrics.val_loss:.4f} val_acc={metrics.val_acc:.4f} "
+        f"val_precision={metrics.val_precision:.4f} val_recall={metrics.val_recall:.4f} "
+        f"val_f1={metrics.val_f1:.4f} val_roc_auc={metrics.val_roc_auc:.4f} | "
+        f"opt_steps={optimizer_steps}"
+    )
+    tracking.log_epoch_metrics(
+        metrics=asdict(metrics),
+        epoch=epoch,
+        optimizer_steps=optimizer_steps,
+    )
+
+
+def is_better_metric(
+    best_model_state: BestModelState | None, current_metric: float
+) -> bool:
+    previous_metric = (
+        best_model_state.metric_value
+        if best_model_state is not None
+        else float("nan")
+    )
+    return (
+        best_model_state is None
+        or (math.isnan(previous_metric) and not math.isnan(current_metric))
+        or (not math.isnan(current_metric) and current_metric > previous_metric)
+    )
+
+
+def capture_best_model_state(
+    model: nn.Module,
+    class_names: list[str],
+    metric_name: str,
+    metric_value: float,
+    epoch: int,
+    model_name: str,
+    image_size: int,
+    freeze_backbone: bool,
+) -> BestModelState:
+    return BestModelState(
+        metric_name=metric_name,
+        metric_value=metric_value,
+        epoch=epoch,
+        model_state_dict={
+            key: value.detach().cpu().clone()
+            for key, value in model.state_dict().items()
+        },
+        class_names=list(class_names),
+        model_name=model_name,
+        image_size=image_size,
+        freeze_backbone=freeze_backbone,
+    )
+
+
+def finalize_training_run(
+    model: nn.Module,
+    history: list[Metrics],
+    best_model_state: BestModelState | None,
+    load_best_model_at_end: bool,
+) -> None:
+    history_payload = [asdict(item) for item in history]
+    best_model_for_mlflow = None
+
+    if best_model_state is not None:
+        model.load_state_dict(best_model_state.model_state_dict)
+        if load_best_model_at_end:
+            print(
+                f"Loaded best model from epoch {best_model_state.epoch} "
+                f"({best_model_state.metric_name}={best_model_state.metric_value:.4f})"
+            )
+        best_model_for_mlflow = model
+        print(
+            f"Best validation {best_model_state.metric_name}: {best_model_state.metric_value:.4f}"
+        )
+        tracking.log_summary_metrics({
+            "best_val_roc_auc": best_model_state.metric_value,
+            "best_epoch": float(best_model_state.epoch),
+        })
+
+    tracking.log_final_artifacts(
+        best_model=best_model_for_mlflow, history_payload=history_payload
+    )
+
+
+def run_training(config: TrainConfig) -> None:
+    validate_config(config)
+
+    set_seed(config.seed)
+    checkpoint_dir = prepare_checkpoint_dir(config.output_dir)
+
+    with tracking.init_mlflow(config):
+        device = resolve_device(config.device)
+        print_run_configuration(config, device)
+
+        train_loader, val_loader, class_names, train_count, val_count = (
+            build_dataloaders(
+                metadata_csv=config.metadata_csv,
+                images_dir=config.images_dir,
+                batch_size=config.batch_size,
+                num_workers=config.num_workers,
+                image_size=config.image_size,
+                model_name=config.model_name,
+                device=device,
+                seed=config.seed,
+                label_column=config.label_column,
+                train_set=config.train_set,
+                val_set=config.val_set,
+                train_fraction=config.train_fraction,
+                val_fraction=config.val_fraction,
+                train_samples=config.train_samples,
+                val_samples=config.val_samples,
+            )
         )
         print(f"Selected samples -> train: {train_count}, val: {val_count}")
-        log_run_params(args=args, train_count=train_count, val_count=val_count, class_names=class_names)
+        tracking.log_run_params(
+            config=config,
+            train_count=train_count,
+            val_count=val_count,
+            class_names=class_names,
+        )
 
         model = build_model(
-            model_name=args.model_name,
+            model_name=config.model_name,
             class_names=class_names,
-            freeze_backbone=args.freeze_backbone,
+            freeze_backbone=config.freeze_backbone,
         ).to(device)
-
-        trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        trainable_params = sum(
+            p.numel() for p in model.parameters() if p.requires_grad
+        )
         all_params = sum(p.numel() for p in model.parameters())
         print(f"Trainable params: {trainable_params}/{all_params}")
 
         criterion = nn.CrossEntropyLoss()
-        optimizer = build_optimizer(model=model, lr=args.lr, weight_decay=args.weight_decay)
-
-        train_batches_per_epoch = len(train_loader)
-        if args.max_train_batches is not None:
-            train_batches_per_epoch = min(train_batches_per_epoch, args.max_train_batches)
-        updates_per_epoch = max(1, math.ceil(train_batches_per_epoch / args.gradient_accumulation_steps))
-        total_training_steps = updates_per_epoch * args.epochs
-        warmup_steps = int(total_training_steps * args.warmup_ratio)
-
-        scheduler = get_scheduler(
-            name=args.lr_scheduler_type,
-            optimizer=optimizer,
-            num_warmup_steps=warmup_steps,
-            num_training_steps=total_training_steps,
+        optimizer = build_optimizer(
+            model=model, lr=config.lr, weight_decay=config.weight_decay
+        )
+        scheduler, updates_per_epoch, total_training_steps, warmup_steps = (
+            build_scheduler_for_training(
+                optimizer=optimizer,
+                train_loader=train_loader,
+                epochs=config.epochs,
+                gradient_accumulation_steps=config.gradient_accumulation_steps,
+                warmup_ratio=config.warmup_ratio,
+                lr_scheduler_type=config.lr_scheduler_type,
+                max_train_batches=config.max_train_batches,
+            )
         )
         print(
-            f"Scheduler: {args.lr_scheduler_type} | "
+            f"Scheduler: {config.lr_scheduler_type} | "
             f"updates/epoch={updates_per_epoch} total_updates={total_training_steps} warmup_steps={warmup_steps}"
         )
 
-        start_epoch = 1
-        best_model_state: BestModelState | None = None
-        history: list[Metrics] = []
+        start_epoch, best_model_state, history = maybe_resume_training(
+            resume_from_checkpoint=config.resume_from_checkpoint,
+            checkpoint_dir=checkpoint_dir,
+            model=model,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            device=device,
+        )
 
-        if args.resume_from_checkpoint:
-            if args.resume_from_checkpoint == "latest":
-                checkpoint_path = find_latest_checkpoint(checkpoint_dir)
-                if checkpoint_path is None:
-                    raise FileNotFoundError(
-                        f"--resume-from-checkpoint=latest but no checkpoint found in {checkpoint_dir}"
-                    )
-            else:
-                checkpoint_path = Path(args.resume_from_checkpoint)
-                if not checkpoint_path.exists():
-                    raise FileNotFoundError(f"Resume checkpoint not found: {checkpoint_path}")
-
-            loaded_epoch, best_model_state, history = load_epoch_checkpoint(
-                checkpoint_path=checkpoint_path,
-                model=model,
-                optimizer=optimizer,
-                scheduler=scheduler,
-                device=device,
-            )
-            start_epoch = loaded_epoch + 1
-            print(f"Resumed from: {checkpoint_path} (next epoch: {start_epoch})")
-
-        for epoch in range(start_epoch, args.epochs + 1):
+        for epoch in range(start_epoch, config.epochs + 1):
             train_loss, train_acc, optimizer_steps = train_one_epoch(
                 model=model,
                 loader=train_loader,
@@ -795,16 +1202,23 @@ def main() -> None:
                 optimizer=optimizer,
                 scheduler=scheduler,
                 device=device,
-                gradient_accumulation_steps=args.gradient_accumulation_steps,
-                max_grad_norm=args.max_grad_norm,
-                max_batches=args.max_train_batches,
+                gradient_accumulation_steps=config.gradient_accumulation_steps,
+                max_grad_norm=config.max_grad_norm,
+                max_batches=config.max_train_batches,
             )
-            val_loss, val_acc, val_precision, val_recall, val_f1, val_roc_auc = evaluate(
+            (
+                val_loss,
+                val_acc,
+                val_precision,
+                val_recall,
+                val_f1,
+                val_roc_auc,
+            ) = evaluate(
                 model=model,
                 loader=val_loader,
                 criterion=criterion,
                 device=device,
-                max_batches=args.max_val_batches,
+                max_batches=config.max_val_batches,
             )
 
             metrics = Metrics(
@@ -818,47 +1232,23 @@ def main() -> None:
                 val_roc_auc=val_roc_auc,
             )
             history.append(metrics)
-
-            print(
-                f"Epoch {epoch}/{args.epochs} | "
-                f"train_loss={train_loss:.4f} train_acc={train_acc:.4f} | "
-                f"val_loss={val_loss:.4f} val_acc={val_acc:.4f} "
-                f"val_precision={val_precision:.4f} val_recall={val_recall:.4f} "
-                f"val_f1={val_f1:.4f} val_roc_auc={val_roc_auc:.4f} | "
-                f"opt_steps={optimizer_steps}"
-            )
-            log_epoch_metrics(
-                metrics={
-                    "train_loss": train_loss,
-                    "train_acc": train_acc,
-                    "val_loss": val_loss,
-                    "val_acc": val_acc,
-                    "val_precision": val_precision,
-                    "val_recall": val_recall,
-                    "val_f1": val_f1,
-                    "val_roc_auc": val_roc_auc,
-                },
+            log_epoch_summary(
+                metrics=metrics,
                 epoch=epoch,
+                total_epochs=config.epochs,
                 optimizer_steps=optimizer_steps,
             )
 
-            current_metric = val_roc_auc
-            previous_metric = best_model_state.metric_value if best_model_state is not None else float("nan")
-            is_better = (
-                best_model_state is None
-                or (math.isnan(previous_metric) and not math.isnan(current_metric))
-                or (not math.isnan(current_metric) and current_metric > previous_metric)
-            )
-            if is_better:
-                best_model_state = BestModelState(
+            if is_better_metric(best_model_state, metrics.val_roc_auc):
+                best_model_state = capture_best_model_state(
+                    model=model,
+                    class_names=class_names,
                     metric_name="val_roc_auc",
-                    metric_value=val_roc_auc,
+                    metric_value=metrics.val_roc_auc,
                     epoch=epoch,
-                    model_state_dict={key: value.detach().cpu().clone() for key, value in model.state_dict().items()},
-                    class_names=list(class_names),
-                    model_name=args.model_name,
-                    image_size=args.image_size,
-                    freeze_backbone=args.freeze_backbone,
+                    model_name=config.model_name,
+                    image_size=config.image_size,
+                    freeze_backbone=config.freeze_backbone,
                 )
 
             epoch_ckpt = checkpoint_dir / f"epoch_{epoch:03d}.pt"
@@ -871,34 +1261,17 @@ def main() -> None:
                 best_model_state=best_model_state,
                 history=history,
             )
-            cleanup_old_checkpoints(checkpoint_dir=checkpoint_dir, keep_last=args.save_total_limit)
-
-        if args.load_best_model_at_end and best_model_state is not None:
-            model.load_state_dict(best_model_state.model_state_dict)
-            print(
-                f"Loaded best model from epoch {best_model_state.epoch} "
-                f"({best_model_state.metric_name}={best_model_state.metric_value:.4f})"
+            cleanup_old_checkpoints(
+                checkpoint_dir=checkpoint_dir, keep_last=config.save_total_limit
             )
 
-        history_payload = [asdict(item) for item in history]
-        best_model_for_mlflow = None
-        if best_model_state is not None:
-            if not args.load_best_model_at_end:
-                model.load_state_dict(best_model_state.model_state_dict)
-            best_model_for_mlflow = model
-            print(f"Best validation {best_model_state.metric_name}: {best_model_state.metric_value:.4f}")
-            log_summary_metrics({
-                "best_val_roc_auc": best_model_state.metric_value,
-                "best_epoch": float(best_model_state.epoch),
-            })
-
-        log_final_artifacts(
-            best_model=best_model_for_mlflow,
-            history_payload=history_payload,
+        finalize_training_run(
+            model=model,
+            history=history,
+            best_model_state=best_model_state,
+            load_best_model_at_end=config.load_best_model_at_end,
         )
 
-    print(f"Training run complete. Local checkpoints saved to: {checkpoint_dir}")
-
-
-if __name__ == "__main__":
-    main()
+    print(
+        f"Training run complete. Local checkpoints saved to: {checkpoint_dir}"
+    )

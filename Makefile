@@ -42,7 +42,7 @@ data-download-kaggle: ## Download Melanoma Kaggle dataset (requires ~/.kaggle/ka
 	@bash scripts/download_melanoma.sh
 
 .PHONY: data-split
-data-split: ## Split HAM10000 dataset into train/val/test/future sets
+data-split: ## Rebuild processed HAM10000 splits locally when DVC data is unavailable
 	@echo "✂️ Splitting HAM10000 dataset..."
 	@uv run scripts/data_processing.py
 

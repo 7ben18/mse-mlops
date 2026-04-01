@@ -18,4 +18,4 @@ COPY . /app
 # Sync the project
 RUN uv sync --locked --no-dev
 
-CMD ["uv", "run", "--no-sync", "--frozen", "--no-dev", "python", "-m", "mse_mlops.train"]
+CMD ["uv", "run", "--no-sync", "--frozen", "--no-dev", "python", "scripts/train.py"]

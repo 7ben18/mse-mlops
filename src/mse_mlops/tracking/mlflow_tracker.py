@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import tempfile
-from argparse import Namespace
 from collections.abc import Mapping
 from contextlib import contextmanager
 from pathlib import Path
@@ -40,9 +39,9 @@ def _sanitize_params(payload: dict[str, object]) -> dict[str, object]:
 
 
 @contextmanager
-def init_mlflow(args: Namespace):
-    tracking_uri = str(args.mlflow_tracking_uri).strip()
-    experiment_name = str(args.mlflow_experiment_name).strip()
+def init_mlflow(config: object):
+    tracking_uri = str(getattr(config, "mlflow_tracking_uri")).strip()
+    experiment_name = str(getattr(config, "mlflow_experiment_name")).strip()
 
     if not tracking_uri:
         raise ValueError("--mlflow-tracking-uri must be set.")
@@ -51,44 +50,45 @@ def init_mlflow(args: Namespace):
 
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment(experiment_name)
-    run_name = args.mlflow_run_name.strip() if isinstance(args.mlflow_run_name, str) else None
-    tags = _coerce_tags(args.mlflow_tags)
+    run_name_value = getattr(config, "mlflow_run_name")
+    run_name = run_name_value.strip() if isinstance(run_name_value, str) else None
+    tags = _coerce_tags(getattr(config, "mlflow_tags"))
 
     with mlflow.start_run(run_name=run_name or None, tags=tags):
         yield
 
 
-def log_run_params(args: Namespace, train_count: int, val_count: int, class_names: list[str]) -> None:
+def log_run_params(config: object, train_count: int, val_count: int, class_names: list[str]) -> None:
     payload = {
-        "config": args.config,
-        "data_dir": args.data_dir,
-        "train_subdir": args.train_subdir,
-        "val_subdir": args.val_subdir,
-        "val_mode": args.val_mode,
-        "val_split": args.val_split,
-        "train_fraction": args.train_fraction,
-        "val_fraction": args.val_fraction,
-        "train_samples": args.train_samples,
-        "val_samples": args.val_samples,
-        "model_name": args.model_name,
-        "epochs": args.epochs,
-        "batch_size": args.batch_size,
-        "image_size": args.image_size,
-        "lr": args.lr,
-        "weight_decay": args.weight_decay,
-        "num_workers": args.num_workers,
-        "seed": args.seed,
-        "device": args.device,
-        "gradient_accumulation_steps": args.gradient_accumulation_steps,
-        "warmup_ratio": args.warmup_ratio,
-        "lr_scheduler_type": args.lr_scheduler_type,
-        "max_grad_norm": args.max_grad_norm,
-        "max_train_batches": args.max_train_batches,
-        "max_val_batches": args.max_val_batches,
-        "resume_from_checkpoint": args.resume_from_checkpoint,
-        "save_total_limit": args.save_total_limit,
-        "freeze_backbone": args.freeze_backbone,
-        "load_best_model_at_end": args.load_best_model_at_end,
+        "config": getattr(config, "config"),
+        "metadata_csv": getattr(config, "metadata_csv"),
+        "images_dir": getattr(config, "images_dir"),
+        "label_column": getattr(config, "label_column"),
+        "train_set": getattr(config, "train_set"),
+        "val_set": getattr(config, "val_set"),
+        "train_fraction": getattr(config, "train_fraction"),
+        "val_fraction": getattr(config, "val_fraction"),
+        "train_samples": getattr(config, "train_samples"),
+        "val_samples": getattr(config, "val_samples"),
+        "model_name": getattr(config, "model_name"),
+        "epochs": getattr(config, "epochs"),
+        "batch_size": getattr(config, "batch_size"),
+        "image_size": getattr(config, "image_size"),
+        "lr": getattr(config, "lr"),
+        "weight_decay": getattr(config, "weight_decay"),
+        "num_workers": getattr(config, "num_workers"),
+        "seed": getattr(config, "seed"),
+        "device": getattr(config, "device"),
+        "gradient_accumulation_steps": getattr(config, "gradient_accumulation_steps"),
+        "warmup_ratio": getattr(config, "warmup_ratio"),
+        "lr_scheduler_type": getattr(config, "lr_scheduler_type"),
+        "max_grad_norm": getattr(config, "max_grad_norm"),
+        "max_train_batches": getattr(config, "max_train_batches"),
+        "max_val_batches": getattr(config, "max_val_batches"),
+        "resume_from_checkpoint": getattr(config, "resume_from_checkpoint"),
+        "save_total_limit": getattr(config, "save_total_limit"),
+        "freeze_backbone": getattr(config, "freeze_backbone"),
+        "load_best_model_at_end": getattr(config, "load_best_model_at_end"),
         "train_count": train_count,
         "val_count": val_count,
         "class_names": class_names,

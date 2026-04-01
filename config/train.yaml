@@ -4,37 +4,28 @@ model:
   # then log in locally with `hf auth login`, then download the default local model with:
   # uv run python scripts/download_model.py
   # Default local path:
-  # outputs/pretrained/dinov3-vits16-pretrain-lvd1689m
-  model_name: outputs/pretrained/dinov3-vits16-pretrain-lvd1689m
+  # models/pretrained/dinov3-vits16-pretrain-lvd1689m
+  model_name: models/pretrained/dinov3-vits16-pretrain-lvd1689m
 
 data:
-  # Root data folder that contains class subfolders.
-  data_dir: data/raw/melanoma_cancer_dataset
+  # Canonical processed HAM10000 metadata used for fine-tuning.
+  metadata_csv: data/processed/ham10000/metadata.csv
 
-  # Subfolder under data_dir used as training source.
-  train_subdir: train
+  # Root folder that contains split RGB images under HAM10000_images/<set>/.
+  images_dir: data/processed/ham10000/HAM10000_images
 
-  # Subfolder under data_dir used only when val_mode = test.
-  # Ignored when val_mode = split.
-  val_subdir: val
+  # Target label column in metadata.csv.
+  label_column: mb
 
-  # Validation strategy:
-  # - test: use train_subdir for training and val_subdir for validation.
-  # - split: split train_subdir into train/val using val_split.
-  #
-  # Default here: split train into train/validation and keep the final test set untouched.
-  val_mode: split
+  # Canonical split names from metadata.csv.
+  train_set: train
+  val_set: val
 
-  # Fraction of train_subdir reserved for validation when val_mode = split.
-  # Example: 0.2 means 80% train / 20% val from train_subdir.
-  # Ignored for val_mode = test.
-  val_split: 0.2
-
-  # Fraction of candidate training images to keep after split/subdir selection.
+  # Fraction of candidate training images to keep after split selection.
   # 1.0 = use all available training images.
   train_fraction: 1.0
 
-  # Fraction of candidate validation images to keep after split/subdir selection.
+  # Fraction of candidate validation images to keep after split selection.
   # 1.0 = use all available validation images.
   val_fraction: 1.0
 
@@ -48,10 +39,11 @@ data:
 
 training:
   # Directory where best checkpoint, epoch checkpoints, and history.json are written.
-  output_dir: outputs/dinov3_melanoma
+  output_dir: models/finetuned/dinov3_ham10000
 
-  # Total number of epochs (HF baseline style for full fine-tuning).
-  epochs: 1
+  # Total number of epochs for the normal training run.
+  # 10 is a practical default; use CLI overrides for quick smoke tests.
+  epochs: 10
 
   # Batch size for train and validation.
   batch_size: 16
@@ -125,7 +117,7 @@ training:
 tracking:
   # MLflow tracking backend URI, for example:
   # - local file store (deprecated): file:./mlruns
-  # - local server (recommended): http://127.0.0.1:5000
+  # - local server (recommended for the default local training flow): http://127.0.0.1:5000
   # - remote server: http://mlflow:5000
   mlflow_tracking_uri: http://127.0.0.1:5000
 

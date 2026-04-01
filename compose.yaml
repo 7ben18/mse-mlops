@@ -6,13 +6,13 @@ services:
     image: mse-mlops-api:latest
     environment:
       FEEDBACK_DIR: /feedback
-      HF_HOME: /app/outputs/.hf-cache
-      MODEL_PATH: /app/outputs/dinov3_melanoma/best_model.pt
-      TRANSFORMERS_CACHE: /app/outputs/.hf-cache
+      HF_HOME: /app/.cache/huggingface
+      MODEL_PATH: /app/models/finetuned/dinov3_ham10000/best_model.pt
+      TRANSFORMERS_CACHE: /app/.cache/huggingface
     ports:
       - "8000:8000"
     volumes:
-      - ./outputs:/app/outputs:ro
+      - ./models:/app/models:ro
       - feedback_data:/feedback
 
   ui:
@@ -35,14 +35,14 @@ services:
       dockerfile: docker/train.Dockerfile
     image: mse-mlops:latest
     working_dir: /app
-    command: ["uv", "run", "--no-sync", "--frozen", "--no-dev", "python", "-m", "mse_mlops.train"]
+    command: ["uv", "run", "--no-sync", "--frozen", "--no-dev", "python", "scripts/train.py"]
     environment:
-      HF_HOME: /app/outputs/.hf-cache
-      TRANSFORMERS_CACHE: /app/outputs/.hf-cache
+      HF_HOME: /app/.cache/huggingface
+      TRANSFORMERS_CACHE: /app/.cache/huggingface
     volumes:
       - ./config:/app/config:ro
       - ./data:/app/data
-      - ./outputs:/app/outputs
+      - ./models:/app/models
 
 volumes:
   feedback_data:

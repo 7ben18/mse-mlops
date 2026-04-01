@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 
 DEFAULT_MODEL_ID = "facebook/dinov3-vits16-pretrain-lvd1689m"
-DEFAULT_OUTPUT_DIR = Path("outputs/pretrained/dinov3-vits16-pretrain-lvd1689m")
+DEFAULT_OUTPUT_DIR = Path("models/pretrained/dinov3-vits16-pretrain-lvd1689m")
 
 
 def parse_args() -> argparse.Namespace:
@@ -46,6 +46,7 @@ def main() -> None:
     model.save_pretrained(output_dir)
 
     print(f"Saved pretrained assets to: {output_dir}")
+    print(f"To track this model in DVC, run: dvc add {output_dir}")
 
 
 if __name__ == "__main__":
