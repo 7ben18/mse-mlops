@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="DINOv3 fine-tuning setup for melanoma skin cancer classification.">
+        <meta name="description" content="DINOv3 fine-tuning setup for binary skin lesion classification on processed HAM10000.">
       
       
         <meta name="author" content="mse-mlops contributors">
@@ -882,44 +882,53 @@
 
 
 <h1 id="mlflow-tracking">MLflow Tracking<a class="headerlink" href="#mlflow-tracking" title="Permanent link">&para;</a></h1>
-<p>Stage 3 of the MLOps pipeline. Captures training runs from <code>src/mse_mlops/train.py</code> in MLflow, including
+<p>Stage 3 of the MLOps pipeline. Captures training runs from <code>scripts/train.py</code> and <code>mse_mlops.train</code>
+in MLflow, including
 configuration, epoch metrics, summary metrics, and model/history artifacts.</p>
 <h2 id="what-it-is">What it is<a class="headerlink" href="#what-it-is" title="Permanent link">&para;</a></h2>
-<p>Training is MLflow-enabled by default and always runs inside an MLflow run context.</p>
+<p>Training is MLflow-enabled by default and always runs inside an MLflow run context.
+That means <code>uv run python scripts/train.py</code> requires a reachable tracking backend before the
+first epoch starts.</p>
 <p>Start MLflow server:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>run<span class="w"> </span>mlflow<span class="w"> </span>server<span class="w"> </span>--backend-store-uri<span class="w"> </span>sqlite:///mlflow.db<span class="w"> </span>--default-artifact-root<span class="w"> </span>file:./mlartifacts<span class="w"> </span>--host<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </span>--port<span class="w"> </span><span class="m">5000</span>
 </span></code></pre></div>
 <p>Start training:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>run<span class="w"> </span>train-dinov3<span class="w"> </span>--config<span class="w"> </span>config/train.yaml
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/train.py
+</span></code></pre></div>
+<p>If the default server at <code>http://127.0.0.1:5000</code> is not running, training fails immediately during
+MLflow setup. For a quick local smoke test without a running server, you can override the tracking URI:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/train.py<span class="w"> </span>--mlflow-tracking-uri<span class="w"> </span>file:./mlruns
 </span></code></pre></div>
 <p>Open UI:</p>
 <p><code>http://127.0.0.1:5000</code></p>
 <p>Tracking code lives in:</p>
 <ul>
+<li><code>scripts/train.py</code></li>
 <li><code>mse_mlops.tracking.mlflow_tracker</code></li>
 <li><code>mse_mlops.train</code></li>
 </ul>
 <h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>train.py
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  -&gt; init_mlflow(args)
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>      -&gt; set_tracking_uri
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>      -&gt; set_experiment
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>      -&gt; start_run
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  -&gt; log_run_params(...)
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  -&gt; epoch loop
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>      -&gt; log_epoch_metrics(..., step=epoch)
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>  -&gt; finalize
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>      -&gt; log_summary_metrics(...)
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>      -&gt; log_final_artifacts(...)
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>          - training/history.json
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>          - model/ (mlflow.pytorch.log_model)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>scripts/train.py
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  -&gt; mse_mlops.train.run_training(config)
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>      -&gt; init_mlflow(config)
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>      -&gt; set_tracking_uri
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>      -&gt; set_experiment
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>      -&gt; start_run
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>      -&gt; log_run_params(...)
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>      -&gt; epoch loop
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>          -&gt; log_epoch_metrics(..., step=epoch)
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>      -&gt; finalize
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>          -&gt; log_summary_metrics(...)
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>          -&gt; log_final_artifacts(...)
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>              - training/history.json
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>              - model/ (mlflow.pytorch.log_model)
 </span></code></pre></div>
 <p>The run closes automatically when the MLflow context exits.</p>
 <hr />
 <h2 id="what-is-logged">What is logged<a class="headerlink" href="#what-is-logged" title="Permanent link">&para;</a></h2>
 <h3 id="parameters-once-per-run">Parameters (once per run)<a class="headerlink" href="#parameters-once-per-run" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Dataset/split config (<code>data_dir</code>, <code>val_mode</code>, <code>val_split</code>, fractions/samples)</li>
+<li>Dataset/split config (<code>metadata_csv</code>, <code>images_dir</code>, <code>label_column</code>, split names, fractions/samples)</li>
 <li>Training config (<code>epochs</code>, <code>batch_size</code>, <code>lr</code>, scheduler settings, etc.)</li>
 <li>Execution controls (<code>device</code>, <code>resume_from_checkpoint</code>, <code>save_total_limit</code>)</li>
 <li>Derived metadata (<code>train_count</code>, <code>val_count</code>, <code>class_names</code>)</li>
@@ -940,10 +949,10 @@ configuration, epoch metrics, summary metrics, and model/history artifacts.</p>
 <li><code>training/history.json</code></li>
 <li><code>model/</code> MLflow model artifact from:</li>
 </ul>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">mlflow</span><span class="o">.</span><span class="n">pytorch</span><span class="o">.</span><span class="n">log_model</span><span class="p">(</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">pytorch_model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">artifact_path</span><span class="o">=</span><span class="s2">&quot;model&quot;</span><span class="p">,</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">mlflow</span><span class="o">.</span><span class="n">pytorch</span><span class="o">.</span><span class="n">log_model</span><span class="p">(</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">pytorch_model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">artifact_path</span><span class="o">=</span><span class="s2">&quot;model&quot;</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <p><code>config/train.yaml</code>:</p>
@@ -988,7 +997,7 @@ configuration, epoch metrics, summary metrics, and model/history artifacts.</p>
 <p>If tracking URI or experiment name is empty, training fails fast with <code>ValueError</code>.</p>
 <h2 id="checkpoint-and-resume">Checkpoint and resume<a class="headerlink" href="#checkpoint-and-resume" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Local checkpoints remain at <code>outputs/.../checkpoints/epoch_XXX.pt</code>.</li>
+<li>Local checkpoints remain at <code>models/finetuned/.../checkpoints/epoch_XXX.pt</code>.</li>
 <li>Checkpoints store <code>history</code> and optional <code>best_model_state</code>.</li>
 <li>Resume restores model/optimizer/scheduler and metric history.</li>
 </ul>

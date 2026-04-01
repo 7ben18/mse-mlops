@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="DINOv3 fine-tuning setup for melanoma skin cancer classification.">
+        <meta name="description" content="DINOv3 fine-tuning setup for binary skin lesion classification on processed HAM10000.">
       
       
         <meta name="author" content="mse-mlops contributors">
@@ -439,44 +439,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#melanoma-skin-cancer-dataset" class="md-nav__link">
+  <a href="#dinov3-pretrained-backbone" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Melanoma Skin Cancer Dataset
+        DINOv3 Pretrained Backbone
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Melanoma Skin Cancer Dataset">
+    <nav class="md-nav" aria-label="DINOv3 Pretrained Backbone">
       <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Prerequisites
-      
-    </span>
-  </a>
-  
-</li>
         
           <li class="md-nav__item">
   <a href="#quick-start_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Quick Start
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#output-structure_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Output Structure
       
     </span>
   </a>
@@ -495,57 +473,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#requirements_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Requirements
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dinov3-pretrained-backbone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        DINOv3 Pretrained Backbone
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="DINOv3 Pretrained Backbone">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#quick-start_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Quick Start
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cli-options_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        CLI Options
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#output-structure_2" class="md-nav__link">
+  <a href="#output-structure_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Output Structure
@@ -874,44 +802,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#melanoma-skin-cancer-dataset" class="md-nav__link">
+  <a href="#dinov3-pretrained-backbone" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Melanoma Skin Cancer Dataset
+        DINOv3 Pretrained Backbone
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Melanoma Skin Cancer Dataset">
+    <nav class="md-nav" aria-label="DINOv3 Pretrained Backbone">
       <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Prerequisites
-      
-    </span>
-  </a>
-  
-</li>
         
           <li class="md-nav__item">
   <a href="#quick-start_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Quick Start
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#output-structure_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Output Structure
       
     </span>
   </a>
@@ -930,57 +836,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#requirements_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Requirements
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dinov3-pretrained-backbone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        DINOv3 Pretrained Backbone
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="DINOv3 Pretrained Backbone">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#quick-start_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Quick Start
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cli-options_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        CLI Options
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#output-structure_2" class="md-nav__link">
+  <a href="#output-structure_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Output Structure
@@ -1016,7 +872,7 @@
 
 
 <h1 id="data-acquisition">Data Acquisition<a class="headerlink" href="#data-acquisition" title="Permanent link">&para;</a></h1>
-<p>This project uses two skin lesion datasets and one pretrained backbone model.
+<p>This project uses the HAM10000 dataset plus one pretrained DINOv3 backbone model.
 All acquisition scripts live under <code>scripts/</code> and can also be triggered through
 the project <code>Makefile</code>.</p>
 <hr />
@@ -1073,82 +929,25 @@ the project <code>Makefile</code>.</p>
 <li><code>unzip</code> — for extracting</li>
 <li><code>bash</code> — for running</li>
 </ul>
-<hr />
-<h2 id="melanoma-skin-cancer-dataset">Melanoma Skin Cancer Dataset<a class="headerlink" href="#melanoma-skin-cancer-dataset" title="Permanent link">&para;</a></h2>
-<p><strong>Source:</strong> <a href="https://www.kaggle.com/datasets/hasnainjaved/melanoma-skin-cancer-dataset-of-10000-images">Kaggle</a>
-<strong>Size:</strong> ~104 MB (~10,600 dermoscopy images in train/test splits)</p>
-<h3 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h3>
-<p>A Kaggle API credentials file must exist at <code>~/.kaggle/kaggle.json</code>:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span><span class="nt">&quot;username&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;YOUR_USERNAME&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;YOUR_API_KEY&quot;</span><span class="p">}</span>
-</span></code></pre></div>
-<p>Obtain your API key at <a href="https://www.kaggle.com/settings/account">kaggle.com/settings/account</a>, then set permissions:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>~/.kaggle/kaggle.json
-</span></code></pre></div>
-<h3 id="quick-start_1">Quick Start<a class="headerlink" href="#quick-start_1" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Check URL reachability</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>bash<span class="w"> </span>scripts/download_melanoma.sh<span class="w"> </span>--check-url
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Download and extract full dataset (~104 MB)</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>bash<span class="w"> </span>scripts/download_melanoma.sh
-</span></code></pre></div>
-<h3 id="output-structure_1">Output Structure<a class="headerlink" href="#output-structure_1" title="Permanent link">&para;</a></h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>data/raw/melanoma_cancer_dataset/
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>├── train/
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>│   ├── benign/               ← 5,000 images
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>│   └── malignant/            ← 4,605 images
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>└── test/
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    ├── benign/               ← 500 images
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    └── malignant/            ← 500 images
-</span></code></pre></div>
-<h3 id="cli-options_1">CLI Options<a class="headerlink" href="#cli-options_1" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>--check-url</code></td>
-<td>Check if URL is reachable and show file size</td>
-</tr>
-<tr>
-<td><code>--help</code></td>
-<td>Show help message</td>
-</tr>
-<tr>
-<td><em>(no args)</em></td>
-<td>Download and extract full dataset</td>
-</tr>
-</tbody>
-</table>
-<h3 id="requirements_1">Requirements<a class="headerlink" href="#requirements_1" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>curl</code> — for downloading</li>
-<li><code>unzip</code> — for extracting</li>
-<li><code>python3</code> — for parsing <code>kaggle.json</code></li>
-<li><code>bash</code> — for running</li>
-</ul>
-<hr />
 <h2 id="dinov3-pretrained-backbone">DINOv3 Pretrained Backbone<a class="headerlink" href="#dinov3-pretrained-backbone" title="Permanent link">&para;</a></h2>
 <p><strong>Source:</strong> <a href="https://huggingface.co/facebook/dinov3-vits16-pretrain-lvd1689m">Hugging Face</a>
 <strong>Default model ID:</strong> <code>facebook/dinov3-vits16-pretrain-lvd1689m</code></p>
 <p>The training pipeline expects the pretrained backbone to be cached locally.
-You must request access on Hugging Face before downloading.</p>
-<h3 id="quick-start_2">Quick Start<a class="headerlink" href="#quick-start_2" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Log in to Hugging Face</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>hf<span class="w"> </span>auth<span class="w"> </span>login
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Download the default model</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/download_model.py
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1"># Download a different model or change output location</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/download_model.py<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span>--model-id<span class="w"> </span>facebook/dinov3-vits16-pretrain-lvd1689m<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">    </span>--output-dir<span class="w"> </span>outputs/pretrained/my-model
+You must request access on Hugging Face before downloading. The project stores the
+backbone under <code>models/pretrained/</code>.</p>
+<h3 id="quick-start_1">Quick Start<a class="headerlink" href="#quick-start_1" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Log in to Hugging Face</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>hf<span class="w"> </span>auth<span class="w"> </span>login
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Download the default model</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/download_model.py
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Download a different model or change output location</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/download_model.py<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span>--model-id<span class="w"> </span>facebook/dinov3-vits16-pretrain-lvd1689m<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span>--output-dir<span class="w"> </span>models/pretrained/my-model
 </span></code></pre></div>
-<h3 id="cli-options_2">CLI Options<a class="headerlink" href="#cli-options_2" title="Permanent link">&para;</a></h3>
+<h3 id="cli-options_1">CLI Options<a class="headerlink" href="#cli-options_1" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1165,18 +964,20 @@ You must request access on Hugging Face before downloading.</p>
 </tr>
 <tr>
 <td><code>--output-dir</code></td>
-<td><code>outputs/pretrained/dinov3-vits16-pretrain-lvd1689m</code></td>
+<td><code>models/pretrained/dinov3-vits16-pretrain-lvd1689m</code></td>
 <td>Directory where model files are saved</td>
 </tr>
 </tbody>
 </table>
-<h3 id="output-structure_2">Output Structure<a class="headerlink" href="#output-structure_2" title="Permanent link">&para;</a></h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>outputs/pretrained/dinov3-vits16-pretrain-lvd1689m/
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>├── config.json
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>├── model.safetensors
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>└── preprocessor_config.json
+<h3 id="output-structure_1">Output Structure<a class="headerlink" href="#output-structure_1" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>models/pretrained/dinov3-vits16-pretrain-lvd1689m/
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>├── config.json
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>├── model.safetensors
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>└── preprocessor_config.json
 </span></code></pre></div>
-<p>The default config (<code>config/train.yaml</code>) expects the model at this exact path.</p>
+<p>The default config (<code>config/train.yaml</code>) expects the model at this exact path. After the
+download finishes, add it to DVC yourself if you want to track it:</p>
+<p><code>dvc add models/pretrained/dinov3-vits16-pretrain-lvd1689m</code></p>
 
 
 

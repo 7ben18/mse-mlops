@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="DINOv3 fine-tuning setup for melanoma skin cancer classification.">
+        <meta name="description" content="DINOv3 fine-tuning setup for binary skin lesion classification on processed HAM10000.">
       
       
         <meta name="author" content="mse-mlops contributors">
@@ -773,8 +773,10 @@
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>      api.py
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>      feedback_store.py
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>      inference.py
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>      launchers.py
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>      ui.py
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>      ui.py
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>scripts/
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>  serve_api.py
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>  serve_ui.py
 </span></code></pre></div>
 <h2 id="runtime-topology">Runtime Topology<a class="headerlink" href="#runtime-topology" title="Permanent link">&para;</a></h2>
 <p><code>docker compose up --build</code> starts two default services:</p>
@@ -786,13 +788,13 @@
 <p><code>docker compose --profile train run --build --rm train</code></p>
 <h2 id="mounted-state">Mounted State<a class="headerlink" href="#mounted-state" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>api</code> mounts <code>./outputs</code> read-only at <code>/app/outputs</code></li>
-<li><code>api</code> uses the checkpoint at <code>/app/outputs/dinov3_melanoma/best_model.pt</code></li>
+<li><code>api</code> mounts <code>./models</code> read-only at <code>/app/models</code></li>
+<li><code>api</code> uses the checkpoint at <code>/app/models/finetuned/dinov3_ham10000/best_model.pt</code></li>
 <li><code>api</code> persists feedback data in the named Docker volume <code>feedback_data</code></li>
 </ul>
 <p>This keeps trained artifacts and serving state separate:</p>
 <ul>
-<li>model artifacts stay in <code>outputs/</code></li>
+<li>model artifacts stay in <code>models/</code></li>
 <li>feedback JSONL and uploaded images stay in the volume mounted at <code>/feedback</code></li>
 </ul>
 <h2 id="package-boundaries">Package Boundaries<a class="headerlink" href="#package-boundaries" title="Permanent link">&para;</a></h2>
@@ -801,14 +803,15 @@
 <li><code>mse_mlops.serving.inference</code>: checkpoint loading, preprocessing, inference, integration stubs</li>
 <li><code>mse_mlops.serving.feedback_store</code>: JSONL-backed feedback persistence</li>
 <li><code>mse_mlops.serving.ui</code>: Streamlit interface</li>
-<li><code>mse_mlops.serving.launchers</code>: script entrypoints for local runs</li>
+<li><code>scripts/serve_api.py</code>: CLI wrapper for local API runs</li>
+<li><code>scripts/serve_ui.py</code>: CLI wrapper for local UI runs</li>
 </ul>
 <h2 id="local-development">Local Development<a class="headerlink" href="#local-development" title="Permanent link">&para;</a></h2>
 <p>Run the API:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>run<span class="w"> </span>--group<span class="w"> </span>api<span class="w"> </span>serve-api
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>run<span class="w"> </span>--group<span class="w"> </span>api<span class="w"> </span>python<span class="w"> </span>scripts/serve_api.py
 </span></code></pre></div>
 <p>Run the UI in a second terminal:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>run<span class="w"> </span>--group<span class="w"> </span>ui<span class="w"> </span>serve-ui
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>run<span class="w"> </span>--group<span class="w"> </span>ui<span class="w"> </span>python<span class="w"> </span>scripts/serve_ui.py
 </span></code></pre></div>
 <p>Set overrides via environment variables as needed:</p>
 <ul>

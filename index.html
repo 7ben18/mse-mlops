@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="DINOv3 fine-tuning setup for melanoma skin cancer classification.">
+        <meta name="description" content="DINOv3 fine-tuning setup for binary skin lesion classification on processed HAM10000.">
       
       
         <meta name="author" content="mse-mlops contributors">
@@ -271,24 +271,6 @@
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Home
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="." class="md-nav__link md-nav__link--active">
         
   
@@ -305,80 +287,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#data-lifecycle" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Data Lifecycle
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#project-conventions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Project Conventions
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#training-prerequisite" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Training Prerequisite
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#docker-training" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Docker Training
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#serving" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Serving
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -676,69 +584,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#data-lifecycle" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Data Lifecycle
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#project-conventions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Project Conventions
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#training-prerequisite" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Training Prerequisite
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#docker-training" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Docker Training
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#serving" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Serving
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -758,56 +603,18 @@
 
 
 <h1 id="mse-mlops">mse-mlops<a class="headerlink" href="#mse-mlops" title="Permanent link">&para;</a></h1>
-<p><a href="https://github.com/7ben18/mse-mlops/actions/workflows/main.yml?query=branch%3Amain"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/7ben18/mse-mlops/main.yml?branch=main" /></a>
-<a href="https://github.com/7ben18/mse-mlops/commits/main"><img alt="Commit activity" src="https://img.shields.io/github/commit-activity/m/7ben18/mse-mlops" /></a>
-<a href="https://github.com/7ben18/mse-mlops/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/7ben18/mse-mlops" /></a></p>
-<p>DINOv3 fine-tuning setup for melanoma skin cancer classification.</p>
-<h2 id="data-lifecycle">Data Lifecycle<a class="headerlink" href="#data-lifecycle" title="Permanent link">&para;</a></h2>
+<p>This page is intentionally short so the setup guide only lives in one place.</p>
+<p>Use the repository README as the main project overview and setup guide:</p>
 <ul>
-<li><code>train</code>: supervised data used for fitting model weights.</li>
-<li><code>val</code>: held-out validation data used during experimentation.</li>
-<li><code>future</code>: newly collected production data kept separate until curated for later fine-tuning.</li>
-<li><code>test</code>: final hold-out set used only for the final pre-production evaluation.</li>
+<li><a href="https://github.com/7ben18/mse-mlops/blob/main/README.md">Repository README</a></li>
 </ul>
-<h2 id="project-conventions">Project Conventions<a class="headerlink" href="#project-conventions" title="Permanent link">&para;</a></h2>
+<p>Use the docs here only for details that would make the README too long:</p>
 <ul>
-<li>Reusable Python code belongs under <code>src/mse_mlops</code>.</li>
-<li>Exploratory notebooks belong under <code>notebooks/</code>.</li>
-<li>Reusable helper code and dataset-processing logic belong under <code>src/mse_mlops</code>, not under <code>notebooks/</code>.</li>
-<li>Raw data and derived dataset artifacts belong under <code>data/</code> and should be managed outside git.</li>
-</ul>
-<h2 id="training-prerequisite">Training Prerequisite<a class="headerlink" href="#training-prerequisite" title="Permanent link">&para;</a></h2>
-<p>Before the first training run:</p>
-<ol>
-<li>Request access to <code>facebook/dinov3-vits16-pretrain-lvd1689m</code> on Hugging Face.</li>
-<li>Log in locally with:</li>
-</ol>
-<p><code>hf auth login</code></p>
-<ol>
-<li>Download the pretrained backbone locally:</li>
-</ol>
-<p><code>uv run python scripts/download_model.py</code></p>
-<p>The default config expects the downloaded model at:</p>
-<p><code>outputs/pretrained/dinov3-vits16-pretrain-lvd1689m</code></p>
-<h2 id="docker-training">Docker Training<a class="headerlink" href="#docker-training" title="Permanent link">&para;</a></h2>
-<p>Run Docker training with:</p>
-<p><code>docker compose --profile train run --build --rm train</code></p>
-<p>The <code>train</code> service is opt-in and is not started by a plain <code>docker compose up</code>.</p>
-<p>The container mounts:</p>
-<ul>
-<li><code>config/</code> at <code>/app/config</code> read-only</li>
-<li><code>data/</code> at <code>/app/data</code></li>
-<li><code>outputs/</code> at <code>/app/outputs</code></li>
-</ul>
-<p>So config changes in <code>config/train.yaml</code> are picked up on the next Docker training run without rebuilding the image.</p>
-<h2 id="serving">Serving<a class="headerlink" href="#serving" title="Permanent link">&para;</a></h2>
-<p>Serving code now lives under <code>src/mse_mlops/serving</code>, and the repo-root <code>compose.yaml</code> orchestrates the API and UI.</p>
-<p>Start the serving stack with:</p>
-<p><code>docker compose up --build</code></p>
-<p>This starts:</p>
-<ul>
-<li>FastAPI at <code>http://localhost:8000</code></li>
-<li>Streamlit at <code>http://localhost:7777</code></li>
+<li><a href="data/">Data Acquisition</a>: raw HAM10000 download and pretrained backbone download</li>
+<li><a href="pipeline/">Pipeline</a>: current end-to-end flow in one page</li>
+<li><a href="mlflow-tracking/">MLflow Tracking</a>: what training logs and how to run the tracker</li>
+<li><a href="serving/">Serving</a>: API/UI behavior and runtime contract</li>
+<li><a href="modules/">API Reference</a>: generated reference from the Python package</li>
 </ul>
 
 

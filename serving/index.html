@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="DINOv3 fine-tuning setup for melanoma skin cancer classification.">
+        <meta name="description" content="DINOv3 fine-tuning setup for binary skin lesion classification on processed HAM10000.">
       
       
         <meta name="author" content="mse-mlops contributors">
@@ -926,7 +926,7 @@
 
 
 <h1 id="serving-layer">Serving Layer<a class="headerlink" href="#serving-layer" title="Permanent link">&para;</a></h1>
-<p>Stage 4 of the MLOps pipeline. Exposes the trained DINOv3 melanoma classifier to patients and
+<p>Stage 4 of the MLOps pipeline. Exposes the trained DINOv3 HAM10000 classifier to patients and
 medical staff through a REST API and a web UI, and collects verified labels back into the
 feedback store.</p>
 <h2 id="what-it-is">What it is<a class="headerlink" href="#what-it-is" title="Permanent link">&para;</a></h2>
@@ -970,7 +970,7 @@ feedback store.</p>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>│  │  ui (Streamlit)  │ ────────► │     api (FastAPI)        │ │
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│  │  port 7777       │           │     port 8000            │ │
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│  └──────────────────┘           │                          │ │
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│  outputs/ (read-only) ─────────►│  DinoV3Classifier        │ │
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│  models/ (read-only) ──────────►│  DinoV3Classifier        │ │
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│                                 │  + eval preprocessing    │ │
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│                                 │                          │ │
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│  feedback_data (volume) ───────►│  /feedback/              │ │
@@ -1069,7 +1069,7 @@ back to the feedback store and the entry is removed from the queue.</p>
 <tbody>
 <tr>
 <td><code>MODEL_PATH</code></td>
-<td><code>/app/outputs/dinov3_melanoma/best_model.pt</code></td>
+<td><code>/app/models/finetuned/dinov3_ham10000/best_model.pt</code></td>
 <td>API</td>
 <td>Path to trained <code>.pt</code> checkpoint</td>
 </tr>
@@ -1097,7 +1097,7 @@ back to the feedback store and the entry is removed from the queue.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>DOCTOR_PASSWORD=your_secure_password
 </span></code></pre></div>
 <h2 id="model-checkpoint">Model checkpoint<a class="headerlink" href="#model-checkpoint" title="Permanent link">&para;</a></h2>
-<p>The API expects a <code>.pt</code> file written by <code>src/mse_mlops/train.py</code> (<code>best_model.pt</code>):</p>
+<p>The API expects a <code>.pt</code> file written by the training pipeline (<code>scripts/train.py</code>, backed by <code>mse_mlops.train</code>) (<code>best_model.pt</code>):</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="s2">&quot;model_state_dict&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>   <span class="c1"># DinoV3Classifier weights</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="s2">&quot;class_names&quot;</span><span class="p">:</span>      <span class="nb">list</span><span class="p">,</span>   <span class="c1"># [&quot;benign&quot;, &quot;malignant&quot;]</span>
