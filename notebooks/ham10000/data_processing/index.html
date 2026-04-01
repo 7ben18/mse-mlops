@@ -1317,14 +1317,18 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">src.mse_mlops.data_processing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dp</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">src.mse_mlops.paths</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">paths</span>
+
 <span class="n">importlib</span><span class="o">.</span><span class="n">reload</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span>
 <span class="n">importlib</span><span class="o">.</span><span class="n">reload</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">import importlib
+
 import src.mse_mlops.data_processing as dp
 import src.mse_mlops.paths as paths
+
 importlib.reload(dp)
 importlib.reload(paths)</div>
 </div>
@@ -1443,20 +1447,20 @@ dp.split_data_dir(split_csv=split_csv_path)</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># split_test.yaml contained different splitting and seed to test that methods work as needed</span>
-<span class="c1"># for example, if train/val/test=0.5/0.3/0.2 was first used, </span>
+<span class="c1"># for example, if train/val/test=0.5/0.3/0.2 was first used,</span>
 <span class="c1"># but then only train/test=0.5/0.5 (no val),</span>
 <span class="c1"># then val folder is cleared up fully.</span>
-<span class="c1">#_ = dp.split_data_full(config_file=paths.CONFIG_DIR/"split_test.yaml")</span>
+<span class="c1"># _ = dp.split_data_full(config_file=paths.CONFIG_DIR/"split_test.yaml")</span>
 
-<span class="n">_</span> <span class="o">=</span> <span class="n">dp</span><span class="o">.</span><span class="n">split_data_full</span><span class="p">(</span><span class="n">config_file</span><span class="o">=</span><span class="n">paths</span><span class="o">.</span><span class="n">CONFIG_DIR</span><span class="o">/</span><span class="s2">"split.yaml"</span><span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">dp</span><span class="o">.</span><span class="n">split_data_full</span><span class="p">(</span><span class="n">config_file</span><span class="o">=</span><span class="n">paths</span><span class="o">.</span><span class="n">CONFIG_DIR</span> <span class="o">/</span> <span class="s2">"split.yaml"</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-4"># split_test.yaml contained different splitting and seed to test that methods work as needed
-# for example, if train/val/test=0.5/0.3/0.2 was first used, 
+# for example, if train/val/test=0.5/0.3/0.2 was first used,
 # but then only train/test=0.5/0.5 (no val),
 # then val folder is cleared up fully.
-#_ = dp.split_data_full(config_file=paths.CONFIG_DIR/"split_test.yaml")
+# _ = dp.split_data_full(config_file=paths.CONFIG_DIR/"split_test.yaml")
 
-_ = dp.split_data_full(config_file=paths.CONFIG_DIR/"split.yaml")</div>
+_ = dp.split_data_full(config_file=paths.CONFIG_DIR / "split.yaml")</div>
 </div>
 </div>
 </div>

@@ -1317,8 +1317,7 @@ from mse_mlops.analysis.melanoma_dataset import (
     load_dataset_overview,
     make_contact_sheet,
     select_class_records,
-)
-</div>
+)</div>
 </div>
 </div>
 </div>
@@ -1365,8 +1364,7 @@ print(f"Validation mode in config: {overview.validation_mode}")
 print(f"Classes found: {overview.classes}")
 print(f"Total samples: {len(overview.all_records)}")
 print(f"Number of classes: {len(overview.classes)}")
-print("Classes: " + ", ".join(overview.classes))
-</div>
+print("Classes: " + ", ".join(overview.classes))</div>
 </div>
 </div>
 </div>
@@ -1393,8 +1391,7 @@ print("Classes: " + ", ".join(overview.classes))
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">build_overview_frame</span><span class="p">(</span><span class="n">overview</span><span class="p">))</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">display(build_overview_frame(overview))
-</div>
+<div class="clipboard-copy-txt" id="cell-3">display(build_overview_frame(overview))</div>
 </div>
 </div>
 </div>
@@ -1421,8 +1418,7 @@ print("Classes: " + ", ".join(overview.classes))
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">build_class_distribution_frame</span><span class="p">(</span><span class="n">overview</span><span class="p">))</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">display(build_class_distribution_frame(overview))
-</div>
+<div class="clipboard-copy-txt" id="cell-4">display(build_class_distribution_frame(overview))</div>
 </div>
 </div>
 </div>
@@ -1461,8 +1457,7 @@ samples_per_class = 8
 for class_name in overview.classes:
     selected_records = select_class_records(overview, class_name, sample_size=samples_per_class)
     print(class_name)
-    display(make_contact_sheet(selected_records, columns=samples_per_class))
-</div>
+    display(make_contact_sheet(selected_records, columns=samples_per_class))</div>
 </div>
 </div>
 </div>
