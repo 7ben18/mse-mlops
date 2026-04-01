@@ -12,13 +12,13 @@
         <meta name="author" content="mse-mlops contributors">
       
       
-        <link rel="canonical" href="https://7ben18.github.io/mse-mlops/notebooks/ham10000/data_processing/">
+        <link rel="canonical" href="https://7ben18.github.io/mse-mlops/notebooks/ham10000/ham10000_eda/">
       
       
-        <link rel="prev" href="../ham10000_eda/">
+        <link rel="prev" href="../../../modules/">
       
       
-        <link rel="next" href="../../melanoma_cancer_dataset/kaggle_eda/">
+        <link rel="next" href="../data_processing/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Data splitting - mse-mlops</title>
+        <title>Overview - mse-mlops</title>
       
     
     
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#data-splitting" class="md-skip">
+        <a href="#overview" class="md-skip">
           Skip to content
         </a>
       
@@ -118,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Data splitting
+              Overview
             
           </span>
         </div>
@@ -499,34 +499,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../ham10000_eda/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -546,7 +518,7 @@
   <span class="md-ellipsis">
     
   
-    Data splitting
+    Overview
   
 
     
@@ -564,7 +536,7 @@
   <span class="md-ellipsis">
     
   
-    Data splitting
+    Overview
   
 
     
@@ -590,10 +562,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#csv-splitting" class="md-nav__link">
+  <a href="#sources-and-references" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CSV splitting
+        Sources and References
       
     </span>
   </a>
@@ -601,10 +573,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#directory-splitting-based-on-csv" class="md-nav__link">
+  <a href="#dataset-structure" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Directory splitting (based on CSV)
+        Dataset structure
       
     </span>
   </a>
@@ -612,10 +584,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#full-split-csv-directory" class="md-nav__link">
+  <a href="#labels" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Full split (CSV + directory)
+        Labels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#images-and-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Images and Metadata
       
     </span>
   </a>
@@ -626,6 +609,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data splitting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -693,10 +704,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#csv-splitting" class="md-nav__link">
+  <a href="#sources-and-references" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CSV splitting
+        Sources and References
       
     </span>
   </a>
@@ -704,10 +715,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#directory-splitting-based-on-csv" class="md-nav__link">
+  <a href="#dataset-structure" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Directory splitting (based on CSV)
+        Dataset structure
       
     </span>
   </a>
@@ -715,10 +726,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#full-split-csv-directory" class="md-nav__link">
+  <a href="#labels" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Full split (CSV + directory)
+        Labels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#images-and-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Images and Metadata
       
     </span>
   </a>
@@ -1466,8 +1488,97 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </style>
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=24e7b9e097a69044">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6eaef6814c12801d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h1 id="overview">Overview<a class="anchor-link" href="#overview">¶</a></h1><p>This Jupyter NB is made for exploratory data analysis (EDA) of <strong>HAM10000/ISIC dataset: <em>"dermatoscopic images from different populations acquired and stored by different modalities"</em></strong></p>
+<h2 id="sources-and-references">Sources and References<a class="anchor-link" href="#sources-and-references">¶</a></h2><ul>
+<li><p><strong>Official name - HAM10000</strong> (Human Against Machine with 10000 training images),</p>
+</li>
+<li><p><strong>Official med source: ISIC archive</strong> <a href="https://api.isic-archive.com/collections/212/">https://api.isic-archive.com/collections/212/</a></p>
+</li>
+<li><p>👉 <strong>Official source with downloadable zip</strong> (used in this NB): <a href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DBW86T">https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DBW86T</a></p>
+</li>
+<li><p><strong>Official GitHub</strong>: <a href="https://github.com/ptschandl/HAM10000_dataset">https://github.com/ptschandl/HAM10000_dataset</a></p>
+</li>
+<li><p><strong>Description by Nature</strong>: <a href="https://www.nature.com/articles/sdata2018161">https://www.nature.com/articles/sdata2018161</a></p>
+</li>
+<li><p>❗ <strong>Notes on usage</strong>: <a href="https://www.nature.com/articles/sdata2018161#Sec21">https://www.nature.com/articles/sdata2018161#Sec21</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b8eb2e382b9aaa4a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="dataset-structure">Dataset structure<a class="anchor-link" href="#dataset-structure">¶</a></h2><h2 id="labels">Labels<a class="anchor-link" href="#labels">¶</a></h2><p><strong>See also:</strong> info of diagnosis relabeling for HAM10000: <a href="https://github.com/ptschandl/HAM10000_dataset/blob/master/unify/unify_diagnoses.ipynb">https://github.com/ptschandl/HAM10000_dataset/blob/master/unify/unify_diagnoses.ipynb</a></p>
+<p><strong>Dataset classes/labels (info from dataverse)</strong>:
+<em>"Cases include a representative collection of all important diagnostic categories in the realm of pigmented lesions"</em></p>
+<p><strong>First level labels (generated):</strong> 🔴== <strong>malignant</strong> (cancer), 🟢 == <strong>benign</strong> (non-cancer).
+<a href="#adding-new-1st-level-labels-into-csv">See metadata extension</a> method for first level labels generation.</p>
+<p><strong>Second level labels from original metadata</strong></p>
+<p>🔴 <strong>akiec</strong> == Actinic keratoses and intraepithelial carcinoma / Bowen's disease,</p>
+<p>🔴 <strong>bcc</strong> == basal cell carcinoma,</p>
+<p>🟢 <strong>bkl</strong> == benign keratosis-like lesions (solar lentigines / seborrheic keratoses and lichen-planus like keratoses),</p>
+<p>🟢 <strong>df</strong> == dermatofibroma,</p>
+<p>🔴 <strong>mel</strong> == melanoma,</p>
+<p>🟢 <strong>nv</strong> == melanocytic nevi</p>
+<p>🟢 <strong>vasc</strong> == vascular lesions (angiomas, angiokeratomas, pyogenic granulomas and hemorrhage).</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c1aaf48ed6318825">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="images-and-metadata">Images and Metadata<a class="anchor-link" href="#images-and-metadata">¶</a></h2><p><strong>HAM10000 consist of ~10000 dermatoscopic samples</strong>:</p>
+<ol>
+<li><p><strong>Dermatoscopy images</strong> (basically high-res photos, .JPG): dir <code>HAM10000_images</code></p>
+<p>👉❗In Dataverse source, HAM10000 is stored in two parts, <code>HAM10000_images_part_1</code> and <code>HAM10000_images_part_1</code>, so they were merged into one dir</p>
+</li>
+<li><p><strong>Binary masks</strong> (segmentations) of the ROI/lesion (.PNG): dir <code>HAM10000_segmentations_lesion_tschandl</code></p>
+</li>
+<li><p><strong>Metadata</strong> (CSV) in <code>HAM10000_metadata</code> file.</p>
+<p>❗The dataset <strong><a href="#lesion-id-vs-image-id">includes lesions with multiple images</a></strong> ❗, which can be tracked by the <code>lesion_id</code> column within the <code>HAM10000_metadata</code> file:</p>
+<ul>
+<li><code>lesion_id</code> - unique lesion ID, e.g. <code>HAM_0000118</code></li>
+<li><code>image_id</code> - image file ID, e.g. <code>ISIC_0027419</code>. ❗Note: <code>lesion_id</code> -&gt; <code>image_id</code> as "one-to-many"</li>
+<li><code>dx</code> - diagnosis, e.g. <code>mel</code> == melanoma, malignant</li>
+<li><code>dx_type</code> - diagnosis confirmation type, e.g. <code>histo</code> == histopathology</li>
+<li><code>age</code> - patient's age, rounded like 55-60-65-70-...</li>
+<li><code>sex</code> - patient's  sex</li>
+<li><code>localization</code> - lesion localization on the body, e.g. <code>face</code></li>
+<li><code>dataset</code> - original dataset</li>
+</ul>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=39b71b6728c5051a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h1 id="eda">EDA<a class="anchor-link" href="#eda">¶</a></h1><h2 id="images-samples">Images samples<a class="anchor-link" href="#images-samples">¶</a></h2>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4a23f38e5353f9d8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1486,38 +1597,41 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">src.mse_mlops.data_processing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dp</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">src.mse_mlops.paths</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">paths</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
 
-<span class="n">importlib</span><span class="o">.</span><span class="n">reload</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span>
+<span class="c1"># importing and reloading a module, so a newly introduced change propagates to the kernel</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mse_mlops.analysis.ham10000</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ham</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mse_mlops.paths</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">paths</span>
+
+<span class="n">importlib</span><span class="o">.</span><span class="n">reload</span><span class="p">(</span><span class="n">ham</span><span class="p">)</span>
 <span class="n">importlib</span><span class="o">.</span><span class="n">reload</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">import importlib
+import random
+from pathlib import Path
 
-import src.mse_mlops.data_processing as dp
-import src.mse_mlops.paths as paths
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
-importlib.reload(dp)
+# importing and reloading a module, so a newly introduced change propagates to the kernel
+import mse_mlops.analysis.ham10000 as ham
+import mse_mlops.paths as paths
+
+importlib.reload(ham)
 importlib.reload(paths)</div>
 </div>
 </div>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cf6248f1fe88e337">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="data-splitting">Data splitting<a class="anchor-link" href="#data-splitting">¶</a></h1><h2 id="csv-splitting">CSV splitting<a class="anchor-link" href="#csv-splitting">¶</a></h2>
-</div>
-</div>
-</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a31f25529ec7ee68">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2f25a00bcfd3c823">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1535,29 +1649,39 @@ importlib.reload(paths)</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># CSV-only splitting</span>
-<span class="n">split_csv_path</span> <span class="o">=</span> <span class="n">dp</span><span class="o">.</span><span class="n">split_data_csv</span><span class="p">()</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">sample_ds</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">get_ds</span><span class="p">(</span>
+    <span class="n">sample_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">sample_seed</span><span class="o">=</span><span class="mi">33</span><span class="p">,</span>
+    <span class="n">get_sample</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">sample_show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">img_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">paths</span><span class="o">.</span><span class="n">RAW_DATA_DIR</span> <span class="o">/</span> <span class="n">paths</span><span class="o">.</span><span class="n">HAM_DIR</span> <span class="o">/</span> <span class="n">paths</span><span class="o">.</span><span class="n">IMG_DIR</span><span class="p">),</span>
+<span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2"># CSV-only splitting
-split_csv_path = dp.split_data_csv()</div>
+<div class="clipboard-copy-txt" id="cell-2">sample_ds = ham.get_ds(
+    sample_size=3,
+    sample_seed=33,
+    get_sample=True,
+    sample_show=True,
+    img_dir=Path(paths.RAW_DATA_DIR / paths.HAM_DIR / paths.IMG_DIR),
+)</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=44ec196706301f91">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=14fb7e6b87f23ac">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="directory-splitting-based-on-csv">Directory splitting (based on CSV)<a class="anchor-link" href="#directory-splitting-based-on-csv">¶</a></h2>
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_#1" data-mime-type="text/markdown">
+<h2 id="metadata-samples">Metadata samples<a class="anchor-link" href="#metadata-samples">¶</a></h2><h3 id="adding-new-1st-level-labels-into-csv">Adding new 1st level labels into CSV<a class="anchor-link" href="#adding-new-1st-level-labels-into-csv">¶</a></h3>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=ffc973f3fb37cb53">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=78525aa696968f7b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1575,29 +1699,29 @@ split_csv_path = dp.split_data_csv()</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Directory splitting based on the CSV split</span>
-<span class="n">dp</span><span class="o">.</span><span class="n">split_data_dir</span><span class="p">(</span><span class="n">split_csv</span><span class="o">=</span><span class="n">split_csv_path</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># extending base metadata with new column</span>
+<span class="n">ham</span><span class="o">.</span><span class="n">metadata_ext</span><span class="p">()</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3"># Directory splitting based on the CSV split
-dp.split_data_dir(split_csv=split_csv_path)</div>
+<div class="clipboard-copy-txt" id="cell-3"># extending base metadata with new column
+ham.metadata_ext()</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8b63a7c2c356523">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=494d05bc06ee7a8f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="full-split-csv-directory">Full split (CSV + directory)<a class="anchor-link" href="#full-split-csv-directory">¶</a></h2>
+<h3 id="exploring-metadata-sample">Exploring metadata sample<a class="anchor-link" href="#exploring-metadata-sample">¶</a></h3>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=12aef7cb61db6a08">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6f70ab0dddababf0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1615,34 +1739,26 @@ dp.split_data_dir(split_csv=split_csv_path)</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># split_test.yaml contained different splitting and seed to test that methods work as needed</span>
-<span class="c1"># for example, if train/val/test=0.5/0.3/0.2 was first used,</span>
-<span class="c1"># but then only train/test=0.5/0.5 (no val),</span>
-<span class="c1"># then val folder is cleared up fully.</span>
-<span class="c1"># _ = dp.split_data_full(config_file=paths.CONFIG_DIR/"split_test.yaml")</span>
-
-<span class="n">_</span> <span class="o">=</span> <span class="n">dp</span><span class="o">.</span><span class="n">split_data_full</span><span class="p">(</span><span class="n">config_file</span><span class="o">=</span><span class="n">paths</span><span class="o">.</span><span class="n">CONFIG_DIR</span> <span class="o">/</span> <span class="s2">"split.yaml"</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">sample_ds_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_id</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">img_id</span> <span class="ow">in</span> <span class="n">sample_ds</span><span class="p">]</span>
+<span class="n">sample_ds_meta</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">(</span><span class="n">sample_ds_ids</span><span class="p">)</span>
+<span class="n">sample_ds_meta</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4"># split_test.yaml contained different splitting and seed to test that methods work as needed
-# for example, if train/val/test=0.5/0.3/0.2 was first used,
-# but then only train/test=0.5/0.5 (no val),
-# then val folder is cleared up fully.
-# _ = dp.split_data_full(config_file=paths.CONFIG_DIR/"split_test.yaml")
-
-_ = dp.split_data_full(config_file=paths.CONFIG_DIR / "split.yaml")</div>
+<div class="clipboard-copy-txt" id="cell-4">sample_ds_ids = [img_id for _, _, img_id in sample_ds]
+sample_ds_meta = ham.get_metadata(sample_ds_ids)
+sample_ds_meta.head()</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=87e4d0b43e73649d">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5907a9c63c08d276">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="example-mask-application">Example: mask application<a class="anchor-link" href="#example-mask-application">¶</a></h1>
+<h2 id="image-csv-mapping-on-sample">Image-CSV mapping on sample<a class="anchor-link" href="#image-csv-mapping-on-sample">¶</a></h2>
 </div>
 </div>
 </div>
@@ -1665,16 +1781,603 @@ _ = dp.split_data_full(config_file=paths.CONFIG_DIR / "split.yaml")</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result_img</span> <span class="o">=</span> <span class="n">dp</span><span class="o">.</span><span class="n">apply_mask</span><span class="p">(</span><span class="n">image_id</span><span class="o">=</span><span class="s2">"ISIC_0024315"</span><span class="p">,</span> <span class="n">to_show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">sample_ds_triplets</span><span class="p">,</span> <span class="n">sample_ds_meta_df</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">map_ds_metadata</span><span class="p">(</span>
+    <span class="n">sample_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">sample_seed</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">get_sample</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sample_show</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">result_img = dp.apply_mask(image_id="ISIC_0024315", to_show=True)</div>
+<div class="clipboard-copy-txt" id="cell-5">sample_ds_triplets, sample_ds_meta_df = ham.map_ds_metadata(
+    sample_size=8, sample_seed=13, get_sample=True, sample_show=True
+)</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b0ba0ac5cd2d85e3">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f254117c00668080">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="full-dataset-eda">Full dataset EDA<a class="anchor-link" href="#full-dataset-eda">¶</a></h2><h3 id="loading-dataset">Loading dataset<a class="anchor-link" href="#loading-dataset">¶</a></h3>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4569a2d781e8cb07">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">full_ds_triplets</span><span class="p">,</span> <span class="n">full_ds_meta_df</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">map_ds_metadata</span><span class="p">()</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-6">full_ds_triplets, full_ds_meta_df = ham.map_ds_metadata()</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ccdafa1cfb8fc465">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="lesion-vs-image-one-to-many">Lesion vs Image: one-to-many<a class="anchor-link" href="#lesion-vs-image-one-to-many">¶</a></h3><p>Each CSV metadata row contains two IDs:</p>
+<ul>
+<li><code>lesion_id</code> - non-unique value, each lesion may have several images</li>
+<li><code>image_id</code> - unique value</li>
+</ul>
+<p>❗See also info on <a href="#images-and-metadata">ID values in metadata</a></p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6c3bee710d2aca5b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">lesion_counts</span><span class="p">,</span> <span class="n">lesion_images</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">map_lesion_images</span><span class="p">(</span><span class="n">full_ds_meta_df</span><span class="p">,</span> <span class="n">min_img_num</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># out_df = ham.save_lesion_images_frame(lesion_images, paths.MAP_LESION_IMAGES)</span>
+<span class="c1"># print(f"Result: {len(out_df)} lesions saved into {paths.MAP_LESION_IMAGES}")</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-7">lesion_counts, lesion_images = ham.map_lesion_images(full_ds_meta_df, min_img_num=1, verbose=False)
+
+# out_df = ham.save_lesion_images_frame(lesion_images, paths.MAP_LESION_IMAGES)
+# print(f"Result: {len(out_df)} lesions saved into {paths.MAP_LESION_IMAGES}")</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=b581c0a1c19d2588">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># showing examples of lesion with several pictures</span>
+<span class="n">examples_num</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">candidates</span> <span class="o">=</span> <span class="p">[(</span><span class="n">lesion_id</span><span class="p">,</span> <span class="n">imgs</span><span class="p">)</span> <span class="k">for</span> <span class="n">lesion_id</span><span class="p">,</span> <span class="n">imgs</span> <span class="ow">in</span> <span class="n">lesion_images</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span> <span class="o">==</span> <span class="n">examples_num</span><span class="p">]</span>
+<span class="n">lesion_id</span><span class="p">,</span> <span class="n">imgs</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
+
+<span class="n">_</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">get_lesion_info</span><span class="p">(</span>
+    <span class="n">lesion_images_csv_path</span><span class="o">=</span><span class="n">paths</span><span class="o">.</span><span class="n">MAP_LESION_IMAGES</span><span class="p">,</span>
+    <span class="n">metadata_csv_path</span><span class="o">=</span><span class="n">paths</span><span class="o">.</span><span class="n">EXT_METADATA</span><span class="p">,</span>
+    <span class="n">img_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">paths</span><span class="o">.</span><span class="n">RAW_DATA_DIR</span> <span class="o">/</span> <span class="n">paths</span><span class="o">.</span><span class="n">HAM_DIR</span> <span class="o">/</span> <span class="n">paths</span><span class="o">.</span><span class="n">IMG_DIR</span><span class="p">),</span>
+    <span class="n">lesion_id</span><span class="o">=</span><span class="n">lesion_id</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-8"># showing examples of lesion with several pictures
+examples_num = 3
+candidates = [(lesion_id, imgs) for lesion_id, imgs in lesion_images.items() if len(imgs) == examples_num]
+lesion_id, imgs = random.choice(candidates)
+
+_ = ham.get_lesion_info(
+    lesion_images_csv_path=paths.MAP_LESION_IMAGES,
+    metadata_csv_path=paths.EXT_METADATA,
+    img_dir=Path(paths.RAW_DATA_DIR / paths.HAM_DIR / paths.IMG_DIR),
+    lesion_id=lesion_id,
+)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=335763f27be36eaf">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="example-exploring-one-lesion">Example: exploring one lesion<a class="anchor-link" href="#example-exploring-one-lesion">¶</a></h3>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=b94c7ab6a0b08139">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Random lesion:</span>
+<span class="n">lesion_id</span><span class="p">,</span> <span class="n">img_ids</span><span class="p">,</span> <span class="n">meta_rows</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">get_lesion_info</span><span class="p">(</span>
+    <span class="n">lesion_images_csv_path</span><span class="o">=</span><span class="n">paths</span><span class="o">.</span><span class="n">MAP_LESION_IMAGES</span><span class="p">,</span>
+    <span class="n">metadata_csv_path</span><span class="o">=</span><span class="n">paths</span><span class="o">.</span><span class="n">EXT_METADATA</span><span class="p">,</span>
+    <span class="n">img_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">paths</span><span class="o">.</span><span class="n">RAW_DATA_DIR</span> <span class="o">/</span> <span class="n">paths</span><span class="o">.</span><span class="n">HAM_DIR</span> <span class="o">/</span> <span class="n">paths</span><span class="o">.</span><span class="n">IMG_DIR</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Specific lesion:</span>
+<span class="n">lesion_id</span><span class="p">,</span> <span class="n">img_ids</span><span class="p">,</span> <span class="n">meta_rows</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">get_lesion_info</span><span class="p">(</span>
+    <span class="n">lesion_images_csv_path</span><span class="o">=</span><span class="n">paths</span><span class="o">.</span><span class="n">MAP_LESION_IMAGES</span><span class="p">,</span>
+    <span class="n">metadata_csv_path</span><span class="o">=</span><span class="n">paths</span><span class="o">.</span><span class="n">EXT_METADATA</span><span class="p">,</span>
+    <span class="n">img_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">paths</span><span class="o">.</span><span class="n">RAW_DATA_DIR</span> <span class="o">/</span> <span class="n">paths</span><span class="o">.</span><span class="n">HAM_DIR</span> <span class="o">/</span> <span class="n">paths</span><span class="o">.</span><span class="n">IMG_DIR</span><span class="p">),</span>
+    <span class="n">lesion_id</span><span class="o">=</span><span class="s2">"HAM_0000005"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-9"># Random lesion:
+lesion_id, img_ids, meta_rows = ham.get_lesion_info(
+    lesion_images_csv_path=paths.MAP_LESION_IMAGES,
+    metadata_csv_path=paths.EXT_METADATA,
+    img_dir=Path(paths.RAW_DATA_DIR / paths.HAM_DIR / paths.IMG_DIR),
+)
+
+# Specific lesion:
+lesion_id, img_ids, meta_rows = ham.get_lesion_info(
+    lesion_images_csv_path=paths.MAP_LESION_IMAGES,
+    metadata_csv_path=paths.EXT_METADATA,
+    img_dir=Path(paths.RAW_DATA_DIR / paths.HAM_DIR / paths.IMG_DIR),
+    lesion_id="HAM_0000005",
+)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5c090a077f8fbc04">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="filter-down-to-unique-lesions">Filter down to unique lesions<a class="anchor-link" href="#filter-down-to-unique-lesions">¶</a></h3>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=42cb42569feec0e4">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">triplets</span><span class="p">,</span> <span class="n">df</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">map_ds_metadata</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Full df shape: </span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">lesion_level_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s2">"lesion_id"</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unique lesions df shape: </span><span class="si">{</span><span class="n">lesion_level_df</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-10">triplets, df = ham.map_ds_metadata()
+print(f"Full df shape: {df.shape}")
+lesion_level_df = df.drop_duplicates(subset="lesion_id").reset_index(drop=True)
+print(f"Unique lesions df shape: {lesion_level_df.shape}")</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=80a176e343cf93e0">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="diagnosis">Diagnosis<a class="anchor-link" href="#diagnosis">¶</a></h3><p>No missing fields found. See also <a href="#labels">info on labels</a></p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=214459afb6eb261b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">counts</span> <span class="o">=</span> <span class="n">lesion_level_df</span><span class="p">[</span><span class="s2">"dx"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">dx</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">dx_str</span> <span class="o">=</span> <span class="s2">"NaN"</span> <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s2">6d</span><span class="si">}</span><span class="s2"> samples -&gt; dx == </span><span class="si">{</span><span class="n">dx_str</span><span class="si">:</span><span class="s2">&lt;2</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">lesion_level_df</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="si">:</span><span class="s2">6.2f</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+
+<span class="n">counts</span> <span class="o">=</span> <span class="n">lesion_level_df</span><span class="p">[</span><span class="s2">"mb"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">mb</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">dx_str</span> <span class="o">=</span> <span class="s2">"NaN"</span> <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">mb</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">mb</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s2">6d</span><span class="si">}</span><span class="s2"> samples -&gt; mb == </span><span class="si">{</span><span class="n">dx_str</span><span class="si">:</span><span class="s2">&lt;2</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">lesion_level_df</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="si">:</span><span class="s2">6.2f</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-11">counts = lesion_level_df["dx"].value_counts(dropna=False).sort_index()
+
+for dx, n in counts.items():
+    dx_str = "NaN" if pd.isna(dx) else str(dx)
+    print(f"{n:6d} samples -&gt; dx == {dx_str:&lt;2}, {n / len(lesion_level_df) * 100:6.2f}%")
+
+counts = lesion_level_df["mb"].value_counts(dropna=False).sort_index()
+
+for mb, n in counts.items():
+    dx_str = "NaN" if pd.isna(mb) else str(mb)
+    print(f"\n{n:6d} samples -&gt; mb == {dx_str:&lt;2}, {n / len(lesion_level_df) * 100:6.2f}%")</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=91eb5828db5857ac">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-12">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># diagnosis labels</span>
+<span class="n">palette</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"benign"</span><span class="p">:</span> <span class="s2">"green"</span><span class="p">,</span> <span class="s2">"malignant"</span><span class="p">:</span> <span class="s2">"red"</span><span class="p">}</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">countplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">lesion_level_df</span><span class="p">,</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">"dx"</span><span class="p">,</span>
+    <span class="n">hue</span><span class="o">=</span><span class="s2">"mb"</span><span class="p">,</span>
+    <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span>
+    <span class="n">dodge</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"dx"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"count"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"y"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># benign/malignant labels</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">countplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">lesion_level_df</span><span class="p">,</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">"mb"</span><span class="p">,</span>
+    <span class="n">hue</span><span class="o">=</span><span class="s2">"mb"</span><span class="p">,</span>
+    <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span>
+    <span class="n">dodge</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"mb"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"count"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"y"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-12"># diagnosis labels
+palette = {"benign": "green", "malignant": "red"}
+ax = sns.countplot(
+    data=lesion_level_df,
+    x="dx",
+    hue="mb",
+    palette=palette,
+    dodge=False,
+)
+ax.set_xlabel("dx")
+ax.set_ylabel("count")
+plt.xticks(rotation=45, ha="right")
+plt.tight_layout()
+plt.grid(axis="y")
+plt.show()
+
+# benign/malignant labels
+ax = sns.countplot(
+    data=lesion_level_df,
+    x="mb",
+    hue="mb",
+    palette=palette,
+    dodge=False,
+)
+ax.set_xlabel("mb")
+ax.set_ylabel("count")
+plt.tight_layout()
+plt.grid(axis="y")
+plt.show()</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c41d1f005857e0c3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="age">Age<a class="anchor-link" href="#age">¶</a></h3><p>❗️<strong>Missing fields found</strong> ❗</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c3613126cb0aaa1d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-13">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">counts</span> <span class="o">=</span> <span class="n">lesion_level_df</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">age</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">age_str</span> <span class="o">=</span> <span class="s2">"NaN"</span> <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">age</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">age</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s2">6d</span><span class="si">}</span><span class="s2"> samples -&gt; age == </span><span class="si">{</span><span class="n">age_str</span><span class="si">:</span><span class="s2">&lt;2</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">lesion_level_df</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="si">:</span><span class="s2">6.2f</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"age"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"count"</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">histplot</span><span class="p">(</span><span class="n">lesion_level_df</span><span class="p">[</span><span class="s2">"age"</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"y"</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">countplot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-13">counts = lesion_level_df["age"].value_counts(dropna=False).sort_index()
+
+for age, n in counts.items():
+    age_str = "NaN" if pd.isna(age) else str(age)
+    print(f"{n:6d} samples -&gt; age == {age_str:&lt;2}, {n / len(lesion_level_df) * 100:6.2f}%")
+
+ax.set_xlabel("age")
+ax.set_ylabel("count")
+sns.histplot(lesion_level_df["age"])
+plt.tight_layout()
+plt.grid(axis="y")
+ax = sns.countplot()
+plt.show()</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=dcf978a23f903873">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="localization">Localization<a class="anchor-link" href="#localization">¶</a></h3><p>"Unknown" fields found</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c261fafe075cc211">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-14">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">counts</span> <span class="o">=</span> <span class="n">lesion_level_df</span><span class="p">[</span><span class="s2">"localization"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">loc</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">loc_str</span> <span class="o">=</span> <span class="s2">"NaN"</span> <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s2">6d</span><span class="si">}</span><span class="s2"> samples -&gt; localization == </span><span class="si">{</span><span class="n">loc_str</span><span class="si">:</span><span class="s2">&lt;2</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">lesion_level_df</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="si">:</span><span class="s2">6.2f</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">countplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">lesion_level_df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">"localization"</span><span class="p">)</span>
+
+<span class="c1"># random color per bar (reproducible if you set seed)</span>
+<span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">patches</span><span class="p">:</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">((</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(),</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(),</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"localization"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"count"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"y"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-14">counts = lesion_level_df["localization"].value_counts(dropna=False).sort_index()
+
+for loc, n in counts.items():
+    loc_str = "NaN" if pd.isna(loc) else str(loc)
+    print(f"{n:6d} samples -&gt; localization == {loc_str:&lt;2}, {n / len(lesion_level_df) * 100:6.2f}%")
+
+ax = sns.countplot(data=lesion_level_df, x="localization")
+
+# random color per bar (reproducible if you set seed)
+random.seed(13)
+for p in ax.patches:
+    p.set_facecolor((random.random(), random.random(), random.random()))
+
+ax.set_xlabel("localization")
+ax.set_ylabel("count")
+plt.xticks(rotation=90, ha="right")
+plt.tight_layout()
+plt.grid(axis="y")
+plt.show()</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8d60da20f8783793">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="sex">Sex<a class="anchor-link" href="#sex">¶</a></h3><p>"Unknown" fields found</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c9ff2306613ff4b9">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-15">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">counts</span> <span class="o">=</span> <span class="n">lesion_level_df</span><span class="p">[</span><span class="s2">"sex"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">s_str</span> <span class="o">=</span> <span class="s2">"NaN"</span> <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s2">6d</span><span class="si">}</span><span class="s2"> samples -&gt; sex == </span><span class="si">{</span><span class="n">s_str</span><span class="si">:</span><span class="s2">&lt;2</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">lesion_level_df</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="si">:</span><span class="s2">6.2f</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"sex"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"count"</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">histplot</span><span class="p">(</span><span class="n">lesion_level_df</span><span class="p">[</span><span class="s2">"sex"</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">countplot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-15">counts = lesion_level_df["sex"].value_counts(dropna=False).sort_index()
+
+for s, n in counts.items():
+    s_str = "NaN" if pd.isna(s) else str(s)
+    print(f"{n:6d} samples -&gt; sex == {s_str:&lt;2}, {n / len(lesion_level_df) * 100:6.2f}%")
+
+ax.set_xlabel("sex")
+ax.set_ylabel("count")
+sns.histplot(lesion_level_df["sex"])
+plt.xticks(rotation=45, ha="right")
+plt.tight_layout()
+plt.grid(axis="x")
+ax = sns.countplot()
+plt.show()</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5170cec1509586a4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
