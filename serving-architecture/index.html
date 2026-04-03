@@ -623,34 +623,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../notebooks/melanoma_cancer_dataset/kaggle_eda/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Melanoma Dataset EDA
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -779,13 +751,15 @@
 </span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>  serve_ui.py
 </span></code></pre></div>
 <h2 id="runtime-topology">Runtime Topology<a class="headerlink" href="#runtime-topology" title="Permanent link">&para;</a></h2>
-<p><code>docker compose up --build</code> starts two default services:</p>
+<p><code>make ui-up</code> starts the serving stack:</p>
 <ul>
+<li><code>mlflow</code>: MLflow tracking UI on port <code>5001</code></li>
 <li><code>api</code>: FastAPI inference API on port <code>8000</code></li>
 <li><code>ui</code>: Streamlit web UI on port <code>7777</code></li>
 </ul>
+<p>Without <code>make ui-up</code>, the serving stack stays off. Use <code>make mlflow-up</code> if you only want MLflow.</p>
 <p>The training service remains opt-in under the <code>train</code> profile:</p>
-<p><code>docker compose --profile train run --build --rm train</code></p>
+<p><code>make train-docker</code></p>
 <h2 id="mounted-state">Mounted State<a class="headerlink" href="#mounted-state" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>api</code> mounts <code>./models</code> read-only at <code>/app/models</code></li>

@@ -706,34 +706,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../notebooks/melanoma_cancer_dataset/kaggle_eda/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Melanoma Dataset EDA
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -930,8 +902,8 @@
 medical staff through a REST API and a web UI, and collects verified labels back into the
 feedback store.</p>
 <h2 id="what-it-is">What it is<a class="headerlink" href="#what-it-is" title="Permanent link">&para;</a></h2>
-<p>Two root-level services in the main project:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>--build
+<p>The serving stack is opt-in and starts only when you enable its profile:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>make<span class="w"> </span>ui-up
 </span></code></pre></div>
 <table>
 <thead>
@@ -942,6 +914,11 @@ feedback store.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>MLflow</td>
+<td>http://localhost:5001</td>
+<td>Experiment browsing</td>
+</tr>
 <tr>
 <td>Streamlit UI</td>
 <td>http://localhost:7777</td>
@@ -954,7 +931,16 @@ feedback store.</p>
 </tr>
 </tbody>
 </table>
-<p><code>train</code> is excluded from this command because it sits behind the <code>train</code> Compose profile.</p>
+<p>Without <code>make ui-up</code>, the serving stack stays off. Use <code>make mlflow-up</code> if you only want MLflow.</p>
+<p>Stop the whole Docker stack with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>make<span class="w"> </span>docker-down
+</span></code></pre></div>
+<p><code>make docker-down</code> removes Compose containers, the Compose network, and named volumes such as
+<code>feedback_data</code>. It does not delete repo-local bind-mounted files like <code>mlflow.db</code> or
+<code>mlartifacts/</code>, and it does not remove local Docker images.</p>
+<p>Stop only the API and UI while keeping MLflow running:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>make<span class="w"> </span>ui-down
+</span></code></pre></div>
 <p>The serving code is now part of the main Python package:</p>
 <ul>
 <li><code>mse_mlops.serving.api</code></li>
@@ -963,21 +949,21 @@ feedback store.</p>
 <li><code>mse_mlops.serving.ui</code></li>
 </ul>
 <h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>┌──────────────────────────────────────────────────────────────┐
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>│                       Docker Compose                          │
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>│                                                              │
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>│  ┌──────────────────┐   HTTP    ┌──────────────────────────┐ │
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>│  │  ui (Streamlit)  │ ────────► │     api (FastAPI)        │ │
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│  │  port 7777       │           │     port 8000            │ │
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│  └──────────────────┘           │                          │ │
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│  models/ (read-only) ──────────►│  DinoV3Classifier        │ │
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│                                 │  + eval preprocessing    │ │
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│                                 │                          │ │
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│  feedback_data (volume) ───────►│  /feedback/              │ │
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>│                                 │  ├── feedback.jsonl      │ │
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│                                 │  └── images/             │ │
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│                                 └──────────────────────────┘ │
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>└──────────────────────────────────────────────────────────────┘
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>┌──────────────────────────────────────────────────────────────┐
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>│                       Docker Compose                          │
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>│                                                              │
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>│  ┌──────────────────┐   HTTP    ┌──────────────────────────┐ │
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>│  │  ui (Streamlit)  │ ────────► │     api (FastAPI)        │ │
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>│  │  port 7777       │           │     port 8000            │ │
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>│  └──────────────────┘           │                          │ │
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>│  models/ (read-only) ──────────►│  DinoV3Classifier        │ │
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>│                                 │  + eval preprocessing    │ │
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>│                                 │                          │ │
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>│  feedback_data (volume) ───────►│  /feedback/              │ │
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>│                                 │  ├── feedback.jsonl      │ │
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>│                                 │  └── images/             │ │
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>│                                 └──────────────────────────┘ │
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>└──────────────────────────────────────────────────────────────┘
 </span></code></pre></div>
 <p>The UI is stateless — it never touches the disk. All data flows through the API.</p>
 <hr />
@@ -1041,27 +1027,28 @@ back to the feedback store and the entry is removed from the queue.</p>
 </table>
 <h2 id="feedback-store">Feedback store<a class="headerlink" href="#feedback-store" title="Permanent link">&para;</a></h2>
 <p>Every prediction and labeled upload is appended to <code>/feedback/feedback.jsonl</code> as a JSON line:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">&quot;image_id&quot;</span><span class="p">:</span><span class="w">      </span><span class="s2">&quot;uuid4&quot;</span><span class="p">,</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">&quot;filename&quot;</span><span class="p">:</span><span class="w">      </span><span class="s2">&quot;lesion.jpg&quot;</span><span class="p">,</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w">     </span><span class="s2">&quot;2026-03-19T10:00:00+00:00&quot;</span><span class="p">,</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">&quot;prediction&quot;</span><span class="p">:</span><span class="w">    </span><span class="s2">&quot;benign&quot;</span><span class="p">,</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">&quot;confidence&quot;</span><span class="p">:</span><span class="w">    </span><span class="mf">0.92</span><span class="p">,</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">&quot;probabilities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;benign&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.92</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;malignant&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.08</span><span class="p">},</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w">         </span><span class="kc">null</span><span class="p">,</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w">        </span><span class="s2">&quot;predict | doctor_review | upload_labeled&quot;</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">}</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;image_id&quot;</span><span class="p">:</span><span class="w">      </span><span class="s2">&quot;uuid4&quot;</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">&quot;filename&quot;</span><span class="p">:</span><span class="w">      </span><span class="s2">&quot;lesion.jpg&quot;</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w">     </span><span class="s2">&quot;2026-03-19T10:00:00+00:00&quot;</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nt">&quot;prediction&quot;</span><span class="p">:</span><span class="w">    </span><span class="s2">&quot;benign&quot;</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="nt">&quot;confidence&quot;</span><span class="p">:</span><span class="w">    </span><span class="mf">0.92</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="nt">&quot;probabilities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;benign&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.92</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;malignant&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.08</span><span class="p">},</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w">         </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w">        </span><span class="s2">&quot;predict | doctor_review | upload_labeled&quot;</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">}</span>
 </span></code></pre></div>
 <p><code>label</code> starts as <code>null</code> and is filled in when a doctor reviews the entry.</p>
 <p>Images uploaded via Tab 3 are stored at <code>/feedback/images/{image_id}{ext}</code>.</p>
-<p>The store is designed to be swapped out: replace <code>_save_feedback()</code> and <code>_load_feedback()</code> in
+<p>The store is designed to be swapped out: replace <code>append_feedback_entry()</code>,
+<code>load_feedback_entries()</code>, and <code>write_feedback_entries()</code> in
 <code>mse_mlops.serving.feedback_store</code> to point at a database or MLflow artifact store.</p>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
 <th>Variable</th>
-<th>Default</th>
+<th>Compose Value</th>
 <th>Service</th>
 <th>Description</th>
 </tr>
@@ -1071,7 +1058,7 @@ back to the feedback store and the entry is removed from the queue.</p>
 <td><code>MODEL_PATH</code></td>
 <td><code>/app/models/finetuned/dinov3_ham10000/best_model.pt</code></td>
 <td>API</td>
-<td>Path to trained <code>.pt</code> checkpoint</td>
+<td>Path to trained <code>.pt</code> checkpoint inside the container</td>
 </tr>
 <tr>
 <td><code>FEEDBACK_DIR</code></td>
@@ -1083,7 +1070,7 @@ back to the feedback store and the entry is removed from the queue.</p>
 <td><code>API_URL</code></td>
 <td><code>http://api:8000</code></td>
 <td>UI</td>
-<td>API base URL</td>
+<td>API base URL inside the Compose network</td>
 </tr>
 <tr>
 <td><code>DOCTOR_PASSWORD</code></td>
@@ -1094,24 +1081,24 @@ back to the feedback store and the entry is removed from the queue.</p>
 </tbody>
 </table>
 <p>Set overrides in the repo-root <code>.env</code>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>DOCTOR_PASSWORD=your_secure_password
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>DOCTOR_PASSWORD=your_secure_password
 </span></code></pre></div>
 <h2 id="model-checkpoint">Model checkpoint<a class="headerlink" href="#model-checkpoint" title="Permanent link">&para;</a></h2>
 <p>The API expects a <code>.pt</code> file written by the training pipeline (<code>scripts/train.py</code>, backed by <code>mse_mlops.train</code>) (<code>best_model.pt</code>):</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="s2">&quot;model_state_dict&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>   <span class="c1"># DinoV3Classifier weights</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="s2">&quot;class_names&quot;</span><span class="p">:</span>      <span class="nb">list</span><span class="p">,</span>   <span class="c1"># [&quot;benign&quot;, &quot;malignant&quot;]</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="s2">&quot;model_name&quot;</span><span class="p">:</span>       <span class="nb">str</span><span class="p">,</span>    <span class="c1"># HuggingFace ID used at training time</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="s2">&quot;image_size&quot;</span><span class="p">:</span>       <span class="nb">int</span><span class="p">,</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="s2">&quot;freeze_backbone&quot;</span><span class="p">:</span>  <span class="nb">bool</span><span class="p">,</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">}</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="s2">&quot;model_state_dict&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>   <span class="c1"># DinoV3Classifier weights</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="s2">&quot;class_names&quot;</span><span class="p">:</span>      <span class="nb">list</span><span class="p">,</span>   <span class="c1"># [&quot;benign&quot;, &quot;malignant&quot;]</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="s2">&quot;model_name&quot;</span><span class="p">:</span>       <span class="nb">str</span><span class="p">,</span>    <span class="c1"># HuggingFace ID used at training time</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="s2">&quot;image_size&quot;</span><span class="p">:</span>       <span class="nb">int</span><span class="p">,</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="s2">&quot;freeze_backbone&quot;</span><span class="p">:</span>  <span class="nb">bool</span><span class="p">,</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Preprocessing (resize → center crop → normalize) is derived from the checkpoint's <code>model_name</code>
 at load time, ensuring it always matches what was used during training.</p>
 <h2 id="future-integration-points">Future integration points<a class="headerlink" href="#future-integration-points" title="Permanent link">&para;</a></h2>
 <p>Two no-op stubs in <code>mse_mlops.serving.inference</code> are already wired into the request lifecycle:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">log_prediction_to_mlflow</span><span class="p">(</span><span class="n">image_id</span><span class="p">,</span> <span class="n">prediction</span><span class="p">):</span> <span class="k">pass</span>  <span class="c1"># TODO</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">notify_curation_pipeline</span><span class="p">(</span><span class="n">image_id</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>      <span class="k">pass</span>  <span class="c1"># TODO</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">log_prediction_to_mlflow</span><span class="p">(</span><span class="n">image_id</span><span class="p">,</span> <span class="n">prediction</span><span class="p">):</span> <span class="k">pass</span>  <span class="c1"># TODO</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">notify_curation_pipeline</span><span class="p">(</span><span class="n">image_id</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>      <span class="k">pass</span>  <span class="c1"># TODO</span>
 </span></code></pre></div>
 <p>When MLflow and the retraining pipeline are ready, fill these in — no other code changes needed.</p>
 <h2 id="further-reading">Further reading<a class="headerlink" href="#further-reading" title="Permanent link">&para;</a></h2>

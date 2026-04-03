@@ -579,34 +579,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../notebooks/melanoma_cancer_dataset/kaggle_eda/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Melanoma Dataset EDA
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -672,7 +644,7 @@
 
 
 <h1 id="mlops-pipeline">MLOps Pipeline<a class="headerlink" href="#mlops-pipeline" title="Permanent link">&para;</a></h1>
-<p>This pipeline covers the full lifecycle of a machine learning model — from raw data ingestion to production serving and continuous retraining. It is built around skin cancer classification using the HAM10000 dataset from Kaggle.</p>
+<p>This pipeline covers the full lifecycle of a machine learning model — from raw data ingestion to production serving and continuous retraining. It is built around skin lesion classification using HAM10000.</p>
 <p>The pipeline is divided into five stages:</p>
 <ol>
 <li><strong>Data</strong> — Ingest raw images, version datasets with DVC, and track code changes with Git</li>
@@ -682,7 +654,7 @@
 <li><strong>Feedback Loop</strong> — Monitor production performance, collect user corrections, curate new data, and feed it back into the pipeline</li>
 </ol>
 <pre class="mermaid"><code>flowchart TD
-    DS["Data Source\nKaggle"]
+    DS["Data Source\nHAM10000"]
     RS["Raw Storage\nLocal / S3"]
     DVC["Data Versioning\nDVC"]
     GIT["Code Versioning\nGit"]
@@ -731,7 +703,7 @@
     class MON,FS,CUR monitor</code></pre>
 <h2 id="node-descriptions">Node Descriptions<a class="headerlink" href="#node-descriptions" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Data Source (Kaggle)</strong> — Raw skin cancer images from a public dataset</li>
+<li><strong>Data Source (HAM10000)</strong> — Raw dermatoscopic images and metadata from the project dataset</li>
 <li><strong>Raw Storage</strong> — Unprocessed images stored locally or in the cloud</li>
 <li><strong>Data Versioning (DVC)</strong> — Tracks and reproduces dataset snapshots</li>
 <li><strong>Code Versioning (Git)</strong> — Version control for all training code</li>
