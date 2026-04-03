@@ -2,68 +2,26 @@ from __future__ import annotations
 
 import io
 import os
-from types import SimpleNamespace
 
 import torch
 from PIL import Image
-from torch import nn
 from torchvision import transforms
-from transformers import AutoImageProcessor, AutoModel
 
-MODEL_PATH = os.environ.get("MODEL_PATH", "models/finetuned/dinov3_ham10000/best_model.pt")
-HIDDEN_SIZE_ERROR = "Could not infer hidden size from model config."
-OUTPUT_FORMAT_ERROR = "Backbone output format is not supported."
+from mse_mlops.modeling import (
+    DinoV3Classifier,
+    is_mps_available,
+    load_processor_mean_std,
+)
+
+MODEL_PATH = os.environ.get(
+    "MODEL_PATH", "models/finetuned/dinov3_ham10000/best_model.pt"
+)
 MODEL_NOT_LOADED_ERROR = "Model not loaded. Call load_model() first."
 
 _model: DinoV3Classifier | None = None
 _class_names: list[str] = []
 _transform: transforms.Compose | None = None
 _device: torch.device = torch.device("cpu")
-
-
-class DinoV3Classifier(nn.Module):
-    def __init__(self, model_name: str, num_labels: int, freeze_backbone: bool) -> None:
-        super().__init__()
-        self.freeze_backbone = freeze_backbone
-        self.backbone = AutoModel.from_pretrained(model_name)
-
-        hidden_size = getattr(self.backbone.config, "hidden_size", None)
-        if hidden_size is None and hasattr(self.backbone.config, "hidden_sizes"):
-            hidden_size = self.backbone.config.hidden_sizes[-1]
-        if hidden_size is None:
-            raise ValueError(HIDDEN_SIZE_ERROR)
-
-        self.dropout = nn.Dropout(p=0.1)
-        self.classifier = nn.Linear(hidden_size, num_labels)
-
-        if freeze_backbone:
-            for param in self.backbone.parameters():
-                param.requires_grad = False
-            self.backbone.eval()
-
-    def train(self, mode: bool = True) -> DinoV3Classifier:
-        super().train(mode)
-        if self.freeze_backbone:
-            self.backbone.eval()
-        return self
-
-    def forward(self, pixel_values: torch.Tensor) -> SimpleNamespace:
-        outputs = self.backbone(pixel_values=pixel_values)
-        if hasattr(outputs, "pooler_output") and outputs.pooler_output is not None:
-            pooled = outputs.pooler_output
-        elif hasattr(outputs, "last_hidden_state"):
-            pooled = outputs.last_hidden_state[:, 0]
-        elif isinstance(outputs, tuple) and outputs:
-            pooled = outputs[0][:, 0]
-        else:
-            raise ValueError(OUTPUT_FORMAT_ERROR)
-
-        logits = self.classifier(self.dropout(pooled))
-        return SimpleNamespace(logits=logits)
-
-
-def is_mps_available() -> bool:
-    return hasattr(torch.backends, "mps") and torch.backends.mps.is_available()
 
 
 def resolve_device() -> torch.device:
@@ -94,10 +52,7 @@ def load_model(path: str = MODEL_PATH) -> None:
     _model.to(_device)
     _model.eval()
 
-    processor = AutoImageProcessor.from_pretrained(model_name)
-    mean = getattr(processor, "image_mean", None) or [0.5, 0.5, 0.5]
-    std = getattr(processor, "image_std", None) or [0.5, 0.5, 0.5]
-
+    mean, std = load_processor_mean_std(model_name)
     resize_size = max(image_size, int(image_size * 256 / 224))
     _transform = transforms.Compose([
         transforms.Resize(resize_size),

@@ -164,16 +164,16 @@ logs/
 # local runtime databases
 mlflow.db
 mlflow.db-*
+mlruns/
+mlartifacts/
 
 # LLMs
 AGENT.md
 STATUS.md
 CLAUDE.md
-.kaggle/kaggle.json
 
 # dvc managed data
 /data
 
-# ignore mlflow artifacts
-mlruns/
-mlartifacts/
+# model checkpoints
+models/finetuned/dinov3_ham10000/checkpoints/*.pt

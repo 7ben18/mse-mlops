@@ -24,14 +24,17 @@ scripts/
 
 ## Runtime Topology
 
-`docker compose up --build` starts two default services:
+`make ui-up` starts the serving stack:
 
+- `mlflow`: MLflow tracking UI on port `5001`
 - `api`: FastAPI inference API on port `8000`
 - `ui`: Streamlit web UI on port `7777`
 
+Without `make ui-up`, the serving stack stays off. Use `make mlflow-up` if you only want MLflow.
+
 The training service remains opt-in under the `train` profile:
 
-`docker compose --profile train run --build --rm train`
+`make train-docker`
 
 ## Mounted State
 

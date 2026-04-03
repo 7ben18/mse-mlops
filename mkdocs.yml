@@ -19,7 +19,6 @@ nav:
   - API Reference: modules.md
   - Notebooks:
       - HAM10000 EDA: notebooks/ham10000/ham10000_eda.ipynb
-      - Melanoma EDA: notebooks/melanoma_cancer_dataset/kaggle_eda.ipynb
 plugins:
   - search
   - mkdocs-jupyter:

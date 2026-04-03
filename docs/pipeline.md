@@ -1,6 +1,6 @@
 # MLOps Pipeline
 
-This pipeline covers the full lifecycle of a machine learning model — from raw data ingestion to production serving and continuous retraining. It is built around skin cancer classification using the HAM10000 dataset from Kaggle.
+This pipeline covers the full lifecycle of a machine learning model — from raw data ingestion to production serving and continuous retraining. It is built around skin lesion classification using HAM10000.
 
 The pipeline is divided into five stages:
 
@@ -12,7 +12,7 @@ The pipeline is divided into five stages:
 
 ```mermaid
 flowchart TD
-    DS["Data Source\nKaggle"]
+    DS["Data Source\nHAM10000"]
     RS["Raw Storage\nLocal / S3"]
     DVC["Data Versioning\nDVC"]
     GIT["Code Versioning\nGit"]
@@ -63,7 +63,7 @@ flowchart TD
 
 ## Node Descriptions
 
-- **Data Source (Kaggle)** — Raw skin cancer images from a public dataset
+- **Data Source (HAM10000)** — Raw dermatoscopic images and metadata from the project dataset
 - **Raw Storage** — Unprocessed images stored locally or in the cloud
 - **Data Versioning (DVC)** — Tracks and reproduces dataset snapshots
 - **Code Versioning (Git)** — Version control for all training code

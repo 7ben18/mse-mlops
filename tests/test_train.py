@@ -73,10 +73,9 @@ def write_train_config_yaml(path: Path, payload: dict[str, object] | None = None
             "max_val_batches": None,
             "resume_from_checkpoint": None,
             "save_total_limit": 5,
-            "load_best_model_at_end": True,
         },
         "tracking": {
-            "mlflow_tracking_uri": "http://127.0.0.1:5000",
+            "mlflow_tracking_uri": "http://mlflow:5001",
             "mlflow_experiment_name": "mse-mlops-training",
             "mlflow_run_name": None,
             "mlflow_tags": {"project": "mse-mlops"},
@@ -88,12 +87,16 @@ def write_train_config_yaml(path: Path, payload: dict[str, object] | None = None
 
 def patch_processor(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "mse_mlops.train.AutoImageProcessor.from_pretrained", lambda *_args, **_kwargs: DummyProcessor()
+        "mse_mlops.modeling.AutoImageProcessor.from_pretrained",
+        lambda *_args, **_kwargs: DummyProcessor(),
     )
 
 
 def patch_backbone(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("mse_mlops.train.AutoModel.from_pretrained", lambda *_args, **_kwargs: DummyBackbone())
+    monkeypatch.setattr(
+        "mse_mlops.modeling.AutoModel.from_pretrained",
+        lambda *_args, **_kwargs: DummyBackbone(),
+    )
 
 
 def test_choose_indices_fraction():
@@ -184,10 +187,9 @@ def test_load_train_config_rejects_missing_required_setting(tmp_path: Path):
             "max_val_batches": None,
             "resume_from_checkpoint": None,
             "save_total_limit": 5,
-            "load_best_model_at_end": True,
         },
         "tracking": {
-            "mlflow_tracking_uri": "http://127.0.0.1:5000",
+            "mlflow_tracking_uri": "http://mlflow:5001",
             "mlflow_experiment_name": "mse-mlops-training",
             "mlflow_run_name": None,
             "mlflow_tags": {"project": "mse-mlops"},
@@ -397,7 +399,11 @@ def test_build_dataloaders_rejects_inconsistent_lesion_sets(tmp_path: Path, monk
         )
 
 
-def test_run_training_and_mlflow_hooks_together(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_run_training_and_mlflow_hooks_together(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
     metadata_csv = tmp_path / "data" / "processed" / "ham10000" / "metadata.csv"
     images_dir = tmp_path / "data" / "processed" / "ham10000" / "HAM10000_images"
     output_dir = tmp_path / "models" / "finetuned" / "dinov3_ham10000"
@@ -452,7 +458,6 @@ def test_run_training_and_mlflow_hooks_together(tmp_path: Path, monkeypatch: pyt
         resume_from_checkpoint=None,
         save_total_limit=2,
         freeze_backbone=True,
-        load_best_model_at_end=True,
         mlflow_tracking_uri="file:///tmp/mlruns",
         mlflow_experiment_name="mse-mlops-training",
         mlflow_run_name=None,
@@ -505,6 +510,10 @@ def test_run_training_and_mlflow_hooks_together(tmp_path: Path, monkeypatch: pyt
     train_module.run_training(config)
 
     checkpoint_path = output_dir / "checkpoints" / "epoch_001.pt"
+    best_model_path = output_dir / "best_model.pt"
+    best_checkpoint = torch.load(best_model_path, map_location="cpu")
+    output = capsys.readouterr().out
+
     assert calls["mlflow_entered"] is True
     assert calls["run_params"] == {
         "config": config,
@@ -520,3 +529,110 @@ def test_run_training_and_mlflow_hooks_together(tmp_path: Path, monkeypatch: pyt
     assert calls["final_artifacts"]["best_model"] is not None
     assert len(calls["final_artifacts"]["history_payload"]) == 1
     assert checkpoint_path.is_file()
+    assert best_model_path.is_file()
+    assert best_checkpoint["epoch"] == 1
+    assert best_checkpoint["metric_name"] == "val_roc_auc"
+    assert best_checkpoint["class_names"] == ["benign", "malignant"]
+    assert best_checkpoint["model_name"] == "models/pretrained/dummy"
+    assert best_checkpoint["image_size"] == 16
+    assert best_checkpoint["freeze_backbone"] is True
+    assert "model_state_dict" in best_checkpoint
+    assert f"Promoted best model to: {best_model_path}" in output
+    assert f"dvc add {best_model_path}" in output
+
+
+def test_run_training_promotes_best_epoch_not_last_epoch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    metadata_csv = tmp_path / "data" / "processed" / "ham10000" / "metadata.csv"
+    images_dir = tmp_path / "data" / "processed" / "ham10000" / "HAM10000_images"
+    output_dir = tmp_path / "models" / "finetuned" / "dinov3_ham10000"
+
+    write_metadata_csv(
+        metadata_csv,
+        [
+            {"lesion_id": "HAM_0001", "image_id": "ISIC_0001", "mb": "benign", "set": "train"},
+            {"lesion_id": "HAM_0002", "image_id": "ISIC_0002", "mb": "malignant", "set": "train"},
+            {"lesion_id": "HAM_0003", "image_id": "ISIC_0003", "mb": "benign", "set": "val"},
+            {"lesion_id": "HAM_0004", "image_id": "ISIC_0004", "mb": "malignant", "set": "val"},
+        ],
+    )
+    for split_name, image_id in [
+        ("train", "ISIC_0001"),
+        ("train", "ISIC_0002"),
+        ("val", "ISIC_0003"),
+        ("val", "ISIC_0004"),
+    ]:
+        write_rgb_image(images_dir / split_name / f"{image_id}.jpg", size=(16, 16))
+
+    patch_processor(monkeypatch)
+    patch_backbone(monkeypatch)
+
+    config = TrainConfig(
+        config=Path("config/train.yaml"),
+        metadata_csv=metadata_csv,
+        images_dir=images_dir,
+        label_column="mb",
+        train_set="train",
+        val_set="val",
+        train_fraction=1.0,
+        val_fraction=1.0,
+        train_samples=None,
+        val_samples=None,
+        model_name="models/pretrained/dummy",
+        output_dir=output_dir,
+        epochs=2,
+        batch_size=2,
+        image_size=16,
+        lr=1e-3,
+        weight_decay=0.0,
+        num_workers=0,
+        seed=13,
+        device="cpu",
+        gradient_accumulation_steps=1,
+        warmup_ratio=0.0,
+        lr_scheduler_type="linear",
+        max_grad_norm=1.0,
+        max_train_batches=None,
+        max_val_batches=None,
+        resume_from_checkpoint=None,
+        save_total_limit=2,
+        freeze_backbone=True,
+        mlflow_tracking_uri="http://mlflow:5001",
+        mlflow_experiment_name="mse-mlops-training",
+        mlflow_run_name=None,
+        mlflow_tags="{}",
+    )
+
+    @contextmanager
+    def fake_init_mlflow(_config: object):
+        yield
+
+    metrics_by_epoch = iter([
+        (0.40, 0.80, 0.80, 0.80, 0.80, 0.90),
+        (0.45, 0.75, 0.75, 0.75, 0.75, 0.70),
+    ])
+
+    def fake_evaluate(**_kwargs):
+        return next(metrics_by_epoch)
+
+    monkeypatch.setattr(train_module.tracking, "init_mlflow", fake_init_mlflow)
+    monkeypatch.setattr(train_module.tracking, "log_run_params", lambda **_kwargs: None)
+    monkeypatch.setattr(train_module.tracking, "log_epoch_metrics", lambda **_kwargs: None)
+    monkeypatch.setattr(train_module.tracking, "log_summary_metrics", lambda _metrics: None)
+    monkeypatch.setattr(
+        train_module.tracking,
+        "log_final_artifacts",
+        lambda **_kwargs: None,
+    )
+    monkeypatch.setattr(train_module, "evaluate", fake_evaluate)
+
+    train_module.run_training(config)
+
+    best_checkpoint = torch.load(output_dir / "best_model.pt", map_location="cpu")
+
+    assert (output_dir / "checkpoints" / "epoch_001.pt").is_file()
+    assert (output_dir / "checkpoints" / "epoch_002.pt").is_file()
+    assert best_checkpoint["epoch"] == 1
+    assert best_checkpoint["metric_value"] == pytest.approx(0.90)

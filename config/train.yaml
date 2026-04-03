@@ -38,7 +38,7 @@ data:
   val_samples: null
 
 training:
-  # Directory where best checkpoint, epoch checkpoints, and history.json are written.
+  # Directory where the promoted best_model.pt and epoch checkpoints are written.
   output_dir: models/finetuned/dinov3_ham10000
 
   # Total number of epochs for the normal training run.
@@ -63,7 +63,7 @@ training:
   weight_decay: 0.01
 
   # DataLoader worker processes.
-  # 0 is safest on macOS/MPS; increase on Linux/CUDA if stable.
+  # 0 is the safest default; increase only if your environment is stable.
   num_workers: 0
 
   # Random seed for split/sampling reproducibility.
@@ -72,8 +72,6 @@ training:
   # Device selection:
   # - auto: cuda -> mps -> cpu
   # - cuda / mps / cpu: force a specific device
-  # On Apple Silicon hosts, local runs can use mps.
-  # Docker training on the current macOS setup should be treated as CPU-only.
   device: auto
 
   # true: train only classifier head
@@ -111,15 +109,9 @@ training:
   # Keep only the N newest epoch checkpoints (null = keep all).
   save_total_limit: 5
 
-  # Load best_model.pt into memory at the end of training.
-  load_best_model_at_end: true
-
 tracking:
-  # MLflow tracking backend URI, for example:
-  # - local file store (deprecated): file:./mlruns
-  # - local server (recommended for the default local training flow): http://127.0.0.1:5000
-  # - remote server: http://mlflow:5000
-  mlflow_tracking_uri: http://127.0.0.1:5000
+  # Docker Compose service-to-service MLflow tracking URI.
+  mlflow_tracking_uri: http://mlflow:5001
 
   # MLflow experiment name for training runs.
   mlflow_experiment_name: mse-mlops-training

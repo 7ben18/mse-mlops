@@ -1,9 +1,48 @@
 services:
+  mlflow:
+    build:
+      context: .
+      dockerfile: docker/mlflow.Dockerfile
+    image: mse-mlops-mlflow:latest
+    pull_policy: never
+    command:
+      [
+        "uv",
+        "run",
+        "--no-sync",
+        "--frozen",
+        "--no-dev",
+        "mlflow",
+        "server",
+        "--backend-store-uri",
+        "sqlite:////repo/mlflow.db",
+        "--default-artifact-root",
+        "file:///repo/mlartifacts",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "5001",
+        "--allowed-hosts",
+        "localhost:5001,127.0.0.1:5001,mlflow:5001",
+      ]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/', timeout=5)"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./:/repo
+
   api:
+    profiles: ["ui"]
     build:
       context: .
       dockerfile: docker/api.Dockerfile
     image: mse-mlops-api:latest
+    pull_policy: never
     environment:
       FEEDBACK_DIR: /feedback
       HF_HOME: /app/.cache/huggingface
@@ -16,10 +55,12 @@ services:
       - feedback_data:/feedback
 
   ui:
+    profiles: ["ui"]
     build:
       context: .
       dockerfile: docker/ui.Dockerfile
     image: mse-mlops-ui:latest
+    pull_policy: never
     depends_on:
       - api
     environment:
@@ -34,7 +75,11 @@ services:
       context: .
       dockerfile: docker/train.Dockerfile
     image: mse-mlops:latest
+    pull_policy: never
     working_dir: /app
+    depends_on:
+      mlflow:
+        condition: service_healthy
     command: ["uv", "run", "--no-sync", "--frozen", "--no-dev", "python", "scripts/train.py"]
     environment:
       HF_HOME: /app/.cache/huggingface

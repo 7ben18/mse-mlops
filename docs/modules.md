@@ -9,7 +9,7 @@ Auto-generated from Python docstrings. All modules are part of the
 
 ### `mse_mlops.paths`
 
-Project-wide path constants and configuration loader helpers.
+Project-wide path constants plus repo-root and config-path helpers.
 
 ::: mse_mlops.paths
 
@@ -31,6 +31,14 @@ DINOv3 fine-tuning training loop, config dataclass, and training helpers.
 
 ---
 
+### `mse_mlops.modeling`
+
+Shared DINOv3 classifier and preprocessing helpers used by training and serving.
+
+::: mse_mlops.modeling
+
+---
+
 ## Analysis
 
 ### `mse_mlops.analysis.ham10000`
@@ -38,14 +46,6 @@ DINOv3 fine-tuning training loop, config dataclass, and training helpers.
 HAM10000 EDA helpers: image/mask triplet building, sampling, and visualisation.
 
 ::: mse_mlops.analysis.ham10000
-
----
-
-### `mse_mlops.analysis.melanoma_dataset`
-
-Melanoma dataset overview loader and per-class statistics helpers.
-
-::: mse_mlops.analysis.melanoma_dataset
 
 ---
 

@@ -65,7 +65,7 @@ backbone under `models/pretrained/`.
 hf auth login
 
 # Download the default model
-uv run python scripts/download_model.py
+make model-download
 
 # Download a different model or change output location
 uv run python scripts/download_model.py \

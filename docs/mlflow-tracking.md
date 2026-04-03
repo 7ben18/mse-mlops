@@ -7,31 +7,43 @@ configuration, epoch metrics, summary metrics, and model/history artifacts.
 ## What it is
 
 Training is MLflow-enabled by default and always runs inside an MLflow run context.
-That means `uv run python scripts/train.py` requires a reachable tracking backend before the
-first epoch starts.
+Docker training talks to MLflow at `http://mlflow:5001`.
 
-Start MLflow server:
-
-```bash
-uv run mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root file:./mlartifacts --host 127.0.0.1 --port 5000
-```
-
-Start training:
+Primary Docker path:
 
 ```bash
-uv run python scripts/train.py
-```
-
-If the default server at `http://127.0.0.1:5000` is not running, training fails immediately during
-MLflow setup. For a quick local smoke test without a running server, you can override the tracking URI:
-
-```bash
-uv run python scripts/train.py --mlflow-tracking-uri file:./mlruns
+make mlflow-up
 ```
 
 Open UI:
 
-`http://127.0.0.1:5000`
+`http://127.0.0.1:5001`
+
+Stop only MLflow:
+
+```bash
+make mlflow-stop
+```
+
+MLflow state is stored in the same git-ignored repo paths:
+
+- `mlflow.db`
+- `mlartifacts/`
+
+`make docker-down` does not delete these files, because they live on the host as bind-mounted
+repo state rather than Docker volumes.
+
+Run Docker training against the in-stack tracker:
+
+```bash
+make train-docker
+```
+
+For a one-epoch Docker smoke test:
+
+```bash
+make train-docker-smoke
+```
 
 Tracking code lives in:
 
@@ -90,7 +102,7 @@ The run closes automatically when the MLflow context exits.
 ```python
 mlflow.pytorch.log_model(
     pytorch_model=model,
-    artifact_path="model",
+    name="model",
 )
 ```
 
@@ -100,7 +112,7 @@ mlflow.pytorch.log_model(
 
 | Key | Required | Example |
 |-----|----------|---------|
-| `tracking.mlflow_tracking_uri` | yes | `http://127.0.0.1:5000` |
+| `tracking.mlflow_tracking_uri` | yes | `http://mlflow:5001` |
 | `tracking.mlflow_experiment_name` | yes | `mse-mlops-training` |
 | `tracking.mlflow_run_name` | no | `baseline-2026-03-22` |
 | `tracking.mlflow_tags` | no | `{project: mse-mlops}` |
@@ -116,8 +128,10 @@ If tracking URI or experiment name is empty, training fails fast with `ValueErro
 
 ## Checkpoint and resume
 
-- Local checkpoints remain at `models/finetuned/.../checkpoints/epoch_XXX.pt`.
-- Checkpoints store `history` and optional `best_model_state`.
+- Training promotes the selected serving checkpoint to `models/finetuned/.../best_model.pt`.
+- Local epoch checkpoints remain at `models/finetuned/.../checkpoints/epoch_XXX.pt`.
+- Epoch checkpoints store `history` and optional `best_model_state` for resume/debug.
+- The training CLI prints a `dvc add models/finetuned/.../best_model.pt` reminder after a successful run.
 - Resume restores model/optimizer/scheduler and metric history.
 
 ## Model Registry note

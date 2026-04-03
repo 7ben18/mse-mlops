@@ -38,8 +38,7 @@ def build_config() -> TrainConfig:
         resume_from_checkpoint=None,
         save_total_limit=5,
         freeze_backbone=True,
-        load_best_model_at_end=True,
-        mlflow_tracking_uri="http://127.0.0.1:5000",
+        mlflow_tracking_uri="http://mlflow:5001",
         mlflow_experiment_name="mse-mlops-training",
         mlflow_run_name=None,
         mlflow_tags="{}",
@@ -71,13 +70,18 @@ def test_log_run_params_uses_ham10000_metadata_contract(monkeypatch):
 
 def test_log_final_artifacts_is_independent_of_local_output_dir(monkeypatch):
     logged_artifacts: list[tuple[str, str]] = []
+    logged_models: list[tuple[object, str]] = []
 
     def fake_log_artifact(path: str, artifact_path: str) -> None:
         logged_artifacts.append((path, artifact_path))
         payload = json.loads(Path(path).read_text(encoding="utf-8"))
         assert payload == [{"epoch": 1, "val_roc_auc": 0.9}]
 
+    def fake_log_model(*, pytorch_model, name: str) -> None:
+        logged_models.append((pytorch_model, name))
+
     monkeypatch.setattr(mlflow_tracker.mlflow, "log_artifact", fake_log_artifact)
+    monkeypatch.setattr(mlflow_tracker.mlflow.pytorch, "log_model", fake_log_model)
 
     mlflow_tracker.log_final_artifacts(
         best_model=None,
@@ -86,3 +90,4 @@ def test_log_final_artifacts_is_independent_of_local_output_dir(monkeypatch):
 
     assert len(logged_artifacts) == 1
     assert logged_artifacts[0][1] == "training"
+    assert logged_models == []

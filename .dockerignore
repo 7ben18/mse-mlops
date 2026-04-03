@@ -2,6 +2,7 @@
 .github
 .venv
 .uv-cache
+.ruff_cache
 .pytest_cache
 __pycache__
 *.pyc
@@ -16,6 +17,13 @@ models
 reports
 references
 notebooks
+mlartifacts
+mlruns
+mlflow
+mlflow.db
+mlflow.db-*
+
+.dvc
 
 AGENT.md
 STATUS.md

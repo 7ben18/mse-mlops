@@ -5,7 +5,6 @@ import random
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -22,14 +21,20 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from tqdm import tqdm
-from transformers import AutoImageProcessor, AutoModel, get_scheduler
+from transformers import get_scheduler
 
 from mse_mlops import paths, tracking
+from mse_mlops.modeling import (
+    DinoV3Classifier,
+    is_mps_available,
+    load_processor_mean_std,
+)
 
 DEFAULT_CONFIG_PATH = paths.DEFAULT_CONFIG_PATH
 CONFIG_SECTIONS = ("model", "data", "training", "tracking")
 MB_LABEL_COLUMN = "mb"
 IMAGE_EXTENSION = ".jpg"
+BEST_MODEL_FILENAME = "best_model.pt"
 REQUIRED_METADATA_COLUMNS = frozenset({"lesion_id", "image_id", "set"})
 ALLOWED_METADATA_SETS = frozenset({"train", "val", "test", "future"})
 ALLOWED_MB_LABELS = frozenset({"benign", "malignant"})
@@ -98,7 +103,6 @@ class TrainConfig:
     resume_from_checkpoint: str | None
     save_total_limit: int | None
     freeze_backbone: bool
-    load_best_model_at_end: bool
     mlflow_tracking_uri: str
     mlflow_experiment_name: str
     mlflow_run_name: str | None
@@ -250,10 +254,6 @@ def load_train_config(
             freeze_backbone=_as_bool(
                 config_values["freeze_backbone"], "freeze_backbone"
             ),
-            load_best_model_at_end=_as_bool(
-                config_values["load_best_model_at_end"],
-                "load_best_model_at_end",
-            ),
             mlflow_tracking_uri=str(config_values["mlflow_tracking_uri"]),
             mlflow_experiment_name=str(config_values["mlflow_experiment_name"]),
             mlflow_run_name=_as_optional_str(config_values["mlflow_run_name"]),
@@ -278,10 +278,6 @@ def set_seed(seed: int) -> None:
         torch.backends.cudnn.benchmark = False
 
 
-def is_mps_available() -> bool:
-    return hasattr(torch.backends, "mps") and torch.backends.mps.is_available()
-
-
 def resolve_device(requested: str) -> torch.device:
     if requested == "cuda":
         if torch.cuda.is_available():
@@ -303,14 +299,6 @@ def resolve_device(requested: str) -> torch.device:
     if is_mps_available():
         return torch.device("mps")
     return torch.device("cpu")
-
-
-def resolve_mean_std(
-    processor: AutoImageProcessor,
-) -> tuple[Sequence[float], Sequence[float]]:
-    mean = getattr(processor, "image_mean", None) or [0.5, 0.5, 0.5]
-    std = getattr(processor, "image_std", None) or [0.5, 0.5, 0.5]
-    return mean, std
 
 
 def build_transforms(
@@ -510,56 +498,6 @@ def compute_classification_metrics(
     return float(precision), float(recall), float(f1), float(roc_auc)
 
 
-class DinoV3Classifier(nn.Module):
-    """Primary classifier wrapper for DINOv3 backbone checkpoints."""
-
-    def __init__(
-        self, model_name: str, num_labels: int, freeze_backbone: bool
-    ) -> None:
-        super().__init__()
-        self.freeze_backbone = freeze_backbone
-        self.backbone = AutoModel.from_pretrained(model_name)
-
-        hidden_size = getattr(self.backbone.config, "hidden_size", None)
-        if hidden_size is None and hasattr(
-            self.backbone.config, "hidden_sizes"
-        ):
-            hidden_size = self.backbone.config.hidden_sizes[-1]
-        if hidden_size is None:
-            raise ValueError("Could not infer hidden size from model config.")
-
-        self.dropout = nn.Dropout(p=0.1)
-        self.classifier = nn.Linear(hidden_size, num_labels)
-
-        if freeze_backbone:
-            for param in self.backbone.parameters():
-                param.requires_grad = False
-            self.backbone.eval()
-
-    def train(self, mode: bool = True) -> DinoV3Classifier:
-        super().train(mode)
-        if self.freeze_backbone:
-            self.backbone.eval()
-        return self
-
-    def forward(self, pixel_values: torch.Tensor) -> SimpleNamespace:
-        outputs = self.backbone(pixel_values=pixel_values)
-        if (
-            hasattr(outputs, "pooler_output")
-            and outputs.pooler_output is not None
-        ):
-            pooled = outputs.pooler_output
-        elif hasattr(outputs, "last_hidden_state"):
-            pooled = outputs.last_hidden_state[:, 0]
-        elif isinstance(outputs, tuple) and outputs:
-            pooled = outputs[0][:, 0]
-        else:
-            raise ValueError("Backbone output format is not supported.")
-
-        logits = self.classifier(self.dropout(pooled))
-        return SimpleNamespace(logits=logits)
-
-
 def build_dataloaders(
     metadata_csv: Path,
     images_dir: Path,
@@ -584,8 +522,7 @@ def build_dataloaders(
 
     metadata_df = read_metadata_frame(metadata_csv, label_column)
     class_names = build_class_names(metadata_df, label_column)
-    processor = AutoImageProcessor.from_pretrained(model_name)
-    mean, std = resolve_mean_std(processor)
+    mean, std = load_processor_mean_std(model_name)
     train_tf, eval_tf = build_transforms(mean, std, image_size=image_size)
 
     train_generator = torch.Generator()
@@ -853,6 +790,18 @@ def deserialize_best_model_state(payload: dict[str, object]) -> BestModelState:
     )
 
 
+def promote_best_model_checkpoint(
+    output_dir: Path,
+    best_model_state: BestModelState | None,
+) -> Path | None:
+    if best_model_state is None:
+        return None
+
+    best_model_path = output_dir / BEST_MODEL_FILENAME
+    torch.save(serialize_best_model_state(best_model_state), best_model_path)
+    return best_model_path
+
+
 def save_epoch_checkpoint(
     checkpoint_path: Path,
     model: nn.Module,
@@ -1091,18 +1040,18 @@ def finalize_training_run(
     model: nn.Module,
     history: list[Metrics],
     best_model_state: BestModelState | None,
-    load_best_model_at_end: bool,
-) -> None:
+    output_dir: Path,
+) -> Path | None:
     history_payload = [asdict(item) for item in history]
     best_model_for_mlflow = None
+    promoted_model_path = None
 
     if best_model_state is not None:
         model.load_state_dict(best_model_state.model_state_dict)
-        if load_best_model_at_end:
-            print(
-                f"Loaded best model from epoch {best_model_state.epoch} "
-                f"({best_model_state.metric_name}={best_model_state.metric_value:.4f})"
-            )
+        print(
+            f"Loaded best model from epoch {best_model_state.epoch} "
+            f"({best_model_state.metric_name}={best_model_state.metric_value:.4f})"
+        )
         best_model_for_mlflow = model
         print(
             f"Best validation {best_model_state.metric_name}: {best_model_state.metric_value:.4f}"
@@ -1111,10 +1060,15 @@ def finalize_training_run(
             "best_val_roc_auc": best_model_state.metric_value,
             "best_epoch": float(best_model_state.epoch),
         })
+        promoted_model_path = promote_best_model_checkpoint(
+            output_dir=output_dir,
+            best_model_state=best_model_state,
+        )
 
     tracking.log_final_artifacts(
         best_model=best_model_for_mlflow, history_payload=history_payload
     )
+    return promoted_model_path
 
 
 def run_training(config: TrainConfig) -> None:
@@ -1265,13 +1219,24 @@ def run_training(config: TrainConfig) -> None:
                 checkpoint_dir=checkpoint_dir, keep_last=config.save_total_limit
             )
 
-        finalize_training_run(
+        promoted_model_path = finalize_training_run(
             model=model,
             history=history,
             best_model_state=best_model_state,
-            load_best_model_at_end=config.load_best_model_at_end,
+            output_dir=config.output_dir,
         )
 
-    print(
-        f"Training run complete. Local checkpoints saved to: {checkpoint_dir}"
-    )
+    print(f"Local epoch checkpoints saved to: {checkpoint_dir}")
+
+    if promoted_model_path is not None and best_model_state is not None:
+        print(
+            "Training run complete. "
+            f"Promoted best model to: {promoted_model_path} "
+            f"(epoch {best_model_state.epoch}, "
+            f"{best_model_state.metric_name}={best_model_state.metric_value:.4f})"
+        )
+        print(
+            f"To share this model via DVC, run: dvc add {promoted_model_path}"
+        )
+    else:
+        print("Training run complete. No promoted best model was written.")

@@ -5,9 +5,46 @@ import tempfile
 from collections.abc import Mapping
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Protocol
+
+from torch import nn
 
 import mlflow
-from torch import nn
+
+
+class TrainTrackingConfig(Protocol):
+    config: Path
+    metadata_csv: Path
+    images_dir: Path
+    label_column: str
+    train_set: str
+    val_set: str
+    train_fraction: float
+    val_fraction: float
+    train_samples: int | None
+    val_samples: int | None
+    model_name: str
+    epochs: int
+    batch_size: int
+    image_size: int
+    lr: float
+    weight_decay: float
+    num_workers: int
+    seed: int
+    device: str
+    gradient_accumulation_steps: int
+    warmup_ratio: float
+    lr_scheduler_type: str
+    max_grad_norm: float
+    max_train_batches: int | None
+    max_val_batches: int | None
+    resume_from_checkpoint: str | None
+    save_total_limit: int | None
+    freeze_backbone: bool
+    mlflow_tracking_uri: str
+    mlflow_experiment_name: str
+    mlflow_run_name: str | None
+    mlflow_tags: str | dict[str, str]
 
 
 def _coerce_tags(raw_tags: object) -> dict[str, str]:
@@ -39,9 +76,9 @@ def _sanitize_params(payload: dict[str, object]) -> dict[str, object]:
 
 
 @contextmanager
-def init_mlflow(config: object):
-    tracking_uri = str(getattr(config, "mlflow_tracking_uri")).strip()
-    experiment_name = str(getattr(config, "mlflow_experiment_name")).strip()
+def init_mlflow(config: TrainTrackingConfig):
+    tracking_uri = str(config.mlflow_tracking_uri).strip()
+    experiment_name = str(config.mlflow_experiment_name).strip()
 
     if not tracking_uri:
         raise ValueError("--mlflow-tracking-uri must be set.")
@@ -50,45 +87,49 @@ def init_mlflow(config: object):
 
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment(experiment_name)
-    run_name_value = getattr(config, "mlflow_run_name")
+    run_name_value = config.mlflow_run_name
     run_name = run_name_value.strip() if isinstance(run_name_value, str) else None
-    tags = _coerce_tags(getattr(config, "mlflow_tags"))
+    tags = _coerce_tags(config.mlflow_tags)
 
     with mlflow.start_run(run_name=run_name or None, tags=tags):
         yield
 
 
-def log_run_params(config: object, train_count: int, val_count: int, class_names: list[str]) -> None:
+def log_run_params(
+    config: TrainTrackingConfig,
+    train_count: int,
+    val_count: int,
+    class_names: list[str],
+) -> None:
     payload = {
-        "config": getattr(config, "config"),
-        "metadata_csv": getattr(config, "metadata_csv"),
-        "images_dir": getattr(config, "images_dir"),
-        "label_column": getattr(config, "label_column"),
-        "train_set": getattr(config, "train_set"),
-        "val_set": getattr(config, "val_set"),
-        "train_fraction": getattr(config, "train_fraction"),
-        "val_fraction": getattr(config, "val_fraction"),
-        "train_samples": getattr(config, "train_samples"),
-        "val_samples": getattr(config, "val_samples"),
-        "model_name": getattr(config, "model_name"),
-        "epochs": getattr(config, "epochs"),
-        "batch_size": getattr(config, "batch_size"),
-        "image_size": getattr(config, "image_size"),
-        "lr": getattr(config, "lr"),
-        "weight_decay": getattr(config, "weight_decay"),
-        "num_workers": getattr(config, "num_workers"),
-        "seed": getattr(config, "seed"),
-        "device": getattr(config, "device"),
-        "gradient_accumulation_steps": getattr(config, "gradient_accumulation_steps"),
-        "warmup_ratio": getattr(config, "warmup_ratio"),
-        "lr_scheduler_type": getattr(config, "lr_scheduler_type"),
-        "max_grad_norm": getattr(config, "max_grad_norm"),
-        "max_train_batches": getattr(config, "max_train_batches"),
-        "max_val_batches": getattr(config, "max_val_batches"),
-        "resume_from_checkpoint": getattr(config, "resume_from_checkpoint"),
-        "save_total_limit": getattr(config, "save_total_limit"),
-        "freeze_backbone": getattr(config, "freeze_backbone"),
-        "load_best_model_at_end": getattr(config, "load_best_model_at_end"),
+        "config": config.config,
+        "metadata_csv": config.metadata_csv,
+        "images_dir": config.images_dir,
+        "label_column": config.label_column,
+        "train_set": config.train_set,
+        "val_set": config.val_set,
+        "train_fraction": config.train_fraction,
+        "val_fraction": config.val_fraction,
+        "train_samples": config.train_samples,
+        "val_samples": config.val_samples,
+        "model_name": config.model_name,
+        "epochs": config.epochs,
+        "batch_size": config.batch_size,
+        "image_size": config.image_size,
+        "lr": config.lr,
+        "weight_decay": config.weight_decay,
+        "num_workers": config.num_workers,
+        "seed": config.seed,
+        "device": config.device,
+        "gradient_accumulation_steps": config.gradient_accumulation_steps,
+        "warmup_ratio": config.warmup_ratio,
+        "lr_scheduler_type": config.lr_scheduler_type,
+        "max_grad_norm": config.max_grad_norm,
+        "max_train_batches": config.max_train_batches,
+        "max_val_batches": config.max_val_batches,
+        "resume_from_checkpoint": config.resume_from_checkpoint,
+        "save_total_limit": config.save_total_limit,
+        "freeze_backbone": config.freeze_backbone,
         "train_count": train_count,
         "val_count": val_count,
         "class_names": class_names,
@@ -121,5 +162,5 @@ def log_final_artifacts(
         if best_model is not None:
             mlflow.pytorch.log_model(
                 pytorch_model=best_model,
-                artifact_path="model",
+                name="model",
             )

@@ -6,6 +6,49 @@
 
 DINOv3 fine-tuning setup for binary skin lesion classification on processed HAM10000.
 
+## Quick Start
+
+### Use Finetuned Model (without training)
+
+```bash
+dvc pull  # pulls data and models
+make ui-up  # starts the ui and api => http://localhost:7777
+```
+
+### Finetuning Smoke Test
+
+```bash
+dvc pull  # pulls data and models
+make mlflow-up
+make train-docker-smoke
+make ui-up  # starts the ui and api => http://localhost:7777
+make docker-down  # optional full Docker teardown
+```
+
+Without relying on DVC provided data:
+
+```bash
+make data-download
+make data-split
+make model-download  # download pretrained model
+make mlflow-up
+make train-docker-smoke
+make ui-up
+make docker-down  # optional full Docker teardown
+```
+
+### Full Finetuning
+
+```bash
+dvc pull
+make mlflow-up
+make train-docker
+dvc add models/finetuned/dinov3_ham10000/best_model.pt
+git add models/finetuned/dinov3_ham10000/best_model.pt.dvc
+git commit -m "Add best model checkpoint from training"
+make ui-up
+```
+
 ## Resources
 
 - 🚀 [Repository](https://github.com/7ben18/mse-mlops)
@@ -69,7 +112,7 @@ Normal workflow pulls this processed dataset from DVC. `make data-split` remains
 
 ## Makefile
 
-Use `make help` to list the available shortcuts. Common targets are `make install`, `make check`, `make test`, `make docs`, `make data-download`, and `make data-split`.
+Use `make help` to list the available shortcuts. Common targets are `make install`, `make check`, `make test`, `make docs`, `make data-download`, `make model-download`, `make data-split`, `make mlflow-up`, `make mlflow-stop`, `make train-docker`, `make train-docker-smoke`, `make ui-up`, `make ui-down`, and `make docker-down`.
 
 ## DVC Data Setup
 
@@ -114,11 +157,11 @@ Before the first training run:
 
 3. Download the pretrained backbone locally:
 
-`uv run python scripts/download_model.py`
+`make model-download`
 
-4. Start the local MLflow tracking server used by the default training config:
+4. Start MLflow:
 
-`uv run mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root file:./mlartifacts --host 127.0.0.1 --port 5000`
+`make mlflow-up`
 
 The default training config expects the downloaded model at:
 
@@ -128,19 +171,19 @@ If you want to track the downloaded backbone in DVC, run:
 
 `dvc add models/pretrained/dinov3-vits16-pretrain-lvd1689m`
 
-The default training config also expects MLflow at:
+The training config expects MLflow at:
 
-`tracking.mlflow_tracking_uri: http://127.0.0.1:5000`
+`tracking.mlflow_tracking_uri: http://mlflow:5001`
 
 If that server is not running, `scripts/train.py` fails before the first epoch starts.
 
-Run training:
-
-`uv run python scripts/train.py`
-
 Run training in Docker:
 
-`docker compose --profile train run --build --rm train`
+`make train-docker`
+
+For a one-epoch smoke test in Docker:
+
+`make train-docker-smoke`
 
 The train container is opt-in only. A plain `docker compose up` will not start training.
 
@@ -152,39 +195,46 @@ Docker training mounts these host folders into the container:
 
 That means edits to `config/train.yaml` apply to the next Docker training run without rebuilding the image. Rebuilds are still needed after code or dependency changes.
 
-On Apple Silicon Macs, local host training can use `mps` when `device: auto` resolves it, but Docker training currently does not expose MPS and should be assumed to run on CPU.
-
 Training settings:
 
 `config/train.yaml`
 
 Training artifacts are written under `models/finetuned/dinov3_ham10000/`:
 
-- `best_model.pt`: best checkpoint selected on validation ROC AUC.
+- `best_model.pt`: promoted local serving checkpoint selected on validation ROC AUC.
 - `checkpoints/epoch_*.pt`: resumable epoch checkpoints.
-- `history.json`: per-epoch training and validation metrics.
 
 ## MLflow Tracking Server
 
-The default training config requires a reachable MLflow tracking backend before training starts.
+MLflow now has a first-class Docker Compose service and is part of the default Docker stack.
 
-Start the local MLflow server used by this repo (SQLite backend + local artifact store):
+Start only MLflow if you just want to browse runs:
 
-`uv run mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root file:./mlartifacts --host 127.0.0.1 --port 5000`
 
-The SQLite database file is a local runtime artifact and is intentionally git-ignored.
+`make mlflow-up`
 
 Open the UI at:
 
-`http://127.0.0.1:5000`
+`http://127.0.0.1:5001`
 
-The default training config points to this server via:
+Stop only MLflow with:
 
-`tracking.mlflow_tracking_uri: http://127.0.0.1:5000`
+`make mlflow-stop`
 
-If you only want a quick local smoke test without running the server, override the tracking URI when you start training:
+This starts:
 
-`uv run python scripts/train.py --mlflow-tracking-uri file:./mlruns`
+- `mlflow`: MLflow UI and tracking server on `http://localhost:5001`
+
+MLflow state is stored in the same git-ignored repo paths:
+
+- `mlflow.db`
+- `mlartifacts/`
+
+So `make docker-down` still does not remove run history, because these are repo-local bind-mounted files, not Docker volumes.
+
+Training containers talk to MLflow at:
+
+`http://mlflow:5001`
 
 ## Serving
 
@@ -192,19 +242,42 @@ Serving now follows the main project layout instead of living as a nested standa
 
 Start the inference API and Streamlit UI from the repo root:
 
-`docker compose up --build`
+`make ui-up`
 
 This starts:
 
+- `mlflow`: MLflow on `http://localhost:5001`
 - `api`: FastAPI on `http://localhost:8000`
 - `ui`: Streamlit on `http://localhost:7777`
 
-The `train` service is still opt-in only and is not started by a plain `docker compose up`.
+The serving stack is now behind the `ui` profile, so a plain `docker compose up` does not try to start `api` before a model exists.
 
-For local development outside Docker:
+Stop the whole Docker stack with:
 
-- `uv run --group api python scripts/serve_api.py`
-- `uv run --group ui python scripts/serve_ui.py`
+`make docker-down`
+
+This removes:
+
+- Compose containers
+- the Compose network
+- named volumes such as `feedback_data`
+
+This does not remove:
+
+- repo-local `mlflow.db`
+- repo-local `mlartifacts/`
+- local Docker images
+
+Stop only the API and UI while keeping MLflow running:
+
+`make ui-down`
+
+Suggested Docker workflow:
+
+1. `make mlflow-up`
+2. `make train-docker`
+3. `make ui-up`
+4. `make docker-down`
 
 The API expects a trained checkpoint at:
 

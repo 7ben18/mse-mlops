@@ -6,18 +6,35 @@ feedback store.
 
 ## What it is
 
-Two root-level services in the main project:
+The serving stack is opt-in and starts only when you enable its profile:
 
 ```bash
-docker compose up --build
+make ui-up
 ```
 
 | Service | URL | Audience |
 |---------|-----|----------|
+| MLflow | http://localhost:5001 | Experiment browsing |
 | Streamlit UI | http://localhost:7777 | Patients + doctors |
 | FastAPI API | http://localhost:8000 | UI + external tooling |
 
-`train` is excluded from this command because it sits behind the `train` Compose profile.
+Without `make ui-up`, the serving stack stays off. Use `make mlflow-up` if you only want MLflow.
+
+Stop the whole Docker stack with:
+
+```bash
+make docker-down
+```
+
+`make docker-down` removes Compose containers, the Compose network, and named volumes such as
+`feedback_data`. It does not delete repo-local bind-mounted files like `mlflow.db` or
+`mlartifacts/`, and it does not remove local Docker images.
+
+Stop only the API and UI while keeping MLflow running:
+
+```bash
+make ui-down
+```
 
 The serving code is now part of the main Python package:
 
@@ -109,16 +126,17 @@ Every prediction and labeled upload is appended to `/feedback/feedback.jsonl` as
 
 Images uploaded via Tab 3 are stored at `/feedback/images/{image_id}{ext}`.
 
-The store is designed to be swapped out: replace `_save_feedback()` and `_load_feedback()` in
+The store is designed to be swapped out: replace `append_feedback_entry()`,
+`load_feedback_entries()`, and `write_feedback_entries()` in
 `mse_mlops.serving.feedback_store` to point at a database or MLflow artifact store.
 
 ## Configuration
 
-| Variable | Default | Service | Description |
-|----------|---------|---------|-------------|
-| `MODEL_PATH` | `/app/models/finetuned/dinov3_ham10000/best_model.pt` | API | Path to trained `.pt` checkpoint |
+| Variable | Compose Value | Service | Description |
+|----------|---------------|---------|-------------|
+| `MODEL_PATH` | `/app/models/finetuned/dinov3_ham10000/best_model.pt` | API | Path to trained `.pt` checkpoint inside the container |
 | `FEEDBACK_DIR` | `/feedback` | API | Root of the feedback volume |
-| `API_URL` | `http://api:8000` | UI | API base URL |
+| `API_URL` | `http://api:8000` | UI | API base URL inside the Compose network |
 | `DOCTOR_PASSWORD` | `doctor123` | UI | Password for doctor tabs — change in production |
 
 Set overrides in the repo-root `.env`:
