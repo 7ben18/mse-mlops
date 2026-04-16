@@ -12,13 +12,13 @@
         <meta name="author" content="mse-mlops contributors">
       
       
-        <link rel="canonical" href="https://7ben18.github.io/mse-mlops/data/">
+        <link rel="canonical" href="https://7ben18.github.io/mse-mlops/ray-tune/">
       
       
-        <link rel="prev" href="../pipeline/">
+        <link rel="prev" href="../mlflow-tracking/">
       
       
-        <link rel="next" href="../mlflow-tracking/">
+        <link rel="next" href="../serving/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Data Acquisition - mse-mlops</title>
+        <title>Ray Tune - mse-mlops</title>
       
     
     
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#data-acquisition" class="md-skip">
+        <a href="#ray-tune" class="md-skip">
           Skip to content
         </a>
       
@@ -118,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Data Acquisition
+              Ray Tune
             
           </span>
         </div>
@@ -315,37 +315,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Data Acquisition
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../data/" class="md-nav__link">
         
   
   
@@ -361,137 +334,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#ham10000-dataset" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        HAM10000 Dataset
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="HAM10000 Dataset">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Quick Start
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#output-structure" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Output Structure
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cli-options" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        CLI Options
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Requirements
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dinov3-pretrained-backbone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        DINOv3 Pretrained Backbone
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="DINOv3 Pretrained Backbone">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#quick-start_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Quick Start
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cli-options_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        CLI Options
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#output-structure_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Output Structure
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -527,10 +369,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../ray-tune/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ray Tune
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -546,6 +415,153 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-is" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it is
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#user-facing-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User-facing behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="User-facing behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#standalone-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Standalone config
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trial-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trial execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#best-trial-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best-trial export
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mlflow-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MLflow behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Outputs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker-and-ray-cluster-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker and Ray cluster usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Further reading
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -740,22 +756,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#ham10000-dataset" class="md-nav__link">
+  <a href="#what-it-is" class="md-nav__link">
     <span class="md-ellipsis">
       
-        HAM10000 Dataset
+        What it is
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="HAM10000 Dataset">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#user-facing-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User-facing behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="User-facing behavior">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
+  <a href="#standalone-config" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Start
+        Standalone config
       
     </span>
   </a>
@@ -763,10 +801,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#output-structure" class="md-nav__link">
+  <a href="#trial-execution" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output Structure
+        Trial execution
       
     </span>
   </a>
@@ -774,21 +812,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#cli-options" class="md-nav__link">
+  <a href="#best-trial-export" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CLI Options
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Requirements
+        Best-trial export
       
     </span>
   </a>
@@ -801,52 +828,57 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#dinov3-pretrained-backbone" class="md-nav__link">
+  <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        DINOv3 Pretrained Backbone
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="DINOv3 Pretrained Backbone">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#quick-start_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Quick Start
+        Configuration
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#cli-options_1" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#mlflow-behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CLI Options
+        MLflow behavior
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#output-structure_1" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#outputs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output Structure
+        Outputs
       
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#docker-and-ray-cluster-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker and Ray cluster usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Further reading
+      
+    </span>
+  </a>
   
 </li>
       
@@ -870,113 +902,225 @@
   
 
 
-<h1 id="data-acquisition">Data Acquisition<a class="headerlink" href="#data-acquisition" title="Permanent link">&para;</a></h1>
-<p>This project uses the HAM10000 dataset plus one pretrained DINOv3 backbone model.
-All acquisition scripts live under <code>scripts/</code> and can also be triggered through
-the project <code>Makefile</code>.</p>
-<hr />
-<h2 id="ham10000-dataset">HAM10000 Dataset<a class="headerlink" href="#ham10000-dataset" title="Permanent link">&para;</a></h2>
-<p><strong>Source:</strong> <a href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DBW86T">Harvard Dataverse</a>
-<strong>License:</strong> CC0 (Public Domain)
-<strong>Size:</strong> ~3.4 GB (10,015 dermatoscopic images + segmentation masks)</p>
-<h3 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Test extraction logic first (no download)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bash<span class="w"> </span>scripts/download_ham10000.sh<span class="w"> </span>--test-extract
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Check URL reachability</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>bash<span class="w"> </span>scripts/download_ham10000.sh<span class="w"> </span>--check-url
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Download and normalize full dataset (~3.4 GB)</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>bash<span class="w"> </span>scripts/download_ham10000.sh
+<h1 id="ray-tune">Ray Tune<a class="headerlink" href="#ray-tune" title="Permanent link">&para;</a></h1>
+<p>Stage 2 of the MLOps pipeline. Runs hyperparameter search against the existing DINOv3 training
+workflow, tracks tuning sessions in MLflow, and exports the best trial configuration.</p>
+<h2 id="what-it-is">What it is<a class="headerlink" href="#what-it-is" title="Permanent link">&para;</a></h2>
+<p>The tuning stack is opt-in and runs only when you start it explicitly.</p>
+<p>Local run:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/tune.py<span class="w"> </span>--config<span class="w"> </span>config/tune.yaml
 </span></code></pre></div>
-<h3 id="output-structure">Output Structure<a class="headerlink" href="#output-structure" title="Permanent link">&para;</a></h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>data/raw/ham10000/
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>├── HAM10000_metadata.csv                             ← Metadata (10,000+ rows)
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>├── HAM10000_images/                                  ← Dermoscopic images (10,015 files)
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>└── HAM10000_segmentations_lesion_tschandl/           ← Segmentation masks (10,015 files)
+<p>Docker run:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>--profile<span class="w"> </span>train<span class="w"> </span>run<span class="w"> </span>--build<span class="w"> </span>--rm<span class="w"> </span>tune
 </span></code></pre></div>
-<h3 id="cli-options">CLI Options<a class="headerlink" href="#cli-options" title="Permanent link">&para;</a></h3>
+<p>Tuning depends on:</p>
 <table>
 <thead>
 <tr>
-<th>Option</th>
-<th>Description</th>
+<th>Service</th>
+<th>URL</th>
+<th>Purpose</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>--test-extract</code></td>
-<td>Test extraction with dummy ZIPs (no download)</td>
+<td>MLflow</td>
+<td><a href="http://localhost:5001">http://localhost:5001</a></td>
+<td>Parent/trial run tracking</td>
 </tr>
 <tr>
-<td><code>--check-url</code></td>
-<td>Check if URL is reachable and show file size</td>
-</tr>
-<tr>
-<td><code>--help</code></td>
-<td>Show help message</td>
-</tr>
-<tr>
-<td><em>(no args)</em></td>
-<td>Download and extract full dataset</td>
+<td>Ray Tune</td>
+<td>local process or Ray cluster</td>
+<td>Trial orchestration</td>
 </tr>
 </tbody>
 </table>
-<h3 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h3>
+<p>Before a local run, start MLflow separately and use a local tracking URI in <code>config/tune.yaml</code>
+or via config edits:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>run<span class="w"> </span>mlflow<span class="w"> </span>server<span class="w"> </span>--host<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </span>--port<span class="w"> </span><span class="m">5001</span><span class="w"> </span>--backend-store-uri<span class="w"> </span>sqlite:///mlflow.db<span class="w"> </span>--default-artifact-root<span class="w"> </span>./mlartifacts
+</span></code></pre></div>
+<p>Without an MLflow server, tuning fails before the first trial starts.</p>
+<p>The tuning code is part of the main Python package:</p>
 <ul>
-<li><code>curl</code> — for downloading</li>
-<li><code>unzip</code> — for extracting</li>
-<li><code>bash</code> — for running</li>
+<li><code>mse_mlops.tune</code></li>
+<li><code>mse_mlops.train</code></li>
+<li><code>mse_mlops.tracking.mlflow_tracker</code></li>
 </ul>
-<h2 id="dinov3-pretrained-backbone">DINOv3 Pretrained Backbone<a class="headerlink" href="#dinov3-pretrained-backbone" title="Permanent link">&para;</a></h2>
-<p><strong>Source:</strong> <a href="https://huggingface.co/facebook/dinov3-vits16-pretrain-lvd1689m">Hugging Face</a>
-<strong>Default model ID:</strong> <code>facebook/dinov3-vits16-pretrain-lvd1689m</code></p>
-<p>The training pipeline expects the pretrained backbone to be cached locally.
-You must request access on Hugging Face before downloading. The project stores the
-backbone under <code>models/pretrained/</code>.</p>
-<h3 id="quick-start_1">Quick Start<a class="headerlink" href="#quick-start_1" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Log in to Hugging Face</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>hf<span class="w"> </span>auth<span class="w"> </span>login
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Download the default model</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>make<span class="w"> </span>model-download
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Download a different model or change output location</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/download_model.py<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span>--model-id<span class="w"> </span>facebook/dinov3-vits16-pretrain-lvd1689m<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span>--output-dir<span class="w"> </span>models/pretrained/my-model
+<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>scripts/tune.py
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  -&gt; mse_mlops.tune.load_tune_config(...)
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  -&gt; mse_mlops.tune.run_tuning(config)
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>      -&gt; start MLflow parent run
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>      -&gt; initialize Ray / connect to Ray cluster
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>      -&gt; build Ray search space from config/tune.yaml
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>      -&gt; run N trials
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>          -&gt; reuse mse_mlops.train.run_training(...)
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>          -&gt; log one MLflow child run per trial
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>          -&gt; report per-epoch metrics back to Ray Tune
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>      -&gt; select best trial
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>      -&gt; write best_config.yaml + leaderboard.json
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>      -&gt; log best-trial artifacts to MLflow
 </span></code></pre></div>
-<h3 id="cli-options_1">CLI Options<a class="headerlink" href="#cli-options_1" title="Permanent link">&para;</a></h3>
+<p>The tuning path does not implement a second training pipeline. Each trial reuses the same training
+codepath as <code>scripts/train.py</code>.</p>
+<hr />
+<h2 id="user-facing-behavior">User-facing behavior<a class="headerlink" href="#user-facing-behavior" title="Permanent link">&para;</a></h2>
+<h3 id="standalone-config">Standalone config<a class="headerlink" href="#standalone-config" title="Permanent link">&para;</a></h3>
+<p>Tuning uses <code>config/tune.yaml</code> and does not inherit from <code>config/train.yaml</code>.</p>
+<p>It defines:</p>
+<ul>
+<li><code>base_run</code> — fixed model/data/training/tracking settings for each trial</li>
+<li><code>search_space</code> — tunable parameters and distributions</li>
+<li><code>tune</code> — metric, mode, scheduler, sampling, concurrency, resources, and Ray address</li>
+<li><code>output</code> — Ray results directory and exported best-config/leaderboard paths</li>
+</ul>
+<h3 id="trial-execution">Trial execution<a class="headerlink" href="#trial-execution" title="Permanent link">&para;</a></h3>
+<p>Each Ray trial:</p>
+<ul>
+<li>merges sampled hyperparameters into <code>base_run</code></li>
+<li>resolves repo-relative dataset/model paths before starting training</li>
+<li>writes trial-local checkpoints under the configured Ray results tree</li>
+<li>logs metrics and artifacts into MLflow as a child run</li>
+</ul>
+<h3 id="best-trial-export">Best-trial export<a class="headerlink" href="#best-trial-export" title="Permanent link">&para;</a></h3>
+<p>After completion, tuning writes:</p>
+<ul>
+<li><code>reports/tuning/best_config.yaml</code></li>
+<li><code>reports/tuning/leaderboard.json</code></li>
+</ul>
+<p>The best trial's promoted checkpoint is also logged to MLflow as a tuning artifact.</p>
+<hr />
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<p>Primary config file:</p>
+<ul>
+<li><code>config/tune.yaml</code></li>
+</ul>
+<p>Key fields:</p>
 <table>
 <thead>
 <tr>
-<th>Option</th>
-<th>Default</th>
+<th>Key</th>
+<th>Example</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>--model-id</code></td>
-<td><code>facebook/dinov3-vits16-pretrain-lvd1689m</code></td>
-<td>Hugging Face model ID to download</td>
+<td><code>base_run.model.model_name</code></td>
+<td><code>models/pretrained/dinov3-vits16-pretrain-lvd1689m</code></td>
+<td>Backbone path or HF model ID</td>
 </tr>
 <tr>
-<td><code>--output-dir</code></td>
-<td><code>models/pretrained/dinov3-vits16-pretrain-lvd1689m</code></td>
-<td>Directory where model files are saved</td>
+<td><code>base_run.data.metadata_csv</code></td>
+<td><code>data/processed/ham10000/metadata.csv</code></td>
+<td>Processed metadata table</td>
+</tr>
+<tr>
+<td><code>base_run.data.images_dir</code></td>
+<td><code>data/processed/ham10000/HAM10000_images</code></td>
+<td>Split image root</td>
+</tr>
+<tr>
+<td><code>base_run.tracking.mlflow_tracking_uri</code></td>
+<td><code>http://mlflow:5001</code></td>
+<td>MLflow endpoint</td>
+</tr>
+<tr>
+<td><code>base_run.tracking.mlflow_experiment_name</code></td>
+<td><code>mse-mlops-tuning</code></td>
+<td>Dedicated tuning experiment</td>
+</tr>
+<tr>
+<td><code>search_space.training.lr</code></td>
+<td><code>loguniform</code></td>
+<td>Learning-rate distribution</td>
+</tr>
+<tr>
+<td><code>search_space.training.batch_size</code></td>
+<td><code>choice</code></td>
+<td>Batch-size candidates</td>
+</tr>
+<tr>
+<td><code>tune.metric</code></td>
+<td><code>val_roc_auc</code></td>
+<td>Objective optimized by Ray Tune</td>
+</tr>
+<tr>
+<td><code>tune.mode</code></td>
+<td><code>max</code></td>
+<td>Optimization direction</td>
+</tr>
+<tr>
+<td><code>tune.num_samples</code></td>
+<td><code>4</code></td>
+<td>Number of sampled trials</td>
+</tr>
+<tr>
+<td><code>tune.scheduler</code></td>
+<td><code>fifo</code></td>
+<td>Trial scheduler</td>
+</tr>
+<tr>
+<td><code>tune.resources</code></td>
+<td><code>{cpu: 1, gpu: 0}</code></td>
+<td>Per-trial Ray resources</td>
+</tr>
+<tr>
+<td><code>tune.ray_address</code></td>
+<td><code>null</code></td>
+<td>Local Ray or remote cluster address</td>
+</tr>
+<tr>
+<td><code>output.ray_results_dir</code></td>
+<td><code>reports/ray_results</code></td>
+<td>Ray output root</td>
 </tr>
 </tbody>
 </table>
-<h3 id="output-structure_1">Output Structure<a class="headerlink" href="#output-structure_1" title="Permanent link">&para;</a></h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>models/pretrained/dinov3-vits16-pretrain-lvd1689m/
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>├── config.json
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>├── model.safetensors
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>└── preprocessor_config.json
+<p>Supported search-space types:</p>
+<ul>
+<li><code>choice</code></li>
+<li><code>uniform</code></li>
+<li><code>loguniform</code></li>
+<li><code>randint</code></li>
+</ul>
+<h2 id="mlflow-behavior">MLflow behavior<a class="headerlink" href="#mlflow-behavior" title="Permanent link">&para;</a></h2>
+<p>Tuning logs:</p>
+<ul>
+<li>one parent run for the overall tuning session</li>
+<li>one child run per Ray trial</li>
+<li>per-epoch trial metrics reported through the shared training loop</li>
+<li>summary artifacts:</li>
+<li><code>tuning/session.json</code></li>
+<li><code>tuning/best_config.yaml</code></li>
+<li><code>tuning/leaderboard.json</code></li>
+<li><code>tuning/best_model/*</code></li>
+</ul>
+<p>Use a separate MLflow experiment for tuning, for example <code>mse-mlops-tuning</code>.</p>
+<h2 id="outputs">Outputs<a class="headerlink" href="#outputs" title="Permanent link">&para;</a></h2>
+<p>Local files written by tuning include:</p>
+<ul>
+<li>Ray result state under <code>reports/ray_results/</code></li>
+<li>exported best config at <code>reports/tuning/best_config.yaml</code></li>
+<li>exported leaderboard at <code>reports/tuning/leaderboard.json</code></li>
+<li>per-trial checkpoints under the Ray results tree</li>
+</ul>
+<p>These outputs are not used directly by serving. Serving still expects a promoted checkpoint in
+<code>models/finetuned/.../best_model.pt</code>.</p>
+<h2 id="docker-and-ray-cluster-usage">Docker and Ray cluster usage<a class="headerlink" href="#docker-and-ray-cluster-usage" title="Permanent link">&para;</a></h2>
+<p>Docker tuning reuses the same image as training and adds a dedicated <code>tune</code> service in
+<code>compose.yaml</code>.</p>
+<p>Run it with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>--profile<span class="w"> </span>train<span class="w"> </span>run<span class="w"> </span>--build<span class="w"> </span>--rm<span class="w"> </span>tune
 </span></code></pre></div>
-<p>The default config (<code>config/train.yaml</code>) expects the model at this exact path. After the
-download finishes, add it to DVC yourself if you want to track it:</p>
-<p><code>dvc add models/pretrained/dinov3-vits16-pretrain-lvd1689m</code></p>
+<p>For multi-node Ray, set <code>tune.ray_address</code> in <code>config/tune.yaml</code> to your cluster address before
+starting the run.</p>
+<h2 id="further-reading">Further reading<a class="headerlink" href="#further-reading" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Pipeline overview: <a href="../pipeline/">pipeline.md</a></li>
+<li>MLflow parent/child tracking model: <a href="../mlflow-tracking/">mlflow-tracking.md</a></li>
+<li>Source package: <code>src/mse_mlops/tune.py</code></li>
+</ul>
 
 
 
