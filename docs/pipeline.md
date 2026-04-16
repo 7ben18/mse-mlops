@@ -68,8 +68,8 @@ flowchart TD
 - **Data Versioning (DVC)** — Tracks and reproduces dataset snapshots
 - **Code Versioning (Git)** — Version control for all training code
 - **Training (PyTorch)** — Fine-tunes a CNN classifier on the dataset
-- **HP Tuning (Ray Tune)** — Distributed hyperparameter optimization
-- **Experiment Tracking (MLFlow)** — Logs runs, metrics, and artifacts
+- **HP Tuning (Ray Tune)** — Distributed hyperparameter optimization via `scripts/tune.py`
+- **Experiment Tracking (MLFlow)** — Logs standard training runs plus parent/child tuning runs
 - **Model Export (ONNX)** — Serializes the model in a framework-agnostic format
 - **Model Registry (MLFlow)** — Stores and stages versioned production models
 - **Deployment (Docker)** — Containerizes the model for reproducible serving

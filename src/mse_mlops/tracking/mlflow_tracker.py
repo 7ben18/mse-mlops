@@ -51,7 +51,11 @@ def _coerce_tags(raw_tags: object) -> dict[str, str]:
     if raw_tags is None:
         return {}
     if isinstance(raw_tags, Mapping):
-        return {str(key): str(value) for key, value in raw_tags.items()}
+        return {
+            str(key): str(value)
+            for key, value in raw_tags.items()
+            if value is not None
+        }
     if isinstance(raw_tags, str):
         raw_tags = raw_tags.strip()
         if not raw_tags:
@@ -59,7 +63,11 @@ def _coerce_tags(raw_tags: object) -> dict[str, str]:
         parsed = json.loads(raw_tags)
         if not isinstance(parsed, dict):
             raise ValueError("--mlflow-tags must be a JSON object.")
-        return {str(key): str(value) for key, value in parsed.items()}
+        return {
+            str(key): str(value)
+            for key, value in parsed.items()
+            if value is not None
+        }
     raise ValueError("--mlflow-tags must be a JSON object string or mapping.")
 
 
@@ -67,7 +75,7 @@ def _sanitize_params(payload: dict[str, object]) -> dict[str, object]:
     sanitized: dict[str, object] = {}
     for key, value in payload.items():
         if isinstance(value, Path):
-            sanitized[key] = str(value)
+            sanitized[key] = value.as_posix()
         elif isinstance(value, (dict, list, tuple)):
             sanitized[key] = json.dumps(value, sort_keys=True)
         else:
@@ -75,11 +83,9 @@ def _sanitize_params(payload: dict[str, object]) -> dict[str, object]:
     return sanitized
 
 
-@contextmanager
-def init_mlflow(config: TrainTrackingConfig):
-    tracking_uri = str(config.mlflow_tracking_uri).strip()
-    experiment_name = str(config.mlflow_experiment_name).strip()
-
+def configure_mlflow(tracking_uri: str, experiment_name: str) -> None:
+    tracking_uri = tracking_uri.strip()
+    experiment_name = experiment_name.strip()
     if not tracking_uri:
         raise ValueError("--mlflow-tracking-uri must be set.")
     if not experiment_name:
@@ -87,11 +93,50 @@ def init_mlflow(config: TrainTrackingConfig):
 
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment(experiment_name)
+
+
+@contextmanager
+def start_run(
+    *,
+    tracking_uri: str,
+    experiment_name: str,
+    run_name: str | None = None,
+    tags: Mapping[str, object] | None = None,
+    nested: bool = False,
+):
+    configure_mlflow(tracking_uri, experiment_name)
+    normalized_run_name = run_name.strip() if isinstance(run_name, str) else None
+    normalized_tags = _coerce_tags(tags)
+
+    with mlflow.start_run(
+        run_name=normalized_run_name or None,
+        tags=normalized_tags,
+        nested=nested,
+    ):
+        yield
+
+
+@contextmanager
+def init_mlflow(
+    config: TrainTrackingConfig,
+    *,
+    nested: bool = False,
+    tags: Mapping[str, object] | None = None,
+):
     run_name_value = config.mlflow_run_name
     run_name = run_name_value.strip() if isinstance(run_name_value, str) else None
-    tags = _coerce_tags(config.mlflow_tags)
+    merged_tags = {
+        **_coerce_tags(config.mlflow_tags),
+        **_coerce_tags(tags),
+    }
 
-    with mlflow.start_run(run_name=run_name or None, tags=tags):
+    with start_run(
+        tracking_uri=str(config.mlflow_tracking_uri),
+        experiment_name=str(config.mlflow_experiment_name),
+        run_name=run_name,
+        tags=merged_tags,
+        nested=nested,
+    ):
         yield
 
 
@@ -150,6 +195,8 @@ def log_summary_metrics(metrics: dict[str, float]) -> None:
 def log_final_artifacts(
     best_model: nn.Module | None,
     history_payload: list[dict[str, object]],
+    *,
+    log_model: bool = True,
 ) -> None:
     with tempfile.TemporaryDirectory(prefix="mse-mlops-mlflow-") as tmp_dir:
         tmp_root = Path(tmp_dir)
@@ -159,8 +206,32 @@ def log_final_artifacts(
             json.dump(history_payload, file, indent=2)
         mlflow.log_artifact(str(history_path), artifact_path="training")
 
-        if best_model is not None:
+        if best_model is not None and log_model:
             mlflow.pytorch.log_model(
                 pytorch_model=best_model,
                 name="model",
             )
+
+
+def log_dict_artifact(
+    payload: dict[str, object] | list[dict[str, object]],
+    *,
+    artifact_path: str,
+    filename: str,
+) -> None:
+    with tempfile.TemporaryDirectory(prefix="mse-mlops-mlflow-") as tmp_dir:
+        output_path = Path(tmp_dir) / filename
+        with output_path.open("w", encoding="utf-8") as file:
+            json.dump(payload, file, indent=2, sort_keys=True)
+        mlflow.log_artifact(str(output_path), artifact_path=artifact_path)
+
+
+def log_local_artifact(path: Path | str, *, artifact_path: str) -> None:
+    mlflow.log_artifact(str(path), artifact_path=artifact_path)
+
+
+def get_active_run_id() -> str | None:
+    active_run = mlflow.active_run()
+    if active_run is None:
+        return None
+    return str(active_run.info.run_id)

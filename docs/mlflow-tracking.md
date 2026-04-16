@@ -1,140 +1,107 @@
 # MLflow Tracking
 
-Stage 3 of the MLOps pipeline. Captures training runs from `scripts/train.py` and `mse_mlops.train`
-in MLflow, including
-configuration, epoch metrics, summary metrics, and model/history artifacts.
+MLflow is the central tracking backend for both standard training and Ray Tune sessions.
 
-## What it is
+## What is tracked
 
-Training is MLflow-enabled by default and always runs inside an MLflow run context.
-Docker training talks to MLflow at `http://mlflow:5001`.
+- `scripts/train.py` starts a single MLflow run for one training job.
+- `scripts/tune.py` starts one parent MLflow run for the tuning session.
+- Each Ray Tune trial starts its own nested child run.
 
-Primary Docker path:
+Docker services talk to MLflow at `http://mlflow:5001`. Local runs can point to `http://127.0.0.1:5001`.
+
+## Core flow
+
+```text
+scripts/train.py
+  -> mse_mlops.train.run_training(config)
+      -> tracking.init_mlflow(...)
+      -> tracking.log_run_params(...)
+      -> epoch loop
+          -> tracking.log_epoch_metrics(..., step=epoch)
+      -> tracking.log_summary_metrics(...)
+      -> tracking.log_final_artifacts(...)
+
+scripts/tune.py
+  -> mse_mlops.tune.run_tuning(config)
+      -> tracking.start_run(...)               # parent tuning run
+      -> Ray Tune trial orchestration
+          -> mse_mlops.train.run_training(...)
+              -> tracking.init_mlflow(..., tags={"mlflow.parentRunId": ...})
+      -> tracking.log_dict_artifact(...)       # best config, leaderboard
+      -> tracking.log_local_artifact(...)      # best trial model checkpoint
+```
+
+## Training runs
+
+Each normal training run logs:
+
+- Parameters: dataset paths, split settings, optimizer/scheduler settings, execution controls, train/val counts, class names.
+- Per-epoch metrics: `train_loss`, `train_acc`, `val_loss`, `val_acc`, `val_precision`, `val_recall`, `val_f1`, `val_roc_auc`, `optimizer_steps`.
+- Summary metrics: `best_val_roc_auc`, `best_epoch`.
+- Artifacts:
+  - `training/history.json`
+  - `model/` MLflow model artifact for the promoted best checkpoint
+
+Local checkpoint files are still written under `models/finetuned/.../checkpoints/`, and the promoted serving checkpoint remains `best_model.pt`.
+
+## Tuning runs
+
+Each tuning session logs one parent run plus one nested child run per trial.
+
+Parent run artifacts:
+
+- `tuning/session.json`
+- `tuning/best_config.yaml`
+- `tuning/leaderboard.json`
+- `tuning/best_model/*` copied from the best trial's promoted checkpoint
+
+Nested child trial runs log:
+
+- trial-specific parameters after config merge
+- per-epoch metrics from the shared training codepath
+- summary metrics for the trial
+- `training/history.json`
+
+Only the best trial's promoted checkpoint is logged back to MLflow as an artifact.
+
+## Configuration
+
+Training config keys:
+
+- `tracking.mlflow_tracking_uri`
+- `tracking.mlflow_experiment_name`
+- `tracking.mlflow_run_name`
+- `tracking.mlflow_tags`
+
+Tuning config:
+
+- `config/tune.yaml` is standalone and defines `base_run`, `search_space`, `tune`, and `output`.
+- The recommended tuning experiment name is separate from standard training, for example `mse-mlops-tuning`.
+
+## Docker usage
+
+Start MLflow:
 
 ```bash
 make mlflow-up
 ```
 
-Open UI:
-
-`http://127.0.0.1:5001`
-
-Stop only MLflow:
-
-```bash
-make mlflow-stop
-```
-
-MLflow state is stored in the same git-ignored repo paths:
-
-- `mlflow.db`
-- `mlartifacts/`
-
-`make docker-down` does not delete these files, because they live on the host as bind-mounted
-repo state rather than Docker volumes.
-
-Run Docker training against the in-stack tracker:
+Run standard training:
 
 ```bash
 make train-docker
 ```
 
-For a one-epoch Docker smoke test:
+Run tuning:
 
 ```bash
-make train-docker-smoke
+docker compose --profile train run --build --rm tune
 ```
 
-Tracking code lives in:
+MLflow state stays in the repo-local paths:
 
-- `scripts/train.py`
-- `mse_mlops.tracking.mlflow_tracker`
-- `mse_mlops.train`
+- `mlflow.db`
+- `mlartifacts/`
 
-## Architecture
-
-```text
-scripts/train.py
-  -> mse_mlops.train.run_training(config)
-      -> init_mlflow(config)
-      -> set_tracking_uri
-      -> set_experiment
-      -> start_run
-      -> log_run_params(...)
-      -> epoch loop
-          -> log_epoch_metrics(..., step=epoch)
-      -> finalize
-          -> log_summary_metrics(...)
-          -> log_final_artifacts(...)
-              - training/history.json
-              - model/ (mlflow.pytorch.log_model)
-```
-
-The run closes automatically when the MLflow context exits.
-
----
-
-## What is logged
-
-### Parameters (once per run)
-
-- Dataset/split config (`metadata_csv`, `images_dir`, `label_column`, split names, fractions/samples)
-- Training config (`epochs`, `batch_size`, `lr`, scheduler settings, etc.)
-- Execution controls (`device`, `resume_from_checkpoint`, `save_total_limit`)
-- Derived metadata (`train_count`, `val_count`, `class_names`)
-
-### Metrics (per epoch)
-
-- `train_loss`, `train_acc`
-- `val_loss`, `val_acc`, `val_precision`, `val_recall`, `val_f1`, `val_roc_auc`
-- `optimizer_steps`
-
-### Summary metrics (run-level)
-
-- `best_val_roc_auc`
-- `best_epoch`
-
-### Artifacts
-
-- `training/history.json`
-- `model/` MLflow model artifact from:
-
-```python
-mlflow.pytorch.log_model(
-    pytorch_model=model,
-    name="model",
-)
-```
-
-## Configuration
-
-`config/train.yaml`:
-
-| Key | Required | Example |
-|-----|----------|---------|
-| `tracking.mlflow_tracking_uri` | yes | `http://mlflow:5001` |
-| `tracking.mlflow_experiment_name` | yes | `mse-mlops-training` |
-| `tracking.mlflow_run_name` | no | `baseline-2026-03-22` |
-| `tracking.mlflow_tags` | no | `{project: mse-mlops}` |
-
-CLI overrides:
-
-- `--mlflow-tracking-uri`
-- `--mlflow-experiment-name`
-- `--mlflow-run-name`
-- `--mlflow-tags`
-
-If tracking URI or experiment name is empty, training fails fast with `ValueError`.
-
-## Checkpoint and resume
-
-- Training promotes the selected serving checkpoint to `models/finetuned/.../best_model.pt`.
-- Local epoch checkpoints remain at `models/finetuned/.../checkpoints/epoch_XXX.pt`.
-- Epoch checkpoints store `history` and optional `best_model_state` for resume/debug.
-- The training CLI prints a `dvc add models/finetuned/.../best_model.pt` reminder after a successful run.
-- Resume restores model/optimizer/scheduler and metric history.
-
-## Model Registry note
-
-This stage does not auto-register models.
-You can register later from a run artifact (for example `runs:/<RUN_ID>/model`) after manual validation.
+`make docker-down` does not delete them.

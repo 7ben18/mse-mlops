@@ -5,6 +5,7 @@ import yaml
 REPO_FILES = [
     "README.md",
     "compose.yaml",
+    "config/tune.yaml",
     "config/train.yaml",
     "docs/data.md",
     "docs/index.md",
@@ -15,9 +16,11 @@ REPO_FILES = [
     "docs/serving-architecture.md",
     "mkdocs.yml",
     "scripts/download_model.py",
+    "scripts/tune.py",
     "scripts/train.py",
     "src/mse_mlops/modeling.py",
     "src/mse_mlops/serving/inference.py",
+    "src/mse_mlops/tune.py",
     "src/mse_mlops/train.py",
 ]
 
@@ -74,6 +77,7 @@ def test_compose_has_default_mlflow_service_and_docker_training_uses_it():
     assert "localhost:5001,127.0.0.1:5001,mlflow:5001" in mlflow_service["command"]
 
     train_service = services["train"]
+    tune_service = services["tune"]
     assert train_service["depends_on"]["mlflow"]["condition"] == "service_healthy"
     assert train_service["command"] == [
         "uv",
@@ -83,6 +87,17 @@ def test_compose_has_default_mlflow_service_and_docker_training_uses_it():
         "--no-dev",
         "python",
         "scripts/train.py",
+    ]
+    assert tune_service["profiles"] == ["train"]
+    assert tune_service["depends_on"]["mlflow"]["condition"] == "service_healthy"
+    assert tune_service["command"] == [
+        "uv",
+        "run",
+        "--no-sync",
+        "--frozen",
+        "--no-dev",
+        "python",
+        "scripts/tune.py",
     ]
     assert train_config["tracking"]["mlflow_tracking_uri"] == "http://mlflow:5001"
 

@@ -49,6 +49,73 @@ git commit -m "Add best model checkpoint from training"
 make ui-up
 ```
 
+### Hyperparameter Tuning
+
+```bash
+dvc pull
+make mlflow-up
+docker compose --profile train run --build --rm tune
+```
+
+## Run Without Docker
+
+Install the project dependencies first:
+
+```powershell
+uv sync --group api --group ui --group dev
+```
+
+Then run each part directly from the repo root:
+
+- Data download: `bash scripts/download_ham10000.sh`
+- Data processing: `uv run python scripts/data_processing.py`
+- Pretrained model download: `uv run python scripts/download_model.py`
+- MLflow tracking server:
+
+```powershell
+uv run mlflow server --host 127.0.0.1 --port 5001 --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlartifacts
+```
+
+- Training against the local MLflow server:
+
+```powershell
+uv run python scripts/train.py --mlflow-tracking-uri http://127.0.0.1:5001
+```
+
+- One-epoch local smoke test on CPU:
+
+```powershell
+uv run python scripts/train.py --mlflow-tracking-uri http://127.0.0.1:5001 --epochs 1 --max-train-batches 1 --max-val-batches 1 --device cpu
+```
+
+- Ray Tune search:
+
+```powershell
+uv run python scripts/tune.py --config config/tune.yaml
+```
+
+- Inference API:
+
+```powershell
+$env:FEEDBACK_DIR = "reports/feedback"
+uv run --group api python scripts/serve_api.py
+```
+
+- Streamlit UI:
+
+```powershell
+$env:API_URL = "http://127.0.0.1:8000"
+uv run --group ui python scripts/serve_ui.py
+```
+
+Local URLs:
+
+- MLflow: `http://127.0.0.1:5001`
+- API: `http://127.0.0.1:8000`
+- UI: `http://127.0.0.1:7777`
+
+If you use the checked-in `config/train.yaml`, local training must override `tracking.mlflow_tracking_uri`, because the default config points at the Docker service name `http://mlflow:5001`.
+
 ## Resources
 
 - 🚀 [Repository](https://github.com/7ben18/mse-mlops)
@@ -185,6 +252,10 @@ For a one-epoch smoke test in Docker:
 
 `make train-docker-smoke`
 
+Run Ray Tune in Docker:
+
+`docker compose --profile train run --build --rm tune`
+
 The train container is opt-in only. A plain `docker compose up` will not start training.
 
 Docker training mounts these host folders into the container:
@@ -199,10 +270,16 @@ Training settings:
 
 `config/train.yaml`
 
+Tuning settings:
+
+`config/tune.yaml`
+
 Training artifacts are written under `models/finetuned/dinov3_ham10000/`:
 
 - `best_model.pt`: promoted local serving checkpoint selected on validation ROC AUC.
 - `checkpoints/epoch_*.pt`: resumable epoch checkpoints.
+
+Tuning writes Ray trial outputs and leaderboard exports under `reports/`.
 
 ## MLflow Tracking Server
 

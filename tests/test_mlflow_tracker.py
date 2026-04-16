@@ -91,3 +91,42 @@ def test_log_final_artifacts_is_independent_of_local_output_dir(monkeypatch):
     assert len(logged_artifacts) == 1
     assert logged_artifacts[0][1] == "training"
     assert logged_models == []
+
+
+def test_init_mlflow_supports_nested_runs(monkeypatch):
+    captured: dict[str, object] = {}
+
+    class DummyRun:
+        def __enter__(self):
+            return None
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    def fake_set_tracking_uri(uri: str) -> None:
+        captured["tracking_uri"] = uri
+
+    def fake_set_experiment(name: str) -> None:
+        captured["experiment_name"] = name
+
+    def fake_start_run(*, run_name=None, tags=None, nested=False):
+        captured["run_name"] = run_name
+        captured["tags"] = tags
+        captured["nested"] = nested
+        return DummyRun()
+
+    monkeypatch.setattr(mlflow_tracker.mlflow, "set_tracking_uri", fake_set_tracking_uri)
+    monkeypatch.setattr(mlflow_tracker.mlflow, "set_experiment", fake_set_experiment)
+    monkeypatch.setattr(mlflow_tracker.mlflow, "start_run", fake_start_run)
+
+    with mlflow_tracker.init_mlflow(
+        build_config(),
+        nested=True,
+        tags={"ray_trial_id": "trial-1"},
+    ):
+        pass
+
+    assert captured["tracking_uri"] == "http://mlflow:5001"
+    assert captured["experiment_name"] == "mse-mlops-training"
+    assert captured["nested"] is True
+    assert captured["tags"]["ray_trial_id"] == "trial-1"

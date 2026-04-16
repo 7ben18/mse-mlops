@@ -89,5 +89,26 @@ services:
       - ./data:/app/data
       - ./models:/app/models
 
+  tune:
+    profiles: ["train"]
+    build:
+      context: .
+      dockerfile: docker/train.Dockerfile
+    image: mse-mlops:latest
+    pull_policy: never
+    working_dir: /app
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    command: ["uv", "run", "--no-sync", "--frozen", "--no-dev", "python", "scripts/tune.py"]
+    environment:
+      HF_HOME: /app/.cache/huggingface
+      TRANSFORMERS_CACHE: /app/.cache/huggingface
+    volumes:
+      - ./config:/app/config:ro
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./reports:/app/reports
+
 volumes:
   feedback_data:

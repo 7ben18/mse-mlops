@@ -14,6 +14,7 @@ nav:
   - Pipeline: pipeline.md
   - Data Acquisition: data.md
   - MLflow Tracking: mlflow-tracking.md
+  - Ray Tune: ray-tune.md
   - Serving: serving.md
   - Serving Architecture: serving-architecture.md
   - API Reference: modules.md

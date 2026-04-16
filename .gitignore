@@ -177,3 +177,4 @@ CLAUDE.md
 
 # model checkpoints
 models/finetuned/dinov3_ham10000/checkpoints/*.pt
+reports/

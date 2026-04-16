@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import random
+from collections.abc import Callable
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -71,6 +72,29 @@ class BestModelState:
     model_name: str
     image_size: int
     freeze_backbone: bool
+
+
+@dataclass
+class TrainingRunResult:
+    config: TrainConfig
+    history: list[Metrics]
+    best_model_state: BestModelState | None
+    promoted_model_path: Path | None
+    checkpoint_dir: Path
+    train_count: int
+    val_count: int
+
+    @property
+    def best_metric_name(self) -> str | None:
+        if self.best_model_state is None:
+            return None
+        return self.best_model_state.metric_name
+
+    @property
+    def best_metric_value(self) -> float | None:
+        if self.best_model_state is None:
+            return None
+        return self.best_model_state.metric_value
 
 
 @dataclass
@@ -203,9 +227,21 @@ def load_train_config(
         if config_path is None
         else Path(config_path)
     )
-    config_values = _flatten_train_config_sections(
-        _read_train_config_mapping(resolved_config_path)
+    return load_train_config_from_mapping(
+        config_data=_read_train_config_mapping(resolved_config_path),
+        config_path=resolved_config_path,
+        overrides=overrides,
     )
+
+
+def load_train_config_from_mapping(
+    config_data: dict[str, object],
+    *,
+    config_path: Path | str,
+    overrides: dict[str, object] | None = None,
+) -> TrainConfig:
+    resolved_config_path = Path(config_path)
+    config_values = _flatten_train_config_sections(config_data)
 
     if overrides:
         if "config" in overrides:
@@ -1041,6 +1077,8 @@ def finalize_training_run(
     history: list[Metrics],
     best_model_state: BestModelState | None,
     output_dir: Path,
+    *,
+    log_model_artifact: bool = True,
 ) -> Path | None:
     history_payload = [asdict(item) for item in history]
     best_model_for_mlflow = None
@@ -1065,19 +1103,35 @@ def finalize_training_run(
             best_model_state=best_model_state,
         )
 
-    tracking.log_final_artifacts(
-        best_model=best_model_for_mlflow, history_payload=history_payload
-    )
+    final_artifact_kwargs = {
+        "best_model": best_model_for_mlflow,
+        "history_payload": history_payload,
+    }
+    if not log_model_artifact:
+        final_artifact_kwargs["log_model"] = False
+    tracking.log_final_artifacts(**final_artifact_kwargs)
     return promoted_model_path
 
 
-def run_training(config: TrainConfig) -> None:
+def _run_training_impl(
+    config: TrainConfig,
+    *,
+    report_callback: Callable[[dict[str, float]], None] | None = None,
+    nested_mlflow: bool = False,
+    extra_mlflow_tags: dict[str, object] | None = None,
+    log_model_artifact: bool = True,
+) -> TrainingRunResult:
     validate_config(config)
 
     set_seed(config.seed)
     checkpoint_dir = prepare_checkpoint_dir(config.output_dir)
+    mlflow_context_kwargs: dict[str, object] = {}
+    if nested_mlflow:
+        mlflow_context_kwargs["nested"] = True
+    if extra_mlflow_tags:
+        mlflow_context_kwargs["tags"] = extra_mlflow_tags
 
-    with tracking.init_mlflow(config):
+    with tracking.init_mlflow(config, **mlflow_context_kwargs):
         device = resolve_device(config.device)
         print_run_configuration(config, device)
 
@@ -1192,6 +1246,19 @@ def run_training(config: TrainConfig) -> None:
                 total_epochs=config.epochs,
                 optimizer_steps=optimizer_steps,
             )
+            if report_callback is not None:
+                report_callback({
+                    "epoch": float(epoch),
+                    "train_loss": metrics.train_loss,
+                    "train_acc": metrics.train_acc,
+                    "val_loss": metrics.val_loss,
+                    "val_acc": metrics.val_acc,
+                    "val_precision": metrics.val_precision,
+                    "val_recall": metrics.val_recall,
+                    "val_f1": metrics.val_f1,
+                    "val_roc_auc": metrics.val_roc_auc,
+                    "optimizer_steps": float(optimizer_steps),
+                })
 
             if is_better_metric(best_model_state, metrics.val_roc_auc):
                 best_model_state = capture_best_model_state(
@@ -1224,19 +1291,49 @@ def run_training(config: TrainConfig) -> None:
             history=history,
             best_model_state=best_model_state,
             output_dir=config.output_dir,
+            log_model_artifact=log_model_artifact,
         )
 
-    print(f"Local epoch checkpoints saved to: {checkpoint_dir}")
+    return TrainingRunResult(
+        config=config,
+        history=history,
+        best_model_state=best_model_state,
+        promoted_model_path=promoted_model_path,
+        checkpoint_dir=checkpoint_dir,
+        train_count=train_count,
+        val_count=val_count,
+    )
 
-    if promoted_model_path is not None and best_model_state is not None:
+
+def run_training(
+    config: TrainConfig,
+    *,
+    report_callback: Callable[[dict[str, float]], None] | None = None,
+    nested_mlflow: bool = False,
+    extra_mlflow_tags: dict[str, object] | None = None,
+    log_model_artifact: bool = True,
+) -> TrainingRunResult:
+    result = _run_training_impl(
+        config,
+        report_callback=report_callback,
+        nested_mlflow=nested_mlflow,
+        extra_mlflow_tags=extra_mlflow_tags,
+        log_model_artifact=log_model_artifact,
+    )
+
+    print(f"Local epoch checkpoints saved to: {result.checkpoint_dir}")
+
+    if result.promoted_model_path is not None and result.best_model_state is not None:
         print(
             "Training run complete. "
-            f"Promoted best model to: {promoted_model_path} "
-            f"(epoch {best_model_state.epoch}, "
-            f"{best_model_state.metric_name}={best_model_state.metric_value:.4f})"
+            f"Promoted best model to: {result.promoted_model_path} "
+            f"(epoch {result.best_model_state.epoch}, "
+            f"{result.best_model_state.metric_name}={result.best_model_state.metric_value:.4f})"
         )
         print(
-            f"To share this model via DVC, run: dvc add {promoted_model_path}"
+            f"To share this model via DVC, run: dvc add {result.promoted_model_path}"
         )
     else:
         print("Training run complete. No promoted best model was written.")
+
+    return result
