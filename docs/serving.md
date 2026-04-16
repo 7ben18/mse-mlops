@@ -14,11 +14,33 @@ make ui-up
 
 | Service | URL | Audience |
 |---------|-----|----------|
-| MLflow | http://localhost:5001 | Experiment browsing |
-| Streamlit UI | http://localhost:7777 | Patients + doctors |
-| FastAPI API | http://localhost:8000 | UI + external tooling |
+| MLflow | [http://localhost:5001](http://localhost:5001) | Experiment browsing |
+| Streamlit UI | [http://localhost:7777](http://localhost:7777) | Patients + doctors |
+| FastAPI API | [http://localhost:8000](http://localhost:8000) | UI + external tooling |
 
 Without `make ui-up`, the serving stack stays off. Use `make mlflow-up` if you only want MLflow.
+
+## Interactive API docs
+
+FastAPI exposes interactive API documentation automatically for this service.
+
+After starting the serving stack with:
+
+```bash
+make ui-up
+```
+
+open:
+
+- [http://localhost:8000/docs](http://localhost:8000/docs) for Swagger UI
+- [http://localhost:8000/redoc](http://localhost:8000/redoc) for ReDoc
+- [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json) for the raw OpenAPI schema
+
+If you open [http://localhost:8000](http://localhost:8000) directly, you may see a `404 Not Found`. That is expected:
+the API root path `/` is not defined, while the docs live under `/docs` and `/redoc`.
+
+If the docs do not load, check whether the API container started successfully. The app loads the
+trained model at startup, so a missing or invalid checkpoint can prevent the API from coming up.
 
 Stop the whole Docker stack with:
 
