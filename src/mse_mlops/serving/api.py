@@ -6,14 +6,15 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-
+from mse_mlops.curation import PromotionConfig, get_promotion_status
 from mse_mlops.serving.feedback_store import (
     append_feedback_entry,
     load_feedback_entries,
     write_feedback_entries,
+    count_unpromoted_labeled_entries,
 )
 from mse_mlops.serving.inference import (
     load_model,
@@ -27,6 +28,7 @@ FEEDBACK_FILE = FEEDBACK_DIR / "feedback.jsonl"
 IMAGES_DIR = FEEDBACK_DIR / "images"
 UPLOAD_FILE = File(...)
 UPLOAD_LABEL = Form(...)
+VALID_LABELS = {"benign", "malignant"}
 
 app = FastAPI(title="Melanoma Classifier API")
 
@@ -80,6 +82,8 @@ async def predict_image(file: UploadFile = UPLOAD_FILE) -> dict[str, Any]:
 
 @app.post("/feedback")
 def submit_feedback(req: FeedbackRequest) -> dict[str, str]:
+    if req.label not in VALID_LABELS:
+        raise HTTPException(status_code=400, detail="Invalid label")
     entries = load_feedback_entries(FEEDBACK_FILE)
     updated = False
     new_entries = []
@@ -118,6 +122,9 @@ async def upload_labeled(
     file: UploadFile = UPLOAD_FILE,
     label: str = UPLOAD_LABEL,
 ) -> dict[str, str]:
+    label = label.strip().lower()
+    if label not in VALID_LABELS:
+        raise HTTPException(status_code=400, detail="Invalid label")
     image_bytes = await file.read()
     image_id = str(uuid.uuid4())
 
@@ -139,3 +146,22 @@ async def upload_labeled(
     notify_curation_pipeline(image_id, label)
 
     return {"status": "ok", "image_id": image_id, "label": label}
+
+@app.get("/feedback/status")
+def feedback_status() -> dict[str, int | bool]:
+    """Return manual flywheel promotion status.
+
+    The API intentionally uses the same PromotionConfig as the promotion CLI,
+    so the UI does not accidentally drift from the actual promotion threshold.
+    """
+    config = PromotionConfig(
+        feedback_file=FEEDBACK_FILE,
+        feedback_images_dir=IMAGES_DIR,
+    )
+    status = get_promotion_status(config)
+
+    return {
+        "ready_count": int(status["ready_count"]),
+        "threshold": int(status["min_items"]),
+        "can_promote": bool(status["threshold_met"]),
+    }

@@ -52,7 +52,10 @@ services:
       - "8000:8000"
     volumes:
       - ./models:/app/models:ro
-      - feedback_data:/feedback
+#      - feedback_data:/feedback
+#       for flywheel, we want files to be visible in the repo,
+#       so promotion copy them into data/processed/
+      - ./reports/feedback:/feedback
 
   ui:
     profiles: ["ui"]
@@ -110,5 +113,5 @@ services:
       - ./models:/app/models
       - ./reports:/app/reports
 
-volumes:
-  feedback_data:
+#volumes:
+#  feedback_data:

@@ -72,4 +72,26 @@ help: ## Show available make targets
 	@uv run python -c "import re; \
 	[[print(f'\033[36m{m[0]:<20}\033[0m {m[1]}') for m in re.findall(r'^([a-zA-Z_-]+):.*?## (.*)$$', open(makefile).read(), re.M)] for makefile in ('$(MAKEFILE_LIST)').strip().split()]"
 
+.PHONY: flywheel-status
+flywheel-status: ## Show whether enough uploaded labeled images are ready
+	@uv run python scripts/promote_feedback.py
+
+.PHONY: flywheel-promote
+flywheel-promote: ## Promote uploaded labeled images into the train split
+	@uv run python scripts/promote_feedback.py --apply --require-promotion
+
+.PHONY: flywheel-dvc-add
+flywheel-dvc-add: ## Track promoted dataset changes with DVC
+	@uv run dvc add data
+
+.PHONY: flywheel-update
+flywheel-update: ## Promote data, DVC-version it, then retrain
+	@$(MAKE) flywheel-promote
+	@$(MAKE) flywheel-dvc-add
+	@$(MAKE) train-docker
+
+.PHONY: flywheel-promote-smoke
+flywheel-promote-smoke: ## Promote feedback even below threshold; demo/dev only
+	@uv run python scripts/promote_feedback.py --apply --no-threshold --require-promotion
+
 .DEFAULT_GOAL := help

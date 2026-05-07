@@ -177,4 +177,13 @@ CLAUDE.md
 
 # model checkpoints
 models/finetuned/dinov3_ham10000/checkpoints/*.pt
-reports/
+
+# Doctor/demo uploaded feedback data
+# Runtime staging area for the manual data flywheel.
+reports/*
+!reports/feedback/
+reports/feedback/*
+!reports/feedback/.gitkeep
+!reports/feedback/images/
+reports/feedback/images/*
+!reports/feedback/images/.gitkeep

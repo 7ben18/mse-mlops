@@ -151,6 +151,22 @@ data/processed/ham10000/
 
 Normal workflow pulls this processed dataset from DVC. `make data-split` remains a local fallback only when the DVC remote is unavailable.
 
+### Manual Data Flywheel
+
+The project supports a manual data-flywheel workflow for newly labeled doctor
+feedback.
+
+Uploaded labeled images are first stored in `reports/feedback/` and are not
+immediately added to the training dataset. This keeps raw feedback staging
+separate from the canonical DVC-versioned dataset.
+
+The manual flywheel is triggered once enough labeled feedback is available:
+
+```bash
+make flywheel-status
+make flywheel-update
+```
+
 ## Dataset Sources
 
 ### HAM10000
