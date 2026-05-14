@@ -167,6 +167,22 @@ def _helper_add_mb_column(metadata_df: pd.DataFrame) -> pd.DataFrame:
     return labeled
 
 
+def _helper_add_lineage_columns(metadata_df: pd.DataFrame) -> pd.DataFrame:
+    """Add the flywheel lineage columns so the processed schema is stable.
+
+    Promotion (curation) stamps these per row. Emitting them empty here means a
+    freshly built dataset already carries the full schema, so the first
+    promotion shows a row-only diff instead of a schema change. Defaults match
+    curation._ensure_lineage_columns, so promotion treats them as already present.
+    """
+    labeled = metadata_df.copy()
+    labeled["first_train_batch_id"] = pd.NA
+    labeled["first_train_at"] = pd.NA
+    labeled["training_enabled"] = True
+    labeled["promotion_source"] = pd.NA
+    return labeled
+
+
 def _helper_load_raw_metadata(raw_metadata_csv: pathlib.Path) -> pd.DataFrame:
     raw_metadata_csv = pathlib.Path(raw_metadata_csv)
     metadata_df = pd.read_csv(raw_metadata_csv)
@@ -259,6 +275,7 @@ def _helper_build_processed_metadata(
     metadata_df = _helper_load_raw_metadata(raw_metadata_csv)
     metadata_df = _helper_add_mb_column(metadata_df)
     metadata_df = _helper_assign_split_by_lesion(metadata_df=metadata_df, split_sets=split_sets, seed=seed)
+    metadata_df = _helper_add_lineage_columns(metadata_df)
 
     if verbose:
         print(
