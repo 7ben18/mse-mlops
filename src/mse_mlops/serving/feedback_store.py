@@ -6,10 +6,8 @@ from typing import Any
 
 VALID_FEEDBACK_LABELS = frozenset({"benign", "malignant"})
 
-# `upload_labeled` is known to save image bytes.
-# `doctor_review` may only update a label for an already logged prediction,
-# so it should not be counted as promotable unless the image is definitely stored.
-PROMOTABLE_FEEDBACK_SOURCES = frozenset({"upload_labeled"})
+# Both labeled upload paths store image bytes, so they are promotable.
+PROMOTABLE_FEEDBACK_SOURCES = frozenset({"upload_labeled", "doctor_review"})
 
 def append_feedback_entry(feedback_file: Path, entry: dict[str, Any]) -> None:
     feedback_file.parent.mkdir(parents=True, exist_ok=True)
@@ -40,10 +38,8 @@ def write_feedback_entries(feedback_file: Path, entries: list[dict[str, Any]]) -
 def is_promotable_feedback(entry: dict[str, Any]) -> bool:
     """Return whether a feedback entry is ready for train-set promotion.
 
-    This is intentionally conservative: only feedback entries from
-    `/upload-labeled` are counted because that endpoint stores both the image
-    file and the label. Prediction feedback may have a label but not necessarily
-    a stored image file.
+    Only labeled feedback entries are counted. Prediction-only feedback remains
+    excluded because it may not have a stored image file.
     """
     label = str(entry.get("label", "")).strip().lower()
 

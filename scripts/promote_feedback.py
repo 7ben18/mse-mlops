@@ -27,7 +27,7 @@ def parse_args() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(
         description=(
-            "Promote doctor-uploaded labeled feedback images into the "
+            "Promote labeled feedback images into the "
             "DVC-versioned HAM10000 train split."
         )
     )
@@ -224,8 +224,8 @@ def print_batch_update(row: dict[str, object], *, enabled: bool) -> None:
 def print_status(config: PromotionConfig) -> None:
     """Print a short pre-flight status before promotion.
 
-    This gives the user immediate feedback about whether the 10-image threshold
-    has been reached before any mutation happens.
+    This gives the user immediate feedback about whether the threshold has been
+    reached before any mutation happens.
     """
     status = get_promotion_status(config)
 
@@ -320,8 +320,8 @@ def main() -> int:
       2 = no promotion happened while --require-promotion was enabled
 
     Not meeting the threshold is normally not treated as an error. It is a
-    valid flywheel state: for example, 7 uploaded labeled images when the
-    configured threshold is 10.
+    valid flywheel state: for example, 7 labeled images when the configured
+    threshold is 10.
 
     However, when this script is used in a chained command like:
 

@@ -8,6 +8,7 @@ from typing import Any
 
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from mse_mlops.curation import PromotionConfig, get_promotion_status
 from mse_mlops.serving.feedback_store import (
@@ -64,6 +65,10 @@ async def predict_image(file: UploadFile = UPLOAD_FILE) -> dict[str, Any]:
     result = predict(image_bytes)
     image_id = str(uuid.uuid4())
 
+    ext = Path(file.filename).suffix if file.filename else ".jpg"
+    image_path = IMAGES_DIR / f"{image_id}{ext}"
+    image_path.write_bytes(image_bytes)
+
     entry = {
         "image_id": image_id,
         "filename": file.filename,
@@ -115,6 +120,25 @@ def submit_feedback(req: FeedbackRequest) -> dict[str, str]:
 @app.get("/feedback")
 def get_feedback() -> list[dict[str, Any]]:
     return load_feedback_entries(FEEDBACK_FILE)
+
+
+@app.get("/feedback/image/{image_id}")
+def get_feedback_image(image_id: str) -> FileResponse:
+    """Serve a stored feedback image by its ID, read from disk.
+
+    Both /predict and /upload-labeled persist the uploaded bytes under
+    IMAGES_DIR, so the doctor review UI can fetch the image to label it.
+    """
+    try:
+        uuid.UUID(image_id)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail="Invalid image_id") from error
+
+    matches = sorted(IMAGES_DIR.glob(f"{image_id}.*"))
+    if not matches:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    return FileResponse(matches[0])
 
 
 @app.post("/upload-labeled")

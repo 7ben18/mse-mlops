@@ -128,6 +128,18 @@ with tab2:
                 ):
                     col_left, col_right = st.columns([2, 1])
                     with col_left:
+                        try:
+                            image_response = requests.get(
+                                f"{API_URL}/feedback/image/{entry['image_id']}",
+                                timeout=10,
+                            )
+                            image_response.raise_for_status()
+                            st.image(
+                                Image.open(io.BytesIO(image_response.content)),
+                                use_container_width=True,
+                            )
+                        except Exception as exc:
+                            st.warning(f"Image unavailable: {exc}")
                         st.write(f"**Reference ID:** `{entry['image_id']}`")
                         st.write(f"**AI prediction:** {entry['prediction']}")
                         st.write(f"**Confidence:** {confidence:.1%}")

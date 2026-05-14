@@ -61,7 +61,7 @@ def test_promotion_stamps_one_batch_and_writes_one_manifest(tmp_path: Path):
                 "image_id": "feedback-b",
                 "filename": "doctor-b.png",
                 "label": "malignant",
-                "source": "upload_labeled",
+                "source": "doctor_review",
             },
         ],
     )

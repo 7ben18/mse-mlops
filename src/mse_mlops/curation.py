@@ -28,7 +28,7 @@ from mse_mlops.serving.feedback_store import (
 )
 
 VALID_LABELS = frozenset({"benign", "malignant"})
-PROMOTABLE_SOURCES = frozenset({"upload_labeled"})
+PROMOTABLE_SOURCES = frozenset({"upload_labeled", "doctor_review"})
 
 LABEL_COLUMN = "mb"
 TARGET_SPLIT = "train"
@@ -347,7 +347,7 @@ def promote_feedback_to_train(
     dry_run: bool = False,
     require_threshold: bool = True,
 ) -> PromotionResult:
-    """Promote doctor-uploaded labeled feedback images into the train split.
+    """Promote labeled feedback images into the train split.
 
     This mutates two things when dry_run=False:
       1. data/processed/ham10000/metadata.csv

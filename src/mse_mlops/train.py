@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import random
+from collections import Counter
 from collections.abc import Callable
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
@@ -13,6 +14,7 @@ import torch
 import yaml
 from PIL import Image
 from sklearn.metrics import (
+    confusion_matrix,
     f1_score,
     precision_score,
     recall_score,
@@ -557,16 +559,66 @@ def build_split_samples(
     return records
 
 
+def _evaluation_breakdown(
+    labels: list[int],
+    preds: list[int],
+    class_names: list[str],
+) -> dict[str, float]:
+    """Per-class precision/recall plus binary confusion-matrix counts.
+
+    The weighted-average precision/recall can stay high even when the minority
+    class is never predicted. This breakdown makes false negatives (missed
+    malignant lesions) and false positives directly visible in MLflow.
+    """
+    label_indices = list(range(len(class_names)))
+    per_class_precision = precision_score(
+        labels, preds, average=None, zero_division=0, labels=label_indices
+    )
+    per_class_recall = recall_score(
+        labels, preds, average=None, zero_division=0, labels=label_indices
+    )
+
+    breakdown: dict[str, float] = {}
+    for name, class_precision, class_recall in zip(
+        class_names, per_class_precision, per_class_recall, strict=True
+    ):
+        breakdown[f"val_precision_{name}"] = float(class_precision)
+        breakdown[f"val_recall_{name}"] = float(class_recall)
+
+    if len(class_names) == 2:
+        # Treat "malignant" as the positive class so false negatives count
+        # missed cancers. Fall back to the second class if naming differs.
+        positive_index = (
+            class_names.index("malignant")
+            if "malignant" in class_names
+            else 1
+        )
+        negative_index = 1 - positive_index
+        matrix = confusion_matrix(
+            labels, preds, labels=[negative_index, positive_index]
+        )
+        true_negatives, false_positives = matrix[0]
+        false_negatives, true_positives = matrix[1]
+        breakdown["val_true_positives"] = float(true_positives)
+        breakdown["val_false_positives"] = float(false_positives)
+        breakdown["val_false_negatives"] = float(false_negatives)
+        breakdown["val_true_negatives"] = float(true_negatives)
+
+    return breakdown
+
+
 def compute_classification_metrics(
     labels: list[int],
     preds: list[int],
     probs: list[list[float]],
-) -> tuple[float, float, float, float]:
+    class_names: list[str],
+) -> tuple[float, float, float, float, dict[str, float]]:
     precision = precision_score(
         labels, preds, average="weighted", zero_division=0
     )
     recall = recall_score(labels, preds, average="weighted", zero_division=0)
     f1 = f1_score(labels, preds, average="weighted", zero_division=0)
+    breakdown = _evaluation_breakdown(labels, preds, class_names)
 
     unique_labels = sorted(set(labels))
     if len(unique_labels) < 2:
@@ -586,7 +638,7 @@ def compute_classification_metrics(
         except ValueError:
             roc_auc = float("nan")
 
-    return float(precision), float(recall), float(f1), float(roc_auc)
+    return float(precision), float(recall), float(f1), float(roc_auc), breakdown
 
 
 def build_dataloaders(
@@ -734,13 +786,38 @@ def build_optimizer(
     return torch.optim.AdamW(param_groups, lr=lr)
 
 
+def compute_class_weights(
+    train_loader: DataLoader,
+    num_classes: int,
+    device: torch.device,
+) -> torch.Tensor | None:
+    """Inverse-frequency class weights for an imbalanced training split.
+
+    HAM10000 is ~80% benign, so an unweighted CrossEntropyLoss can minimize
+    loss by leaning on the majority class. Weighting each class by the inverse
+    of its frequency counteracts that. Returns None when a class is absent from
+    the train split, so the caller falls back to an unweighted loss.
+    """
+    counts = Counter(
+        record.label_index for record in train_loader.dataset.records
+    )
+    if any(counts.get(index, 0) == 0 for index in range(num_classes)):
+        return None
+    total = sum(counts.values())
+    weights = [
+        total / (num_classes * counts[index]) for index in range(num_classes)
+    ]
+    return torch.tensor(weights, dtype=torch.float, device=device)
+
+
 def evaluate(
     model: nn.Module,
     loader: DataLoader,
     criterion: nn.Module,
     device: torch.device,
+    class_names: list[str],
     max_batches: int | None = None,
-) -> tuple[float, float, float, float, float, float]:
+) -> tuple[float, float, float, float, float, float, dict[str, float]]:
     model.eval()
     running_loss = 0.0
     correct = 0
@@ -771,10 +848,10 @@ def evaluate(
 
     avg_loss = running_loss / max(total, 1)
     acc = correct / max(total, 1)
-    precision, recall, f1, roc_auc = compute_classification_metrics(
-        all_labels, all_preds, all_probs
+    precision, recall, f1, roc_auc, breakdown = compute_classification_metrics(
+        all_labels, all_preds, all_probs, class_names
     )
-    return avg_loss, acc, precision, recall, f1, roc_auc
+    return avg_loss, acc, precision, recall, f1, roc_auc, breakdown
 
 
 def train_one_epoch(
@@ -1080,7 +1157,11 @@ def maybe_resume_training(
 
 
 def log_epoch_summary(
-    metrics: Metrics, epoch: int, total_epochs: int, optimizer_steps: int
+    metrics: Metrics,
+    epoch: int,
+    total_epochs: int,
+    optimizer_steps: int,
+    extra_metrics: dict[str, float] | None = None,
 ) -> None:
     print(
         f"Epoch {epoch}/{total_epochs} | "
@@ -1090,8 +1171,18 @@ def log_epoch_summary(
         f"val_f1={metrics.val_f1:.4f} val_roc_auc={metrics.val_roc_auc:.4f} | "
         f"opt_steps={optimizer_steps}"
     )
+    metric_payload = asdict(metrics)
+    if extra_metrics:
+        print(
+            "  val breakdown: "
+            + ", ".join(
+                f"{name}={value:.4f}"
+                for name, value in sorted(extra_metrics.items())
+            )
+        )
+        metric_payload.update(extra_metrics)
     tracking.log_epoch_metrics(
-        metrics=asdict(metrics),
+        metrics=metric_payload,
         epoch=epoch,
         optimizer_steps=optimizer_steps,
     )
@@ -1239,7 +1330,24 @@ def _run_training_impl(
         all_params = sum(p.numel() for p in model.parameters())
         print(f"Trainable params: {trainable_params}/{all_params}")
 
-        criterion = nn.CrossEntropyLoss()
+        class_weights = compute_class_weights(
+            train_loader=train_loader,
+            num_classes=len(class_names),
+            device=device,
+        )
+        if class_weights is None:
+            print(
+                "Class weights: disabled (a class is missing from the train split)"
+            )
+        else:
+            weight_summary = ", ".join(
+                f"{name}={weight:.3f}"
+                for name, weight in zip(
+                    class_names, class_weights.tolist(), strict=True
+                )
+            )
+            print(f"Class weights (inverse-frequency): {weight_summary}")
+        criterion = nn.CrossEntropyLoss(weight=class_weights)
         optimizer = build_optimizer(
             model=model, lr=config.lr, weight_decay=config.weight_decay
         )
@@ -1287,11 +1395,13 @@ def _run_training_impl(
                 val_recall,
                 val_f1,
                 val_roc_auc,
+                val_breakdown,
             ) = evaluate(
                 model=model,
                 loader=val_loader,
                 criterion=criterion,
                 device=device,
+                class_names=class_names,
                 max_batches=config.max_val_batches,
             )
 
@@ -1311,6 +1421,7 @@ def _run_training_impl(
                 epoch=epoch,
                 total_epochs=config.epochs,
                 optimizer_steps=optimizer_steps,
+                extra_metrics=val_breakdown,
             )
             if report_callback is not None:
                 report_callback({

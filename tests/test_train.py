@@ -703,8 +703,8 @@ def test_run_training_promotes_best_epoch_not_last_epoch(
         yield
 
     metrics_by_epoch = iter([
-        (0.40, 0.80, 0.80, 0.80, 0.80, 0.90),
-        (0.45, 0.75, 0.75, 0.75, 0.75, 0.70),
+        (0.40, 0.80, 0.80, 0.80, 0.80, 0.90, {"val_recall_malignant": 0.80}),
+        (0.45, 0.75, 0.75, 0.75, 0.75, 0.70, {"val_recall_malignant": 0.75}),
     ])
 
     def fake_evaluate(**_kwargs):

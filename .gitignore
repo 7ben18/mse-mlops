@@ -168,7 +168,7 @@ mlruns/
 mlartifacts/
 
 # LLMs
-AGENT.md
+AGENTS.md
 STATUS.md
 CLAUDE.md
 
