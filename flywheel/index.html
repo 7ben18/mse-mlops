@@ -12,13 +12,13 @@
         <meta name="author" content="mse-mlops contributors">
       
       
-        <link rel="canonical" href="https://7ben18.github.io/mse-mlops/mlflow-tracking/">
+        <link rel="canonical" href="https://7ben18.github.io/mse-mlops/flywheel/">
       
       
-        <link rel="prev" href="../flywheel/">
+        <link rel="prev" href="../data/">
       
       
-        <link rel="next" href="../ray-tune/">
+        <link rel="next" href="../mlflow-tracking/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>MLflow Tracking - mse-mlops</title>
+        <title>Manual Flywheel - mse-mlops</title>
       
     
     
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mlflow-tracking" class="md-skip">
+        <a href="#manual-data-flywheel" class="md-skip">
           Skip to content
         </a>
       
@@ -118,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              MLflow Tracking
+              Manual Flywheel
             
           </span>
         </div>
@@ -342,33 +342,6 @@
       
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../flywheel/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Manual Flywheel
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
     
   
   
@@ -388,7 +361,7 @@
   <span class="md-ellipsis">
     
   
-    MLflow Tracking
+    Manual Flywheel
   
 
     
@@ -406,7 +379,7 @@
   <span class="md-ellipsis">
     
   
-    MLflow Tracking
+    Manual Flywheel
   
 
     
@@ -432,10 +405,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-tracked" class="md-nav__link">
+  <a href="#promotion-metadata" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What is tracked
+        Promotion Metadata
       
     </span>
   </a>
@@ -443,10 +416,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#core-flow" class="md-nav__link">
+  <a href="#promote-and-fine-tune" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Core flow
+        Promote And Fine-Tune
       
     </span>
   </a>
@@ -454,10 +427,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#training-runs" class="md-nav__link">
+  <a href="#publish-accepted-results" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Training runs
+        Publish Accepted Results
       
     </span>
   </a>
@@ -465,32 +438,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tuning-runs" class="md-nav__link">
+  <a href="#reject-or-exclude-a-batch" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tuning runs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Configuration
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#docker-usage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Docker usage
+        Reject Or Exclude A Batch
       
     </span>
   </a>
@@ -501,6 +452,33 @@
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mlflow-tracking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MLflow Tracking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -722,10 +700,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-tracked" class="md-nav__link">
+  <a href="#promotion-metadata" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What is tracked
+        Promotion Metadata
       
     </span>
   </a>
@@ -733,10 +711,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#core-flow" class="md-nav__link">
+  <a href="#promote-and-fine-tune" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Core flow
+        Promote And Fine-Tune
       
     </span>
   </a>
@@ -744,10 +722,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#training-runs" class="md-nav__link">
+  <a href="#publish-accepted-results" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Training runs
+        Publish Accepted Results
       
     </span>
   </a>
@@ -755,32 +733,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tuning-runs" class="md-nav__link">
+  <a href="#reject-or-exclude-a-batch" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tuning runs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Configuration
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#docker-usage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Docker usage
+        Reject Or Exclude A Batch
       
     </span>
   </a>
@@ -807,91 +763,76 @@
   
 
 
-<h1 id="mlflow-tracking">MLflow Tracking<a class="headerlink" href="#mlflow-tracking" title="Permanent link">&para;</a></h1>
-<p>MLflow is the central tracking backend for both standard training and Ray Tune sessions.</p>
-<h2 id="what-is-tracked">What is tracked<a class="headerlink" href="#what-is-tracked" title="Permanent link">&para;</a></h2>
+<h1 id="manual-data-flywheel">Manual Data Flywheel<a class="headerlink" href="#manual-data-flywheel" title="Permanent link">&para;</a></h1>
+<p>This runbook covers the manual feedback loop for labeled doctor uploads:
+promote accepted labels into the train split, fine-tune, evaluate, publish the
+accepted dataset and model artifacts, and exclude a bad promotion batch if it is
+rejected later.</p>
+<p>The canonical dataset split names stay unchanged:</p>
 <ul>
-<li><code>scripts/train.py</code> starts a single MLflow run for one training job.</li>
-<li><code>scripts/tune.py</code> starts one parent MLflow run for the tuning session.</li>
-<li>Each Ray Tune trial starts its own nested child run.</li>
+<li><code>train</code>: examples used to fit model weights.</li>
+<li><code>val</code>: validation examples used during training and evaluation.</li>
+<li><code>test</code>: final hold-out examples.</li>
+<li><code>future</code>: reviewed production/demo candidates that are not yet in training.</li>
 </ul>
-<p>Docker services talk to MLflow at <code>http://mlflow:5001</code>. Local runs can point to <code>http://127.0.0.1:5001</code>.</p>
-<h2 id="core-flow">Core flow<a class="headerlink" href="#core-flow" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>scripts/train.py
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  -&gt; mse_mlops.train.run_training(config)
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>      -&gt; tracking.init_mlflow(...)
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>      -&gt; tracking.log_run_params(...)
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>      -&gt; epoch loop
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>          -&gt; tracking.log_epoch_metrics(..., step=epoch)
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>      -&gt; tracking.log_summary_metrics(...)
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>      -&gt; tracking.log_final_artifacts(...)
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>scripts/tune.py
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>  -&gt; mse_mlops.tune.run_tuning(config)
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>      -&gt; tracking.start_run(...)               # parent tuning run
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>      -&gt; Ray Tune trial orchestration
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>          -&gt; mse_mlops.train.run_training(...)
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>              -&gt; tracking.init_mlflow(..., tags={&quot;mlflow.parentRunId&quot;: ...})
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>      -&gt; tracking.log_dict_artifact(...)       # best config, leaderboard
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>      -&gt; tracking.log_local_artifact(...)      # best trial model checkpoint
+<p>Dataset files and model checkpoints are DVC-managed. Promotion audit manifests
+under <code>reports/feedback/promotions/</code> are git-managed.</p>
+<h2 id="promotion-metadata">Promotion Metadata<a class="headerlink" href="#promotion-metadata" title="Permanent link">&para;</a></h2>
+<p>Each feedback promotion creates one batch ID:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>train_YYYYmmddHHMMSS
 </span></code></pre></div>
-<h2 id="training-runs">Training runs<a class="headerlink" href="#training-runs" title="Permanent link">&para;</a></h2>
-<p>Each normal training run logs:</p>
+<p>Promoted metadata rows keep the normal <code>set</code> value of <code>train</code> and receive these
+lineage columns:</p>
 <ul>
-<li>Parameters: dataset paths, split settings, optimizer/scheduler settings, execution controls, train/val counts, class names.</li>
-<li>Per-epoch metrics: <code>train_loss</code>, <code>train_acc</code>, <code>val_loss</code>, <code>val_acc</code>, <code>val_precision</code>, <code>val_recall</code>, <code>val_f1</code>, <code>val_roc_auc</code>, <code>optimizer_steps</code>.</li>
-<li>Summary metrics: <code>best_val_roc_auc</code>, <code>best_epoch</code>.</li>
-<li>Artifacts:</li>
-<li><code>training/history.json</code></li>
-<li><code>model/</code> MLflow model artifact for the promoted best checkpoint</li>
+<li><code>first_train_batch_id</code>: the first promotion batch that moved the row into training.</li>
+<li><code>first_train_at</code>: the UTC promotion timestamp.</li>
+<li><code>training_enabled</code>: whether the row is eligible for future training runs.</li>
+<li><code>promotion_source</code>: <code>future_demo</code> for uploads that came from <code>future</code>, or
+  <code>feedback_upload</code> for new uploaded images.</li>
 </ul>
-<p>Local checkpoint files are still written under <code>models/finetuned/.../checkpoints/</code>, and the promoted serving checkpoint remains <code>best_model.pt</code>.</p>
-<h2 id="tuning-runs">Tuning runs<a class="headerlink" href="#tuning-runs" title="Permanent link">&para;</a></h2>
-<p>Each tuning session logs one parent run plus one nested child run per trial.</p>
-<p>Parent run artifacts:</p>
-<ul>
-<li><code>tuning/session.json</code></li>
-<li><code>tuning/best_config.yaml</code></li>
-<li><code>tuning/leaderboard.json</code></li>
-<li><code>tuning/best_model/*</code> copied from the best trial's promoted checkpoint</li>
-</ul>
-<p>Nested child trial runs log:</p>
-<ul>
-<li>trial-specific parameters after config merge</li>
-<li>per-epoch metrics from the shared training codepath</li>
-<li>summary metrics for the trial</li>
-<li><code>training/history.json</code></li>
-</ul>
-<p>Only the best trial's promoted checkpoint is logged back to MLflow as an artifact.</p>
-<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
-<p>Training config keys:</p>
-<ul>
-<li><code>tracking.mlflow_tracking_uri</code></li>
-<li><code>tracking.mlflow_experiment_name</code></li>
-<li><code>tracking.mlflow_run_name</code></li>
-<li><code>tracking.mlflow_tags</code></li>
-</ul>
-<p>Tuning config:</p>
-<ul>
-<li><code>config/tune.yaml</code> is standalone and defines <code>base_run</code>, <code>search_space</code>, <code>tune</code>, and <code>output</code>.</li>
-<li>The recommended tuning experiment name is separate from standard training, for example <code>mse-mlops-tuning</code>.</li>
-</ul>
-<h2 id="docker-usage">Docker usage<a class="headerlink" href="#docker-usage" title="Permanent link">&para;</a></h2>
-<p>Start MLflow:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>make<span class="w"> </span>mlflow-up
+<h2 id="promote-and-fine-tune">Promote And Fine-Tune<a class="headerlink" href="#promote-and-fine-tune" title="Permanent link">&para;</a></h2>
+<p>Start from the DVC-tracked dataset and model artifacts:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>dvc<span class="w"> </span>pull
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>make<span class="w"> </span>ui-up
 </span></code></pre></div>
-<p>Run standard training:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>make<span class="w"> </span>train-docker
+<p>Upload labeled demo data through the UI from <code>future</code>. When enough labeled
+uploads are ready, promote them:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>make<span class="w"> </span>flywheel-status
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>make<span class="w"> </span>flywheel-promote
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>make<span class="w"> </span>flywheel-dvc-add
 </span></code></pre></div>
-<p>Run tuning:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>--profile<span class="w"> </span>train<span class="w"> </span>run<span class="w"> </span>--build<span class="w"> </span>--rm<span class="w"> </span>tune
+<p>Fine-tune on the promoted training data:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>make<span class="w"> </span>train-docker
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>dvc<span class="w"> </span>add<span class="w"> </span>models/finetuned/dinov3_ham10000/best_model.pt
 </span></code></pre></div>
-<p>MLflow state stays in the repo-local paths:</p>
-<ul>
-<li><code>mlflow.db</code></li>
-<li><code>mlartifacts/</code></li>
-</ul>
-<p><code>make docker-down</code> does not delete them.</p>
+<p>You can exclude a known bad batch for a single training run without mutating
+metadata:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>make<span class="w"> </span>train-docker<span class="w"> </span><span class="nv">TRAIN_ARGS</span><span class="o">=</span><span class="s2">&quot;--exclude-training-batches train_20260514123045&quot;</span>
+</span></code></pre></div>
+<h2 id="publish-accepted-results">Publish Accepted Results<a class="headerlink" href="#publish-accepted-results" title="Permanent link">&para;</a></h2>
+<p>If the promoted data and retrained model are accepted, commit the DVC pointers
+and the git-managed promotion manifest:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>git<span class="w"> </span>add<span class="w"> </span>data.dvc<span class="w"> </span>models/finetuned/dinov3_ham10000/best_model.pt.dvc<span class="w"> </span>reports/feedback/promotions/*.json
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Promote feedback batch and publish retrained model&quot;</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>dvc<span class="w"> </span>push
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>git<span class="w"> </span>push
+</span></code></pre></div>
+<h2 id="reject-or-exclude-a-batch">Reject Or Exclude A Batch<a class="headerlink" href="#reject-or-exclude-a-batch" title="Permanent link">&para;</a></h2>
+<p>List promoted batches:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>make<span class="w"> </span>flywheel-batch-status
+</span></code></pre></div>
+<p>If a previously accepted batch is rejected, permanently disable it in metadata:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>make<span class="w"> </span>flywheel-exclude-batch<span class="w"> </span><span class="nv">BATCH_ID</span><span class="o">=</span>train_20260514123045
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>make<span class="w"> </span>flywheel-dvc-add
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>make<span class="w"> </span>train-docker
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>dvc<span class="w"> </span>add<span class="w"> </span>models/finetuned/dinov3_ham10000/best_model.pt
+</span></code></pre></div>
+<p>If the batch is reinstated later:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>make<span class="w"> </span>flywheel-include-batch<span class="w"> </span><span class="nv">BATCH_ID</span><span class="o">=</span>train_20260514123045
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>make<span class="w"> </span>flywheel-dvc-add
+</span></code></pre></div>
+<p>After retraining and evaluation, publish the updated DVC pointers and model
+checkpoint the same way as an accepted promotion.</p>
 
 
 
