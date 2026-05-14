@@ -8,6 +8,8 @@
 # That avoids extension weirdness.
 
 from __future__ import annotations
+
+import json
 import os
 import shutil
 import tempfile
@@ -39,6 +41,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_FEEDBACK_DIR = PROJECT_ROOT / "reports" / "feedback"
 DEFAULT_FEEDBACK_FILE = DEFAULT_FEEDBACK_DIR / "feedback.jsonl"
 DEFAULT_FEEDBACK_IMAGES_DIR = DEFAULT_FEEDBACK_DIR / "images"
+DEFAULT_PROMOTIONS_DIR = DEFAULT_FEEDBACK_DIR / "promotions"
 
 DEFAULT_HAM10000_DIR = PROJECT_ROOT / "data" / "processed" / "ham10000"
 DEFAULT_METADATA_CSV = DEFAULT_HAM10000_DIR / "metadata.csv"
@@ -49,6 +52,7 @@ DEFAULT_DATASET_IMAGES_DIR = DEFAULT_HAM10000_DIR / "HAM10000_images"
 class PromotionConfig:
     feedback_file: Path = DEFAULT_FEEDBACK_FILE
     feedback_images_dir: Path = DEFAULT_FEEDBACK_IMAGES_DIR
+    promotions_dir: Path = DEFAULT_PROMOTIONS_DIR
     metadata_csv: Path = DEFAULT_METADATA_CSV
     dataset_images_dir: Path = DEFAULT_DATASET_IMAGES_DIR
     target_split: str = TARGET_SPLIT
@@ -85,6 +89,8 @@ class PromotionResult:
     label_counts: dict[str, int]
     promoted_image_ids: list[str] = field(default_factory=list)
     skipped_reasons: list[str] = field(default_factory=list)
+    batch_id: str | None = None
+    manifest_path: Path | None = None
 
     @property
     def should_trigger_training(self) -> bool:
@@ -111,6 +117,184 @@ def get_promotion_status(config: PromotionConfig | None = None) -> dict[str, int
         "min_items": resolved_config.min_items,
         "threshold_met": ready_count >= resolved_config.min_items,
     }
+
+
+def get_training_batch_status(
+    config: PromotionConfig | None = None,
+) -> list[dict[str, object]]:
+    """Return row counts by feedback promotion batch."""
+    resolved_config = config or PromotionConfig()
+    metadata_df = _ensure_lineage_columns(
+        _load_metadata(
+            resolved_config.metadata_csv,
+            label_column=resolved_config.label_column,
+        )
+    )
+
+    batch_ids = metadata_df["first_train_batch_id"].fillna("").astype(str).str.strip()
+    batch_df = metadata_df[batch_ids != ""].copy()
+    if batch_df.empty:
+        return []
+
+    status_rows: list[dict[str, object]] = []
+    for batch_id, group_df in batch_df.groupby("first_train_batch_id", sort=True):
+        enabled = group_df["training_enabled"].map(_is_training_enabled)
+        sources = sorted(
+            source
+            for source in group_df["promotion_source"].fillna("").astype(str).unique()
+            if source
+        )
+        first_train_values = sorted(
+            value
+            for value in group_df["first_train_at"].fillna("").astype(str).unique()
+            if value
+        )
+        status_rows.append({
+            "batch_id": str(batch_id),
+            "rows": len(group_df),
+            "enabled_rows": int(enabled.sum()),
+            "disabled_rows": int((~enabled).sum()),
+            "promotion_sources": sources,
+            "first_train_at": first_train_values[0] if first_train_values else None,
+        })
+
+    return status_rows
+
+
+def set_training_batch_enabled(
+    batch_id: str,
+    enabled: bool,
+    config: PromotionConfig | None = None,
+) -> dict[str, object]:
+    """Enable or disable all metadata rows from one promotion batch."""
+    resolved_config = config or PromotionConfig()
+    normalized_batch_id = batch_id.strip()
+    if not normalized_batch_id:
+        raise ValueError("BATCH_ID must not be blank.")
+
+    metadata_df = _ensure_lineage_columns(
+        _load_metadata(
+            resolved_config.metadata_csv,
+            label_column=resolved_config.label_column,
+        )
+    )
+    mask = (
+        metadata_df["first_train_batch_id"].fillna("").astype(str).str.strip()
+        == normalized_batch_id
+    )
+    affected_rows = int(mask.sum())
+    if affected_rows == 0:
+        raise ValueError(f"Unknown training batch: {normalized_batch_id}")
+
+    metadata_df.loc[mask, "training_enabled"] = bool(enabled)
+    _write_metadata_atomic(metadata_df, resolved_config.metadata_csv)
+
+    return {
+        "batch_id": normalized_batch_id,
+        "rows": affected_rows,
+        "enabled_rows": affected_rows if enabled else 0,
+        "disabled_rows": 0 if enabled else affected_rows,
+    }
+
+
+def _new_training_batch_id(now: datetime | None = None) -> str:
+    timestamp = now or datetime.now(UTC)
+    return timestamp.strftime("train_%Y%m%d%H%M%S")
+
+
+def _ensure_lineage_columns(metadata_df: pd.DataFrame) -> pd.DataFrame:
+    updated_df = metadata_df.copy()
+    if "first_train_batch_id" not in updated_df.columns:
+        updated_df["first_train_batch_id"] = pd.NA
+    if "first_train_at" not in updated_df.columns:
+        updated_df["first_train_at"] = pd.NA
+    if "training_enabled" not in updated_df.columns:
+        updated_df["training_enabled"] = True
+    else:
+        updated_df["training_enabled"] = updated_df["training_enabled"].fillna(True)
+    if "promotion_source" not in updated_df.columns:
+        updated_df["promotion_source"] = pd.NA
+    return updated_df
+
+
+def _is_training_enabled(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value is None or pd.isna(value):
+        return True
+    return str(value).strip().lower() not in {"false", "0", "no", "n"}
+
+
+def _promotion_source_for_candidate(candidate: PromotionCandidate) -> str:
+    if candidate.promotion_kind == "future_existing":
+        return "future_demo"
+    if candidate.promotion_kind == "already_train":
+        return "already_train"
+    return "feedback_upload"
+
+
+def _stamp_training_lineage(
+    *,
+    metadata_df: pd.DataFrame,
+    row_indices: list[int],
+    batch_id: str,
+    promoted_at: str,
+    promotion_source: str,
+) -> None:
+    for row_index in row_indices:
+        metadata_df.loc[row_index, "first_train_batch_id"] = batch_id
+        metadata_df.loc[row_index, "first_train_at"] = promoted_at
+        metadata_df.loc[row_index, "training_enabled"] = True
+        metadata_df.loc[row_index, "promotion_source"] = promotion_source
+
+
+def _write_promotion_manifest(
+    *,
+    config: PromotionConfig,
+    batch_id: str,
+    promoted_at: str,
+    candidates: list[PromotionCandidate],
+    promoted_count: int,
+    already_present_count: int,
+    skipped_reasons: list[str],
+    label_counts: dict[str, int],
+    promoted_image_ids: list[str],
+) -> Path:
+    config.promotions_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = config.promotions_dir / f"{batch_id}.json"
+    payload = {
+        "batch_id": batch_id,
+        "promoted_at": promoted_at,
+        "target_split": config.target_split,
+        "metadata_csv": str(config.metadata_csv),
+        "dataset_images_dir": str(config.dataset_images_dir),
+        "candidate_count": len(candidates),
+        "promoted_count": promoted_count,
+        "already_present_count": already_present_count,
+        "skipped_count": len(skipped_reasons),
+        "label_counts": label_counts,
+        "promoted_image_ids": promoted_image_ids,
+        "skipped_reasons": skipped_reasons,
+        "items": [
+            {
+                "feedback_index": candidate.feedback_index,
+                "feedback_image_id": candidate.feedback_image_id,
+                "target_image_id": candidate.target_image_id,
+                "label": candidate.label,
+                "promotion_kind": candidate.promotion_kind,
+                "promotion_source": _promotion_source_for_candidate(candidate),
+                "source_image_path": str(candidate.source_image_path),
+                "target_image_path": str(candidate.target_image_path),
+                "original_filename": candidate.original_filename,
+            }
+            for candidate in candidates
+        ],
+    }
+    manifest_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return manifest_path
 
 
 
@@ -151,6 +335,7 @@ def _write_metadata_atomic(updated_metadata_df: pd.DataFrame, metadata_csv: Path
         tmp_path.replace(metadata_csv)
 
     except Exception:
+        # Clean up the temp file, then propagate the original write error.
         if tmp_path is not None and tmp_path.exists():
             tmp_path.unlink()
         raise
@@ -220,16 +405,13 @@ def promote_feedback_to_train(
     metadata_rows_to_append: list[dict[str, Any]] = []
     promoted_image_ids: list[str] = []
     already_present_count = 0
-    promoted_at = datetime.now(UTC).isoformat()
-
-    updated_metadata_df = metadata_df.copy()
-    metadata_changed = False
-
-    metadata_rows_to_append: list[dict[str, Any]] = []
-    promoted_image_ids: list[str] = []
-    already_present_count = 0
     promoted_count = 0
     promoted_at = datetime.now(UTC).isoformat()
+    batch_id = _new_training_batch_id()
+    manifest_path: Path | None = None
+
+    updated_metadata_df = _ensure_lineage_columns(metadata_df)
+    metadata_changed = list(updated_metadata_df.columns) != list(metadata_df.columns)
 
     for candidate in candidates:
         if candidate.promotion_kind == "future_existing":
@@ -273,9 +455,20 @@ def promote_feedback_to_train(
                     candidate.label
                 )
 
+            _stamp_training_lineage(
+                metadata_df=updated_metadata_df,
+                row_indices=group_indices,
+                batch_id=batch_id,
+                promoted_at=promoted_at,
+                promotion_source=_promotion_source_for_candidate(candidate),
+            )
             metadata_changed = True
             promoted_count += len(group_indices)
         elif candidate.promotion_kind == "already_train":
+            if candidate.metadata_row_index is None:
+                raise ValueError(
+                    f"Missing metadata row index for {candidate.target_image_id!r}"
+                )
             existing_row = updated_metadata_df.loc[candidate.metadata_row_index]
 
             _validate_existing_metadata_row(
@@ -322,6 +515,9 @@ def promote_feedback_to_train(
                         candidate=candidate,
                         label_column=resolved_config.label_column,
                         target_split=resolved_config.target_split,
+                        batch_id=batch_id,
+                        first_train_at=promoted_at,
+                        promotion_source=_promotion_source_for_candidate(candidate),
                     )
                 )
                 promoted_count += 1
@@ -345,16 +541,18 @@ def promote_feedback_to_train(
         _write_metadata_atomic(updated_metadata_df, resolved_config.metadata_csv)
 
     write_feedback_entries(resolved_config.feedback_file, entries)
-
-    if metadata_rows_to_append:
-        updated_metadata_df = metadata_df.copy()
-
-        for row in metadata_rows_to_append:
-            updated_metadata_df.loc[len(updated_metadata_df)] = row
-
-        _write_metadata_atomic(updated_metadata_df, resolved_config.metadata_csv)
-
-    write_feedback_entries(resolved_config.feedback_file, entries)
+    if candidates:
+        manifest_path = _write_promotion_manifest(
+            config=resolved_config,
+            batch_id=batch_id,
+            promoted_at=promoted_at,
+            candidates=candidates,
+            promoted_count=promoted_count,
+            already_present_count=already_present_count,
+            skipped_reasons=skipped_reasons,
+            label_counts=label_counts,
+            promoted_image_ids=promoted_image_ids,
+        )
 
     return PromotionResult(
         dry_run=False,
@@ -367,6 +565,8 @@ def promote_feedback_to_train(
         label_counts=label_counts,
         promoted_image_ids=promoted_image_ids,
         skipped_reasons=skipped_reasons,
+        batch_id=batch_id,
+        manifest_path=manifest_path,
     )
 
 
@@ -564,6 +764,9 @@ def _build_metadata_row(
     candidate: PromotionCandidate,
     label_column: str,
     target_split: str,
+    batch_id: str,
+    first_train_at: str,
+    promotion_source: str,
 ) -> dict[str, Any]:
     row = {column: pd.NA for column in metadata_columns}
 
@@ -571,6 +774,10 @@ def _build_metadata_row(
     row["image_id"] = candidate.target_image_id
     row["set"] = target_split
     row[label_column] = candidate.label
+    row["first_train_batch_id"] = batch_id
+    row["first_train_at"] = first_train_at
+    row["training_enabled"] = True
+    row["promotion_source"] = promotion_source
 
     # Fill optional provenance columns only if they already exist in metadata.csv.
     # This avoids changing the dataset schema unexpectedly.

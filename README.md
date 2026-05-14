@@ -153,18 +153,14 @@ Normal workflow pulls this processed dataset from DVC. `make data-split` remains
 
 ### Manual Data Flywheel
 
-The project supports a manual data-flywheel workflow for newly labeled doctor
-feedback.
-
-Uploaded labeled images are first stored in `reports/feedback/` and are not
-immediately added to the training dataset. This keeps raw feedback staging
-separate from the canonical DVC-versioned dataset.
-
-The manual flywheel is triggered once enough labeled feedback is available:
+The detailed promote, fine-tune, publish, and batch-exclusion runbook lives in
+[docs/flywheel.md](docs/flywheel.md).
 
 ```bash
 make flywheel-status
-make flywheel-update
+make flywheel-promote
+make flywheel-dvc-add
+make train-docker
 ```
 
 ## Dataset Sources

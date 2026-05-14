@@ -1,0 +1,152 @@
+{
+  "already_present_count": 0,
+  "batch_id": "train_20260514110813",
+  "candidate_count": 11,
+  "dataset_images_dir": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/data/processed/ham10000/HAM10000_images",
+  "items": [
+    {
+      "feedback_image_id": "e96a9b33-bd8c-4674-871a-f5a7219b6214",
+      "feedback_index": 0,
+      "label": "malignant",
+      "original_filename": "ISIC_0024313.jpg",
+      "promotion_kind": "future_existing",
+      "promotion_source": "future_demo",
+      "source_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/reports/feedback/images/e96a9b33-bd8c-4674-871a-f5a7219b6214.jpg",
+      "target_image_id": "ISIC_0024313",
+      "target_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/data/processed/ham10000/HAM10000_images/train/ISIC_0024313.jpg"
+    },
+    {
+      "feedback_image_id": "e848a3d1-9ebe-4d75-b1f8-c3c7da979e4c",
+      "feedback_index": 1,
+      "label": "malignant",
+      "original_filename": "ISIC_0024315.jpg",
+      "promotion_kind": "future_existing",
+      "promotion_source": "future_demo",
+      "source_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/reports/feedback/images/e848a3d1-9ebe-4d75-b1f8-c3c7da979e4c.jpg",
+      "target_image_id": "ISIC_0024315",
+      "target_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/data/processed/ham10000/HAM10000_images/train/ISIC_0024315.jpg"
+    },
+    {
+      "feedback_image_id": "8b1ef176-5e4b-4164-94b3-05d7ab12a360",
+      "feedback_index": 2,
+      "label": "benign",
+      "original_filename": "ISIC_0024322.jpg",
+      "promotion_kind": "future_existing",
+      "promotion_source": "future_demo",
+      "source_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/reports/feedback/images/8b1ef176-5e4b-4164-94b3-05d7ab12a360.jpg",
+      "target_image_id": "ISIC_0024322",
+      "target_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/data/processed/ham10000/HAM10000_images/train/ISIC_0024322.jpg"
+    },
+    {
+      "feedback_image_id": "b8f0b786-917b-442c-b3a5-0f4d3579f628",
+      "feedback_index": 3,
+      "label": "benign",
+      "original_filename": "ISIC_0024325.jpg",
+      "promotion_kind": "future_existing",
+      "promotion_source": "future_demo",
+      "source_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/reports/feedback/images/b8f0b786-917b-442c-b3a5-0f4d3579f628.jpg",
+      "target_image_id": "ISIC_0024325",
+      "target_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/data/processed/ham10000/HAM10000_images/train/ISIC_0024325.jpg"
+    },
+    {
+      "feedback_image_id": "4b29c144-3d11-4ecf-9085-5e4844b535e5",
+      "feedback_index": 4,
+      "label": "benign",
+      "original_filename": "ISIC_0024328.jpg",
+      "promotion_kind": "future_existing",
+      "promotion_source": "future_demo",
+      "source_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/reports/feedback/images/4b29c144-3d11-4ecf-9085-5e4844b535e5.jpg",
+      "target_image_id": "ISIC_0024328",
+      "target_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/data/processed/ham10000/HAM10000_images/train/ISIC_0024328.jpg"
+    },
+    {
+      "feedback_image_id": "bd0cc7a2-a192-41df-b640-a4ce41843634",
+      "feedback_index": 5,
+      "label": "benign",
+      "original_filename": "ISIC_0024339.jpg",
+      "promotion_kind": "future_existing",
+      "promotion_source": "future_demo",
+      "source_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/reports/feedback/images/bd0cc7a2-a192-41df-b640-a4ce41843634.jpg",
+      "target_image_id": "ISIC_0024339",
+      "target_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/data/processed/ham10000/HAM10000_images/train/ISIC_0024339.jpg"
+    },
+    {
+      "feedback_image_id": "60b3f7b5-fe09-408f-80d2-8a9b3df6ab25",
+      "feedback_index": 6,
+      "label": "benign",
+      "original_filename": "ISIC_0024347.jpg",
+      "promotion_kind": "future_existing",
+      "promotion_source": "future_demo",
+      "source_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/reports/feedback/images/60b3f7b5-fe09-408f-80d2-8a9b3df6ab25.jpg",
+      "target_image_id": "ISIC_0024347",
+      "target_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/data/processed/ham10000/HAM10000_images/train/ISIC_0024347.jpg"
+    },
+    {
+      "feedback_image_id": "f1a39c34-6705-40c3-b925-b89e2a34d3d9",
+      "feedback_index": 7,
+      "label": "benign",
+      "original_filename": "ISIC_0024357.jpg",
+      "promotion_kind": "future_existing",
+      "promotion_source": "future_demo",
+      "source_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/reports/feedback/images/f1a39c34-6705-40c3-b925-b89e2a34d3d9.jpg",
+      "target_image_id": "ISIC_0024357",
+      "target_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/data/processed/ham10000/HAM10000_images/train/ISIC_0024357.jpg"
+    },
+    {
+      "feedback_image_id": "cbaeda0c-cc1e-4d48-ae22-72a2ecb19f0b",
+      "feedback_index": 8,
+      "label": "malignant",
+      "original_filename": "ISIC_0024367.jpg",
+      "promotion_kind": "future_existing",
+      "promotion_source": "future_demo",
+      "source_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/reports/feedback/images/cbaeda0c-cc1e-4d48-ae22-72a2ecb19f0b.jpg",
+      "target_image_id": "ISIC_0024367",
+      "target_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/data/processed/ham10000/HAM10000_images/train/ISIC_0024367.jpg"
+    },
+    {
+      "feedback_image_id": "bbed867d-6494-4c24-9db7-f324581de01b",
+      "feedback_index": 9,
+      "label": "benign",
+      "original_filename": "ISIC_0024435.jpg",
+      "promotion_kind": "future_existing",
+      "promotion_source": "future_demo",
+      "source_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/reports/feedback/images/bbed867d-6494-4c24-9db7-f324581de01b.jpg",
+      "target_image_id": "ISIC_0024435",
+      "target_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/data/processed/ham10000/HAM10000_images/train/ISIC_0024435.jpg"
+    },
+    {
+      "feedback_image_id": "9026f3e6-d3cc-416f-b080-c97584bde1d5",
+      "feedback_index": 10,
+      "label": "malignant",
+      "original_filename": "ISIC_0024449.jpg",
+      "promotion_kind": "future_existing",
+      "promotion_source": "future_demo",
+      "source_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/reports/feedback/images/9026f3e6-d3cc-416f-b080-c97584bde1d5.jpg",
+      "target_image_id": "ISIC_0024449",
+      "target_image_path": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/data/processed/ham10000/HAM10000_images/train/ISIC_0024449.jpg"
+    }
+  ],
+  "label_counts": {
+    "benign": 7,
+    "malignant": 4
+  },
+  "metadata_csv": "/Users/aaronbrulisauer/code/github.com/7ben18/mse-mlops/data/processed/ham10000/metadata.csv",
+  "promoted_at": "2026-05-14T11:08:13.534092+00:00",
+  "promoted_count": 17,
+  "promoted_image_ids": [
+    "ISIC_0024313",
+    "ISIC_0024315",
+    "ISIC_0024322",
+    "ISIC_0024325",
+    "ISIC_0024328",
+    "ISIC_0024339",
+    "ISIC_0024347",
+    "ISIC_0024357",
+    "ISIC_0024367",
+    "ISIC_0024435",
+    "ISIC_0024449"
+  ],
+  "skipped_count": 0,
+  "skipped_reasons": [],
+  "target_split": "train"
+}

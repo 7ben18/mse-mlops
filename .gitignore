@@ -187,3 +187,7 @@ reports/feedback/*
 !reports/feedback/images/
 reports/feedback/images/*
 !reports/feedback/images/.gitkeep
+!reports/feedback/promotions/
+reports/feedback/promotions/*
+!reports/feedback/promotions/.gitkeep
+!reports/feedback/promotions/*.json

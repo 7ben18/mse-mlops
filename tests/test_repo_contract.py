@@ -8,6 +8,7 @@ REPO_FILES = [
     "config/tune.yaml",
     "config/train.yaml",
     "docs/data.md",
+    "docs/flywheel.md",
     "docs/index.md",
     "docs/mlflow-tracking.md",
     "docs/modules.md",
@@ -105,3 +106,23 @@ def test_compose_has_default_mlflow_service_and_docker_training_uses_it():
     ui_service = services["ui"]
     assert api_service["profiles"] == ["ui"]
     assert ui_service["profiles"] == ["ui"]
+
+
+def test_manual_flywheel_docs_cover_batch_workflows():
+    repo_root = Path(__file__).resolve().parents[1]
+    content = (repo_root / "docs" / "flywheel.md").read_text(encoding="utf-8")
+    mkdocs = (repo_root / "mkdocs.yml").read_text(encoding="utf-8")
+
+    required_snippets = (
+        "make flywheel-promote",
+        "make train-docker",
+        "git add data.dvc",
+        "make flywheel-exclude-batch",
+        "--exclude-training-batches",
+        "reports/feedback/promotions/",
+    )
+
+    for snippet in required_snippets:
+        assert snippet in content
+
+    assert "Manual Flywheel: flywheel.md" in mkdocs

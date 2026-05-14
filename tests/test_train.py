@@ -255,6 +255,97 @@ def test_build_dataloaders_reads_ham10000_metadata_splits(tmp_path: Path, monkey
     assert {record.label_index for record in train_loader.dataset.records} == {0, 1}
 
 
+def test_build_dataloaders_excludes_disabled_and_one_run_batches(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    metadata_csv = tmp_path / "data" / "processed" / "ham10000" / "metadata.csv"
+    images_dir = tmp_path / "data" / "processed" / "ham10000" / "HAM10000_images"
+
+    rows = [
+        {
+            "lesion_id": "HAM_0001",
+            "image_id": "ISIC_0001",
+            "mb": "benign",
+            "set": "train",
+            "first_train_batch_id": "",
+            "training_enabled": True,
+        },
+        {
+            "lesion_id": "upload_excluded",
+            "image_id": "upload_excluded",
+            "mb": "malignant",
+            "set": "train",
+            "first_train_batch_id": "train_20260514123045",
+            "training_enabled": True,
+        },
+        {
+            "lesion_id": "upload_disabled",
+            "image_id": "upload_disabled",
+            "mb": "malignant",
+            "set": "train",
+            "first_train_batch_id": "train_20260514111111",
+            "training_enabled": False,
+        },
+        {
+            "lesion_id": "upload_kept",
+            "image_id": "upload_kept",
+            "mb": "malignant",
+            "set": "train",
+            "first_train_batch_id": "train_20260514101010",
+            "training_enabled": True,
+        },
+        {
+            "lesion_id": "HAM_0002",
+            "image_id": "ISIC_0002",
+            "mb": "benign",
+            "set": "val",
+            "first_train_batch_id": "",
+            "training_enabled": True,
+        },
+        {
+            "lesion_id": "HAM_0003",
+            "image_id": "ISIC_0003",
+            "mb": "malignant",
+            "set": "val",
+            "first_train_batch_id": "",
+            "training_enabled": True,
+        },
+    ]
+    write_metadata_csv(metadata_csv, rows)
+    metadata_before = metadata_csv.read_text(encoding="utf-8")
+
+    for row in rows:
+        write_rgb_image(images_dir / row["set"] / f"{row['image_id']}.jpg")
+
+    patch_processor(monkeypatch)
+
+    train_loader, _val_loader, _class_names, train_count, _val_count = build_dataloaders(
+        metadata_csv=metadata_csv,
+        images_dir=images_dir,
+        batch_size=2,
+        num_workers=0,
+        image_size=16,
+        model_name="models/pretrained/dummy",
+        device=torch.device("cpu"),
+        seed=13,
+        label_column="mb",
+        train_set="train",
+        val_set="val",
+        train_fraction=1.0,
+        val_fraction=1.0,
+        train_samples=None,
+        val_samples=None,
+        exclude_training_batches=("train_20260514123045",),
+    )
+
+    selected_paths = {record.image_path.stem for record in train_loader.dataset.records}
+
+    assert train_count == 2
+    assert selected_paths == {"ISIC_0001", "upload_kept"}
+    assert metadata_csv.read_text(encoding="utf-8") == metadata_before
+
+
 def test_build_dataloaders_rejects_missing_image(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     metadata_csv = tmp_path / "metadata.csv"
     images_dir = tmp_path / "HAM10000_images"
@@ -439,6 +530,7 @@ def test_run_training_and_mlflow_hooks_together(
         val_fraction=1.0,
         train_samples=None,
         val_samples=None,
+        exclude_training_batches=(),
         model_name="models/pretrained/dummy",
         output_dir=output_dir,
         epochs=1,
@@ -580,6 +672,7 @@ def test_run_training_promotes_best_epoch_not_last_epoch(
         val_fraction=1.0,
         train_samples=None,
         val_samples=None,
+        exclude_training_batches=(),
         model_name="models/pretrained/dummy",
         output_dir=output_dir,
         epochs=2,

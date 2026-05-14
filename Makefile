@@ -76,6 +76,20 @@ help: ## Show available make targets
 flywheel-status: ## Show whether enough uploaded labeled images are ready
 	@uv run python scripts/promote_feedback.py
 
+.PHONY: flywheel-batch-status
+flywheel-batch-status: ## Show promoted training batches and enablement state
+	@uv run python scripts/promote_feedback.py --batch-status
+
+.PHONY: flywheel-exclude-batch
+flywheel-exclude-batch: ## Disable a promoted training batch; pass BATCH_ID=train_YYYYmmddHHMMSS
+	@test -n "$(BATCH_ID)" || (echo "BATCH_ID is required" >&2; exit 2)
+	@uv run python scripts/promote_feedback.py --exclude-batch "$(BATCH_ID)"
+
+.PHONY: flywheel-include-batch
+flywheel-include-batch: ## Re-enable a promoted training batch; pass BATCH_ID=train_YYYYmmddHHMMSS
+	@test -n "$(BATCH_ID)" || (echo "BATCH_ID is required" >&2; exit 2)
+	@uv run python scripts/promote_feedback.py --include-batch "$(BATCH_ID)"
+
 .PHONY: flywheel-promote
 flywheel-promote: ## Promote uploaded labeled images into the train split
 	@uv run python scripts/promote_feedback.py --apply --require-promotion

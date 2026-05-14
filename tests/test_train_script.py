@@ -27,6 +27,7 @@ def test_train_script_parse_args_defaults(monkeypatch):
     assert args.images_dir is None
     assert args.output_dir is None
     assert args.epochs is None
+    assert args.exclude_training_batches is None
 
 
 def test_train_script_main_delegates_config_loading_to_src(monkeypatch):
@@ -36,7 +37,17 @@ def test_train_script_main_delegates_config_loading_to_src(monkeypatch):
     monkeypatch.setattr(
         sys,
         "argv",
-        ["train.py", "--config", "custom.yaml", "--epochs", "3", "--device", "cpu"],
+        [
+            "train.py",
+            "--config",
+            "custom.yaml",
+            "--epochs",
+            "3",
+            "--device",
+            "cpu",
+            "--exclude-training-batches",
+            "train_20260514123045",
+        ],
     )
 
     def fake_load_train_config(config_path=None, overrides=None):
@@ -53,5 +64,9 @@ def test_train_script_main_delegates_config_loading_to_src(monkeypatch):
     module.main()
 
     assert captured["config_path"] == Path("custom.yaml")
-    assert captured["overrides"] == {"epochs": 3, "device": "cpu"}
+    assert captured["overrides"] == {
+        "epochs": 3,
+        "device": "cpu",
+        "exclude_training_batches": ["train_20260514123045"],
+    }
     assert captured["run_training_config"] is fake_config

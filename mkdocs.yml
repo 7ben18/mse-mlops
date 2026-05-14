@@ -13,6 +13,7 @@ nav:
   - Home: index.md
   - Pipeline: pipeline.md
   - Data Acquisition: data.md
+  - Manual Flywheel: flywheel.md
   - MLflow Tracking: mlflow-tracking.md
   - Ray Tune: ray-tune.md
   - Serving: serving.md

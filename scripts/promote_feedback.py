@@ -9,8 +9,10 @@ from pathlib import Path
 from mse_mlops.curation import (
     PromotionConfig,
     PromotionResult,
+    get_training_batch_status,
     get_promotion_status,
     promote_feedback_to_train,
+    set_training_batch_enabled,
 )
 
 
@@ -99,6 +101,37 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--promotions-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Directory for git-managed promotion audit manifests. "
+            "Default: reports/feedback/promotions from project root."
+        ),
+    )
+
+    batch_actions = parser.add_mutually_exclusive_group()
+    batch_actions.add_argument(
+        "--batch-status",
+        action="store_true",
+        help="Show promoted training batches and whether they are enabled.",
+    )
+
+    batch_actions.add_argument(
+        "--exclude-batch",
+        type=str,
+        default=None,
+        help="Permanently disable one promoted training batch by batch ID.",
+    )
+
+    batch_actions.add_argument(
+        "--include-batch",
+        type=str,
+        default=None,
+        help="Re-enable one promoted training batch by batch ID.",
+    )
+
+    parser.add_argument(
         "--quiet",
         action="store_true",
         help="Print only the final one-line summary.",
@@ -142,12 +175,50 @@ def build_config(args: argparse.Namespace) -> PromotionConfig:
     if args.dataset_images_dir is not None:
         overrides["dataset_images_dir"] = args.dataset_images_dir
 
+    if args.promotions_dir is not None:
+        overrides["promotions_dir"] = args.promotions_dir
+
     if args.min_items is not None:
         if args.min_items < 1:
             raise ValueError("--min-items must be >= 1")
         overrides["min_items"] = args.min_items
 
     return PromotionConfig(**overrides)
+
+
+def print_batch_status(config: PromotionConfig, *, quiet: bool) -> None:
+    """Print training batch enablement status."""
+    rows = get_training_batch_status(config)
+
+    if quiet:
+        for row in rows:
+            print(
+                f"{row['batch_id']}: rows={row['rows']} "
+                f"enabled={row['enabled_rows']} disabled={row['disabled_rows']}"
+            )
+        return
+
+    print("Feedback training batch status:")
+    if not rows:
+        print("  no promoted batches found")
+        return
+
+    for row in rows:
+        sources = ", ".join(row["promotion_sources"]) or "unknown"
+        print(f"  {row['batch_id']}")
+        print(f"    rows:          {row['rows']}")
+        print(f"    enabled rows:  {row['enabled_rows']}")
+        print(f"    disabled rows: {row['disabled_rows']}")
+        print(f"    source:        {sources}")
+        print(f"    first train:   {row['first_train_at']}")
+
+
+def print_batch_update(row: dict[str, object], *, enabled: bool) -> None:
+    action = "included" if enabled else "excluded"
+    print(f"Batch {row['batch_id']} {action}.")
+    print(f"  rows:          {row['rows']}")
+    print(f"  enabled rows:  {row['enabled_rows']}")
+    print(f"  disabled rows: {row['disabled_rows']}")
 
 
 def print_status(config: PromotionConfig) -> None:
@@ -198,6 +269,12 @@ def print_result(result: PromotionResult, *, quiet: bool) -> None:
         print("  promoted image ids:")
         for image_id in result.promoted_image_ids:
             print(f"    {image_id}")
+
+    if result.batch_id:
+        print(f"  batch id:           {result.batch_id}")
+
+    if result.manifest_path:
+        print(f"  manifest:           {result.manifest_path}")
 
     if result.skipped_reasons:
         print("  skipped reasons:")
@@ -255,31 +332,48 @@ def main() -> int:
     """
     args = parse_args()
 
-    try:
-        config = build_config(args)
+    config = build_config(args)
 
-        if not args.quiet:
-            print_status(config)
+    if args.batch_status:
+        print_batch_status(config, quiet=args.quiet)
+        return 0
 
-        result = promote_feedback_to_train(
-            config,
-            dry_run=not args.apply,
-            require_threshold=not args.no_threshold,
+    if args.exclude_batch is not None:
+        row = set_training_batch_enabled(
+            args.exclude_batch,
+            enabled=False,
+            config=config,
         )
+        print_batch_update(row, enabled=False)
+        return 0
 
-        print_result(result, quiet=args.quiet)
+    if args.include_batch is not None:
+        row = set_training_batch_enabled(
+            args.include_batch,
+            enabled=True,
+            config=config,
+        )
+        print_batch_update(row, enabled=True)
+        return 0
 
-        if args.require_promotion and result.promoted_count == 0:
-            print(
-                "No new images were promoted; stopping because "
-                "--require-promotion was set.",
-                file=sys.stderr,
-            )
-            return 2
+    if not args.quiet:
+        print_status(config)
 
-    except Exception as error:
-        print(f"ERROR: {error}", file=sys.stderr)
-        return 1
+    result = promote_feedback_to_train(
+        config,
+        dry_run=not args.apply,
+        require_threshold=not args.no_threshold,
+    )
+
+    print_result(result, quiet=args.quiet)
+
+    if args.require_promotion and result.promoted_count == 0:
+        print(
+            "No new images were promoted; stopping because "
+            "--require-promotion was set.",
+            file=sys.stderr,
+        )
+        return 2
 
     return 0
 

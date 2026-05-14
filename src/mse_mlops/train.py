@@ -108,6 +108,7 @@ class TrainConfig:
     val_fraction: float
     train_samples: int | None
     val_samples: int | None
+    exclude_training_batches: tuple[str, ...]
     model_name: str
     output_dir: Path
     epochs: int
@@ -218,6 +219,16 @@ def _as_optional_str(value: object) -> str | None:
     return str(value)
 
 
+def _as_str_tuple(value: object) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if isinstance(value, str):
+        return tuple(item.strip() for item in value.split(",") if item.strip())
+    if isinstance(value, Sequence):
+        return tuple(str(item).strip() for item in value if str(item).strip())
+    return (str(value),)
+
+
 def load_train_config(
     config_path: Path | str | None = None,
     overrides: dict[str, object] | None = None,
@@ -261,6 +272,9 @@ def load_train_config_from_mapping(
             val_fraction=float(config_values["val_fraction"]),
             train_samples=_as_optional_int(config_values["train_samples"]),
             val_samples=_as_optional_int(config_values["val_samples"]),
+            exclude_training_batches=_as_str_tuple(
+                config_values.get("exclude_training_batches")
+            ),
             model_name=str(config_values["model_name"]),
             output_dir=_as_path(config_values["output_dir"]),
             epochs=int(config_values["epochs"]),
@@ -414,6 +428,47 @@ def read_metadata_frame(metadata_csv: Path, label_column: str) -> pd.DataFrame:
     return normalized_df
 
 
+def is_training_enabled(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value is None or pd.isna(value):
+        return True
+    return str(value).strip().lower() not in {"false", "0", "no", "n"}
+
+
+def filter_disabled_training_batches(
+    metadata_df: pd.DataFrame,
+    *,
+    train_set: str,
+    exclude_training_batches: Sequence[str],
+) -> pd.DataFrame:
+    """Exclude disabled or one-run excluded train rows from training."""
+    filtered_df = metadata_df.copy()
+    train_mask = filtered_df["set"] == train_set
+    keep_mask = pd.Series(True, index=filtered_df.index)
+
+    if "training_enabled" in filtered_df.columns:
+        enabled_mask = filtered_df["training_enabled"].map(is_training_enabled)
+        keep_mask &= ~train_mask | enabled_mask
+
+    excluded_batches = {
+        batch_id.strip()
+        for batch_id in exclude_training_batches
+        if batch_id.strip()
+    }
+    if excluded_batches and "first_train_batch_id" in filtered_df.columns:
+        batch_mask = (
+            filtered_df["first_train_batch_id"]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .isin(excluded_batches)
+        )
+        keep_mask &= ~train_mask | ~batch_mask
+
+    return filtered_df[keep_mask].copy()
+
+
 def validate_lesion_split_consistency(metadata_df: pd.DataFrame) -> None:
     lesion_split_counts = metadata_df.groupby("lesion_id")["set"].nunique()
     invalid = lesion_split_counts[lesion_split_counts != 1]
@@ -550,13 +605,18 @@ def build_dataloaders(
     val_fraction: float,
     train_samples: int | None,
     val_samples: int | None,
+    exclude_training_batches: Sequence[str] = (),
 ) -> tuple[DataLoader, DataLoader, list[str], int, int]:
     if train_set == val_set:
         raise ValueError("--train-set and --val-set must be different.")
     if not images_dir.is_dir():
         raise FileNotFoundError(f"Images directory not found: {images_dir}")
 
-    metadata_df = read_metadata_frame(metadata_csv, label_column)
+    metadata_df = filter_disabled_training_batches(
+        read_metadata_frame(metadata_csv, label_column),
+        train_set=train_set,
+        exclude_training_batches=exclude_training_batches,
+    )
     class_names = build_class_names(metadata_df, label_column)
     mean, std = load_processor_mean_std(model_name)
     train_tf, eval_tf = build_transforms(mean, std, image_size=image_size)
@@ -936,6 +996,11 @@ def print_run_configuration(config: TrainConfig, device: torch.device) -> None:
         f"train_fraction={config.train_fraction} | "
         f"val_fraction={config.val_fraction}"
     )
+    if config.exclude_training_batches:
+        print(
+            "One-run excluded training batches: "
+            f"{', '.join(config.exclude_training_batches)}"
+        )
 
 
 def build_scheduler_for_training(
@@ -1152,6 +1217,7 @@ def _run_training_impl(
                 val_fraction=config.val_fraction,
                 train_samples=config.train_samples,
                 val_samples=config.val_samples,
+                exclude_training_batches=config.exclude_training_batches,
             )
         )
         print(f"Selected samples -> train: {train_count}, val: {val_count}")

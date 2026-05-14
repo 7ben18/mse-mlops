@@ -19,6 +19,7 @@ def build_config() -> TrainConfig:
         val_fraction=1.0,
         train_samples=None,
         val_samples=None,
+        exclude_training_batches=(),
         model_name="models/pretrained/dinov3-vits16-pretrain-lvd1689m",
         output_dir=Path("models/finetuned/dinov3_ham10000"),
         epochs=1,

@@ -10,6 +10,7 @@ Use the docs here only for details that would make the README too long:
 
 - [Data Acquisition](data.md): raw HAM10000 download and pretrained backbone download
 - [Pipeline](pipeline.md): current end-to-end flow in one page
+- [Manual Flywheel](flywheel.md): promote labeled feedback, fine-tune, publish, and exclude rejected batches
 - [MLflow Tracking](mlflow-tracking.md): what training logs and how to run the tracker
 - [Ray Tune](ray-tune.md): tuning workflow, config contract, and outputs
 - [Serving](serving.md): API/UI behavior, runtime contract, and FastAPI Swagger/OpenAPI docs

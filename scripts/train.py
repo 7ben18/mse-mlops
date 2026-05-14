@@ -23,6 +23,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--val-fraction", type=float)
     parser.add_argument("--train-samples", type=int)
     parser.add_argument("--val-samples", type=int)
+    parser.add_argument(
+        "--exclude-training-batches",
+        nargs="+",
+        default=None,
+        help=("Exclude promoted training batch IDs for this run only, without mutating metadata.csv."),
+    )
 
     parser.add_argument("--model-name", type=str)
     parser.add_argument("--output-dir", type=Path)
@@ -80,6 +86,7 @@ def build_overrides(args: argparse.Namespace) -> dict[str, object]:
             "val_fraction": args.val_fraction,
             "train_samples": args.train_samples,
             "val_samples": args.val_samples,
+            "exclude_training_batches": args.exclude_training_batches,
             "model_name": args.model_name,
             "output_dir": args.output_dir,
             "epochs": args.epochs,
