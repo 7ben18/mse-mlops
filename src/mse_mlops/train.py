@@ -135,6 +135,7 @@ class TrainConfig:
     mlflow_run_name: str | None
     mlflow_tags: str | dict[str, str]
     config: Path
+    early_stopping_patience: int | None = None
 
 
 @dataclass(frozen=True)
@@ -311,6 +312,9 @@ def load_train_config_from_mapping(
             mlflow_run_name=_as_optional_str(config_values["mlflow_run_name"]),
             mlflow_tags=config_values["mlflow_tags"],
             config=resolved_config_path,
+            early_stopping_patience=_as_optional_int(
+                config_values.get("early_stopping_patience")
+            ),
         )
     except KeyError as error:
         missing_field = str(error.args[0])
@@ -1051,6 +1055,11 @@ def validate_config(config: TrainConfig) -> None:
         raise ValueError("--max-val-batches must be > 0 when provided.")
     if config.save_total_limit is not None and config.save_total_limit <= 0:
         raise ValueError("--save-total-limit must be > 0 when provided.")
+    if (
+        config.early_stopping_patience is not None
+        and config.early_stopping_patience <= 0
+    ):
+        raise ValueError("--early-stopping-patience must be > 0 when provided.")
 
 
 def prepare_checkpoint_dir(output_dir: Path) -> Path:
@@ -1376,6 +1385,8 @@ def _run_training_impl(
             device=device,
         )
 
+        epochs_without_improvement = 0
+
         for epoch in range(start_epoch, config.epochs + 1):
             train_loss, train_acc, optimizer_steps = train_one_epoch(
                 model=model,
@@ -1448,6 +1459,9 @@ def _run_training_impl(
                     image_size=config.image_size,
                     freeze_backbone=config.freeze_backbone,
                 )
+                epochs_without_improvement = 0
+            else:
+                epochs_without_improvement += 1
 
             epoch_ckpt = checkpoint_dir / f"epoch_{epoch:03d}.pt"
             save_epoch_checkpoint(
@@ -1462,6 +1476,17 @@ def _run_training_impl(
             cleanup_old_checkpoints(
                 checkpoint_dir=checkpoint_dir, keep_last=config.save_total_limit
             )
+
+            if (
+                config.early_stopping_patience is not None
+                and epochs_without_improvement >= config.early_stopping_patience
+            ):
+                print(
+                    f"Early stopping at epoch {epoch}: val_roc_auc did not "
+                    f"improve for {epochs_without_improvement} consecutive epochs "
+                    f"(patience={config.early_stopping_patience})."
+                )
+                break
 
         promoted_model_path = finalize_training_run(
             model=model,

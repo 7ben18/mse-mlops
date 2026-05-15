@@ -76,7 +76,12 @@ training:
 
   # true: train only classifier head
   # false: full fine-tuning (HF-standard default)
-  freeze_backbone: true
+  freeze_backbone: false
+
+  # Stop training if val_roc_auc does not improve for this many epochs.
+  # null = run all configured epochs. The promoted best_model.pt is still
+  # the best epoch seen, regardless of early stopping.
+  early_stopping_patience: 3
 
   # Gradient accumulation steps.
   # Effective batch size = batch_size * gradient_accumulation_steps.

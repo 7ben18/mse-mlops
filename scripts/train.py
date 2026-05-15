@@ -65,6 +65,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--unfreeze-backbone", action="store_false", dest="freeze_backbone")
     parser.set_defaults(freeze_backbone=None)
 
+    parser.add_argument("--early-stopping-patience", type=int)
+
     parser.add_argument("--mlflow-tracking-uri", type=str)
     parser.add_argument("--mlflow-experiment-name", type=str)
     parser.add_argument("--mlflow-run-name", type=str)
@@ -106,6 +108,7 @@ def build_overrides(args: argparse.Namespace) -> dict[str, object]:
             "resume_from_checkpoint": args.resume_from_checkpoint,
             "save_total_limit": args.save_total_limit,
             "freeze_backbone": args.freeze_backbone,
+            "early_stopping_patience": args.early_stopping_patience,
             "mlflow_tracking_uri": args.mlflow_tracking_uri,
             "mlflow_experiment_name": args.mlflow_experiment_name,
             "mlflow_run_name": args.mlflow_run_name,
